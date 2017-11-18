@@ -2,12 +2,15 @@
 
 LWS_VERSION=2.4.1
 ULFIUS_VERSION=2.2
+## libdiscord dependencies installation script
+# WIP, always examine the source before arbitrarily running someone else's scripts
+
 
 #future plans:
 # check what version is required for each package
 # if a package is already installed, prompt user for options (keep old, install new, something else)
 
-#assuming Ubuntu 17.10
+#assuming Ubuntu
 #assuming the current directory is where everything is going to be downloaded
 #assuming sudo access
 
