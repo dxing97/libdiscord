@@ -1,5 +1,6 @@
 #include <sched.h>
 #include <stdlib.h>
+#include <libwebsockets.h>
 #include "libdiscord.h"
 
 struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {

@@ -24,6 +24,8 @@ configure_file(
 )
 
 include_directories("${PROJECT_BINARY_DIR}")
+# If libwebsockets was compiled and installed in Cygwin:
+include_directories(/usr/local/lib/include)
 
 set(LD_LIBS websockets ulfius yder orcania jansson config)
 
