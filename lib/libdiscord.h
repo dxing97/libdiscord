@@ -22,6 +22,7 @@ struct ld_context_info {
  * gateway_connected: are we connected to the gateway?
  * gateway_disconnected: were we disconnected to the gateway?
  * gateway_unconnected: have we ever connected to the gateway?
+ * user_callback: user defined callback function for event loops.
  */
 struct ld_context {
     char *bot_token;
