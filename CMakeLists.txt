@@ -25,7 +25,6 @@ configure_file(
 
 include_directories("${PROJECT_BINARY_DIR}")
 
-#todo: what if the library isn't installed on the system or it's in a weird place?
 set(LD_LIBS websockets ulfius yder orcania jansson config)
 
 set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h)

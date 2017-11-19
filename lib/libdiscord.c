@@ -13,6 +13,8 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->gateway_disconnected = 0;
     context->gateway_unconnected = 1;
 
+    context->user_callback = info->user_callback;
+
     if(info->bot_token == NULL) {
         return NULL;
     }

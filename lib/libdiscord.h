@@ -3,16 +3,16 @@
 
 #include "libdiscord_config.h"
 #include "log.h"
+
 /*
- * info used to generate a context
- * includes:
- *  bot token
- *  user-defined pointer to anything, can be metadata about the bot (creator, version, etc.)
- *  libdiscord logging level (see ld_log_level)
+ * LD_GATEWAY_RECIEVE: We've receieved data from the gateway
+ * LD_GATEWAY_SENDABLE: We can now send data to the gateway
+ * LD_GATEWAY_CONNECTING: We're connecting to the gateway (why do we need this one?)
  */
-struct ld_context_info {
-    char *bot_token;
-    unsigned long log_level;
+enum ld_callback_reason {
+    LD_GATEWAY_RECIEVE = 0,
+    LD_GATEWAY_SENDABLE = 1,
+    LD_GATEWAY_CONNECTING = 2
 };
 
 /*
@@ -33,7 +33,26 @@ struct ld_context {
     int gateway_disconnected;
     int gateway_unconnected;
     int gateway_connecting;
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
+
 };
+
+/*
+ * info used to generate a context
+ * includes:
+ *  bot token
+ *  user-defined pointer to anything, can be metadata about the bot (creator, version, etc.)
+ *  libdiscord logging level (see ld_log_level)
+ */
+struct ld_context_info {
+    char *bot_token;
+    unsigned long log_level;
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
+};
+
+
+
+
 
 /*
  * logging functions for different levels

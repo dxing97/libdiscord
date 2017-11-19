@@ -10,7 +10,13 @@
 
 #include <getopt.h>
 
-//int callback() {
+/*
+ * main way of user interaction with libdiscord
+ * the user callback returns 0 if everything is OK
+ *
+ * if the return value is not 0, libdiscord will interpret it as that to mean disconnect from Discord.
+ */
+int callback(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len) {
     /*
      * depending on the reason, do stuff
      */
@@ -18,7 +24,19 @@
         //post a "lmao" to the channel
         //create a new message info struct with content "lmao"
         //add that context to the send queue
-//}
+    switch(reason){
+        case LD_GATEWAY_RECIEVE:
+            ld_debug(context, "Recieved data from gateway.");
+            break;
+        case LD_GATEWAY_SENDABLE:
+            ld_debug(context, "We can now send data to the gateway");
+            break;
+        case LD_GATEWAY_CONNECTING:
+            ld_debug(context, "We are now connecting to the gateway");
+            break;
+    }
+    return 0;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -87,7 +105,7 @@ int main(int argc, char *argv[]) {
 
     info->bot_token = strdup(bot_token);
     info->log_level = log_level;
-
+    info->user_callback = (&callback);
     free(bot_token);
 
     //initialize context with context info
