@@ -82,10 +82,10 @@ int ld_connect(struct ld_context *context) {
     return 1;
 }
 
-int ld_connection_state(struct ld_context *context) {
-    //use defines/const for this part
-    if(context->gateway_connected) {
-        return 1;
-    }
-    return 0;
+int ld_connection_state_disconnected(struct ld_context *context) {
+    return context->gateway_disconnected;
+}
+
+int ld_connection_state_unconnected(struct ld_context *context) {
+    return context->gateway_unconnected;
 }

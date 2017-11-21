@@ -29,7 +29,7 @@ struct ld_context {
     void *user_data;
     unsigned long log_level;
     char *rest_base_url;
-    int gateway_connected;
+    int gateway_connected; //todo: merge states into one variable and use enums, modify functions that check state. Make state diagram.
     int gateway_disconnected;
     int gateway_unconnected;
     int gateway_connecting;
@@ -77,10 +77,18 @@ struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
 void ld_destroy_context(struct ld_context *context);
 
 /*
- * returns status of the connection to discord
- * returns 0 for not connected, nonzero for connected
+ * returns nonzero for disconnected, zero for not disconnected
+ * disconnected: we were previously connected to the Discord gateway, but we have been disconnected for some reason
+ * A bot can either be unconnected, disconnected, or neither.
  */
-int ld_connection_state(struct ld_context *context);
+int ld_connection_state_disconnected(struct ld_context *context);
+
+/*
+ * returns nonzero for disconnected, zero for not unconnected
+ * unconnected: this bot has never connected to Discord before, or the proper response for a disconnection was
+ * to initiate a completely new connection.
+ */
+int ld_connection_state_unconnected(struct ld_context *context);
 
 /*
  * connect to discord

@@ -14,6 +14,10 @@
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
  *
+ * ld_context is an opaque internal bot identifier.
+ * ld_callback_reason is the reason for the library calling the callback.
+ * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
+ *
  * if the return value is not 0, libdiscord will interpret it as that to mean disconnect from Discord.
  */
 int callback(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len) {
@@ -50,7 +54,7 @@ int main(int argc, char *argv[]) {
      * if an "ayy" is detected, POST a message to the same channel with content "lmao"
      * continue ad infinitum (or until the bot is killed)
      */
-    int c;
+    int c, bot_exit = 0; //bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
     unsigned long log_level = 15;
     if(argc == 1) {
@@ -110,24 +114,31 @@ int main(int argc, char *argv[]) {
 
     //initialize context with context info
     struct ld_context *context;
-    context = ld_create_context_via_info(info);
+    context = ld_create_context_via_info(info); //garbage in, garbage out
     if(context == NULL) {
         fprintf(stderr, "error creating ld context\n");
-        return -1;
+        return 1;
     }
     free(info);
 
-    int exit = 0;
+
+
     //while the bot is still alive
-    while(!exit) {
+    while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
-        if(ld_connection_state(context) == 0) {
+        if(ld_connection_state_unconnected(context) != 0) {
+            //currently unconnected, will now connect
             ld_info(context, "Connecting to Discord...");
             ld_connect(context);
+        } else  if(ld_connection_state_disconnected(context) != 0){
+            //we've been disconnected for some reason, so we should figure out why we were disconnected
+            bot_exit = 1;
         }
+
+        //what if we're not disconnected/unconnected, but just simply still in the process of connecting?
+        //what does it mean to be "connecting"?
         //service the connection
         ld_debug(context, "servicing connection");
-        exit = 1;
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnected from discord");
