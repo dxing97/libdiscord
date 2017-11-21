@@ -40,3 +40,7 @@ set(BOT1_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-1 ${BOT1_SOURCE})
 
 target_link_libraries(example-bot-1 libdiscord)
+
+set(BOT2_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
+add_executable(example-bot-2 ${BOT2_SOURCE})
+target_link_libraries(example-bot-2 libdiscord)
