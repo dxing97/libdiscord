@@ -36,11 +36,11 @@ set_target_properties(libdiscord PROPERTIES VERSION ${PROJECT_VERSION})
 target_compile_options(libdiscord PRIVATE "-Wall")
 target_compile_options(libdiscord PRIVATE "-Werror")
 
-set(BOT1_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
-add_executable(example-bot-1 ${BOT1_SOURCE})
+set(BOT_AYY_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
+add_executable(example-bot-ayylmao ${BOT_AYY_SOURCE})
 
-target_link_libraries(example-bot-1 libdiscord)
+target_link_libraries(example-bot-ayylmao libdiscord)
 
-set(BOT2_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
-add_executable(example-bot-2 ${BOT2_SOURCE})
-target_link_libraries(example-bot-2 libdiscord)
+set(BOT_PING_SOURCE example_bots/example-ping.c cmake/libdiscord_config.h.in)
+add_executable(example-bot-ping ${BOT_PING_SOURCE})
+target_link_libraries(example-bot-ping libdiscord)
