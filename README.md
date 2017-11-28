@@ -17,10 +17,3 @@ Under consideration. Will measure latencies and response times of various API en
 * Response time of gateway heartbeats
 * Response time of REST-gateway event pairs (POST [message] | recieved gateway dispatch for message event, etc)
 * Response time to (user defined) third party servers
-
-## Plans
-* get a stable working example bot with minimal spaghetti
-### Far Future
-* Rich presence integration for IoT
-* A command line application for scripting
-* Support for voice channels (UDP connections)
