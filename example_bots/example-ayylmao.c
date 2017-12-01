@@ -29,7 +29,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, const c
         //create a new message info struct with content "lmao"
         //add that context to the send queue
     switch(reason){
-        case LD_GATEWAY_RECIEVE:
+        case LD_GATEWAY_RECEIVE:
             ld_debug(context, "Recieved data from gateway.");
             break;
         case LD_GATEWAY_SENDABLE:

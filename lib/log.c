@@ -17,6 +17,7 @@ const char *ld_log_level_string(unsigned long ll) {
         case ld_log_debug:
             return "DEBUG";
         default:
+            //sum ting wong
             return "UNKNOWN(?)";
     }
 }

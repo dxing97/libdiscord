@@ -5,12 +5,12 @@
 #include "log.h"
 
 /*
- * LD_GATEWAY_RECIEVE: We've receieved data from the gateway
+ * LD_GATEWAY_RECEIVE: We've received data from the gateway
  * LD_GATEWAY_SENDABLE: We can now send data to the gateway
  * LD_GATEWAY_CONNECTING: We're connecting to the gateway (why do we need this one?)
  */
 enum ld_callback_reason {
-    LD_GATEWAY_RECIEVE = 0,
+    LD_GATEWAY_RECEIVE = 0,
     LD_GATEWAY_SENDABLE = 1,
     LD_GATEWAY_CONNECTING = 2
 };
