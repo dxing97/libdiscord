@@ -31,18 +31,19 @@ sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-d
                  make cmake gcc libssl-dev libconfig-dev\
                  libulfius-dev zlib1g-dev libssl-dev
 
-#echo "Installing libulfius"
-#git clone https://github.com/babelouest/ulfius.git
-#cd ulfius
-#    git checkout ${ULFIUS_VERSION}
-#    cd lib/orcania
-#        make && sudo checkinstall
-#        cd ../..
-#    cd lib/yder
-#        make && sudo checkinstall
-#        cd ../..
-#    make && sudo checkinstall
-#cd ..
+#libulfius is not included with Debian 9.3 at the present, and should be compiled.
+echo "Installing libulfius"
+git clone https://github.com/babelouest/ulfius.git
+cd ulfius
+    git checkout ${ULFIUS_VERSION}
+    cd lib/orcania
+        make && sudo checkinstall
+        cd ../..
+    cd lib/yder
+        make && sudo checkinstall
+        cd ../..
+    make && sudo checkinstall
+cd ..
 
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
@@ -55,7 +56,15 @@ cd libwebsockets
     cd ..
 cd ..
 
-#rm -rf libwebsockets
+#build libdiscord examples
+git clone https://github.com/dxing97/libdiscord.git
+cd libdiscord
+    mkdir build && cd build
+        cmake ..
+        make
+    cd ..
+cd ..
+
 
 
 
