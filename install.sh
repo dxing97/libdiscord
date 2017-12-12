@@ -29,7 +29,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev\
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
-                 libulfius-dev
+                 libulfius-dev zlib1g-dev libssl-dev
 
 #echo "Installing libulfius"
 #git clone https://github.com/babelouest/ulfius.git

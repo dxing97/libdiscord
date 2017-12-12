@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.7)
 project(libdiscord VERSION 0.3.0 LANGUAGES C)
 
 set(LD_VERSION_MAJOR 0)
