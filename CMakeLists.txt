@@ -7,7 +7,7 @@ set(LD_VERSION_PATCH )
 set(LD_VERSION "${LD_VERSION_MAJOR}${LD_VERSION_MINOR}${LD_VERSION_PATCH}")
 
 ## Discord connection options
-set(LD_API_URL "https://discordapp.com/api")
+set(LD_API_URL "\"https://discordapp.com/api\"")
 set(LD_REST_API_VERSION 6)
 #set(LD_GATEWAY_API_VERSION 3 "Only version 3 of the gateway API is supported")
 
@@ -27,11 +27,12 @@ include_directories("${PROJECT_BINARY_DIR}")
 # If libwebsockets was compiled and installed in Cygwin:
 include_directories(/usr/local/lib/include)
 
-set(LD_LIBS websockets ulfius yder orcania jansson config)
+set(LD_LIBS websockets ulfius yder orcania jansson config curl)
 
 set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h)
 add_library(libdiscord SHARED ${LD_SOURCE})
 
+target_link_libraries(libdiscord ${LD_LIBS})
 set_target_properties(libdiscord PROPERTIES VERSION ${PROJECT_VERSION})
 target_compile_options(libdiscord PRIVATE "-Wall")
 target_compile_options(libdiscord PRIVATE "-Werror")

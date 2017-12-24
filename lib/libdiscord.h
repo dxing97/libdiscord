@@ -1,18 +1,26 @@
 #ifndef LIBDISCORD_0_3_LIBRARY_H
 #define LIBDISCORD_0_3_LIBRARY_H
 
+#include <curl/curl.h>
 #include "libdiscord_config.h"
 #include "log.h"
 
 /*
- * LD_GATEWAY_RECEIVE: We've received data from the gateway
- * LD_GATEWAY_SENDABLE: We can now send data to the gateway
- * LD_GATEWAY_CONNECTING: We're connecting to the gateway (why do we need this one?)
+ * LD_WEBSOCKET_RECEIVE: We've received data from the gateway
+ * LD_WEBSOCKET_SENDABLE: We can now send data to the gateway
+ * LD_WEBSOCKET_CONNECTING: We're connecting to the gateway (why do we need this one?)
  */
 enum ld_callback_reason {
-    LD_GATEWAY_RECEIVE = 0,
-    LD_GATEWAY_SENDABLE = 1,
-    LD_GATEWAY_CONNECTING = 2
+    LD_WEBSOCKET_RECEIVE = 0,
+    LD_WEBSOCKET_SENDABLE = 1,
+    LD_WEBSOCKET_CONNECTING = 2
+};
+
+enum gateway_state {
+    LD_GATEWAY_UNCONNECTED = 0,
+    LD_GATEWAY_DISCONNECTED = 1,
+    LD_GATEWAY_CONNECTING = 2,
+    LD_GATEWAY_CONNECTED = 3
 };
 
 /*
@@ -29,12 +37,13 @@ struct ld_context {
     void *user_data;
     unsigned long log_level;
     char *rest_base_url;
-    int gateway_connected; //todo: merge states into one variable and use enums, modify functions that check state. Make state diagram.
-    int gateway_disconnected;
-    int gateway_unconnected;
-    int gateway_connecting;
+    unsigned int gateway_state;
+//    int gateway_connected;
+//    int gateway_disconnected;
+//    int gateway_unconnected;
+//    int gateway_connecting;
+    CURLM *curl_multi_handle;
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
-
 };
 
 /*
@@ -77,18 +86,14 @@ struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
 void ld_destroy_context(struct ld_context *context);
 
 /*
- * returns nonzero for disconnected, zero for not disconnected
- * disconnected: we were previously connected to the Discord gateway, but we have been disconnected for some reason
- * A bot can either be unconnected, disconnected, or neither.
+ * returns enum corresponding to the gateway connection state
  */
-int ld_connection_state_disconnected(struct ld_context *context);
+int ld_gateway_connection_state(struct ld_context *context);
 
 /*
- * returns nonzero for disconnected, zero for not unconnected
- * unconnected: this bot has never connected to Discord before, or the proper response for a disconnection was
- * to initiate a completely new connection.
+ *
  */
-int ld_connection_state_unconnected(struct ld_context *context);
+int ld_gateway_connected(struct ld_context *context);
 
 /*
  * connect to discord

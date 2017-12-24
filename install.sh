@@ -29,7 +29,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev\
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
-                  zlib1g-dev libssl-dev
+                  zlib1g-dev libssl-dev libcurl4-gnutls-dev
 sudo apt install libulfius-dev
 
 #libulfius is not included with Debian 9.3 at the present, and should be compiled.

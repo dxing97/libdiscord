@@ -29,13 +29,13 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, const c
         //create a new message info struct with content "lmao"
         //add that context to the send queue
     switch(reason){
-        case LD_GATEWAY_RECEIVE:
+        case LD_WEBSOCKET_RECEIVE:
             ld_debug(context, "Recieved data from gateway.");
             break;
-        case LD_GATEWAY_SENDABLE:
+        case LD_WEBSOCKET_SENDABLE:
             ld_debug(context, "We can now send data to the gateway");
             break;
-        case LD_GATEWAY_CONNECTING:
+        case LD_WEBSOCKET_CONNECTING:
             ld_debug(context, "We are now connecting to the gateway");
             break;
     }
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
      */
     int c, bot_exit = 0; //bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
-    unsigned long log_level = 15;
+    unsigned long log_level = 31;
     if(argc == 1) {
         goto HELP;
     }
@@ -121,17 +121,23 @@ int main(int argc, char *argv[]) {
     }
     free(info);
 
-
+    int ret;
 
     //while the bot is still alive
     while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
-        if(ld_connection_state_unconnected(context) != 0) {
+        if((ld_gateway_connection_state(context) != LD_GATEWAY_CONNECTED) &&
+                (ld_gateway_connection_state(context) != LD_GATEWAY_CONNECTING)) {
             //currently unconnected, will now connect
             ld_info(context, "Connecting to Discord...");
-            ld_connect(context);
-        } else  if(ld_connection_state_disconnected(context) != 0){
+            ret = ld_connect(context);
+            if(ret != 0) {
+                ld_warn(context, "couldn't connect to Discord: error code %d", ret);
+            }
+            bot_exit = 1;
+        } else  if(ld_gateway_connection_state(context) == LD_GATEWAY_DISCONNECTED){
             //we've been disconnected for some reason, so we should figure out why we were disconnected
+            ld_info(context, "Checking disconnection reason...");
             bot_exit = 1;
         }
 
