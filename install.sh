@@ -4,7 +4,7 @@ LWS_VERSION=2.4.1
 ULFIUS_VERSION=2.2
 ## libdiscord dependencies installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
-
+# todo: remove ulfius, add curl
 
 #future plans:
 # check what version is required for each package

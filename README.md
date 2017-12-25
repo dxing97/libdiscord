@@ -17,3 +17,4 @@ Under consideration. Will try to roughly measure latencies and response times of
 * Response time of gateway heartbeats
 * Response time of REST-gateway event pairs (POST [message] | recieved gateway dispatch for message event, etc)
 * Response time to (user defined) third party servers (like a CLI ping tool)
+
