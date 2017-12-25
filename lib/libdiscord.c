@@ -22,6 +22,9 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     if(info->bot_token == NULL) {
         return NULL;
     }
+    context->bot_token = malloc(strlen(info->bot_token) + 1);
+    context->bot_token = strcpy(context->bot_token, info->bot_token);
+
     return context;
 }
 
@@ -100,10 +103,15 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
     return recieved_size;
 }
 
+
+
 int ld_connect(struct ld_context *context) {
     int ret;
 
-    //check to see if we can even connect to Discord's servers
+    /*
+     * check to see if we can even connect to Discord's servers
+     * examine /gateway and see if we get a valid response
+     */
     CURL *handle;
     struct _ld_buffer buffer;
 
@@ -117,9 +125,10 @@ int ld_connect(struct ld_context *context) {
         return 2;
     }
 
-    curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL "/gateway");
+    curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway");
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _ld_curl_response_string);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&buffer);
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3) ");
 
     ret = curl_easy_perform(handle);
 
@@ -127,12 +136,11 @@ int ld_connect(struct ld_context *context) {
         ld_err(context, "curl: couldn't get gateway url from /gateway");
         return 2;
     }
-    curl_easy_cleanup(handle);
 
     ld_debug(context, "received data from /gateway: \n%s", buffer.string);
 
     //use jansson to extract the JSON data
-    json_t *object;
+    json_t *object, *tmp;
     json_error_t error;
 
     object = json_loads(buffer.string, 0, &error);
@@ -142,24 +150,117 @@ int ld_connect(struct ld_context *context) {
         return 3;
     }
 
-    if(json_string_value(object) == NULL) {
+    tmp = json_object_get(object, "url");
+    if(tmp == NULL) {
+        ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway");
+        return 3;
+    }
+
+    if(json_string_value(tmp) == NULL) {
         ld_err(context, "jansson: didn't receive string object from "
                 "JSON payload received from gateway");
         return 3;
     }
-    //we got a valid response from the REST API, which should mean Discord is connectable at basic level
 
-    //check the bot token's validity
-        //GET /gateway/bot
-    //connect to the websocket
-    if((context->gateway_state == LD_GATEWAY_UNCONNECTED)
-       || (context->gateway_state == LD_GATEWAY_DISCONNECTED)) {
-        //we're not connected, so we should connect
-        context->gateway_state = LD_GATEWAY_CONNECTING;
-        return 0;
+    context->gateway_url = malloc(strlen(json_string_value(tmp)) + 1);
+    context->gateway_url = strcpy(context->gateway_url, json_string_value(tmp));
+
+    free(tmp);
+    free(object);
+    /*
+     * we got a valid response from the REST API, which should mean
+     *  Discord is connectable at basic level
+     *  Now we should check the bot token validity using /gateway/bot
+     */
+    struct curl_slist *headers = NULL;
+    char auth_header[1024];
+    sprintf(auth_header, "Authorization: %s", context->bot_token);
+    headers = curl_slist_append(headers, auth_header);
+
+    //check the bot token's validity by trying to connect to /gateway/bot
+
+    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway/bot");
+
+    free(buffer.string);
+    buffer.string = malloc(1);
+    buffer.size = 0;
+
+    ret = curl_easy_perform(handle);
+    if(ret != CURLE_OK) {
+        ld_err(context, "curl: couldn't get gateway url from /gateway");
+        return 2;
+    }
+    curl_easy_cleanup(handle);
+
+    ld_debug(context, "received data from /gateway/bot: \n%s", buffer.string);
+
+    object = json_loads(buffer.string, 0, &error);
+    if(object == NULL) {
+        ld_err(context, "jansson: couldn't decode string returned "
+                "from /gateway/bot in ld_connect: %s", buffer.string);
+        return 3;
+    }
+
+    tmp = json_object_get(object, "url");
+    if(tmp == NULL) {
+        ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway/bot."
+                "is the bot token valid?");
+        return 3;
+    }
+
+    if(json_string_value(tmp) == NULL) {
+        ld_err(context, "jansson: didn't receive string object in \"url\" from "
+                "JSON payload received from /gateway/bot");
+        return 3;
+    }
+
+    tmp = json_object_get(object, "shards");
+    if(tmp == NULL) {
+        ld_err(context, "jansson: couldn't find key \"shards\" in JSON object from /gateway/bot."
+                "is the bot token valid?");
+        return 3;
+    }
+
+    if(json_integer_value(tmp) == 0) {
+        ld_err(context, "jansson: didn't receive integer object in \"shards\" from "
+                "JSON payload received from /gateway/bot");
+        return 3;
+    }
+
+    context->shards = (int) json_integer_value(tmp);
+    ld_info(context, "shards: %d", context->shards);
+
+    switch(context->gateway_state) {
+        case LD_GATEWAY_UNCONNECTED:
+            //we were never connected, so we should start a fresh connection
+            ld_gateway_connect(context);
+            break;
+        case LD_GATEWAY_DISCONNECTED:
+            //we were disconnected from the gateway.
+            break;
+        case LD_GATEWAY_CONNECTING:break;
+        case LD_GATEWAY_CONNECTED:break;
+        default:
+            //???
+            break;
     }
     //we're already connected...
-    return 1;
+    return 0;
 }
 
+int ld_service() {
+    /*
+     * HTTP servicing
+     */
 
+    /*
+     * gateway servicing
+     * if sufficient time has passed, add a heartbeat payload to the queue
+     */
+    return 0;
+}
+
+int ld_gateway_connect(struct ld_context *context) {
+    return 0;
+}

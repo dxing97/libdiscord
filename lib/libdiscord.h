@@ -36,12 +36,10 @@ struct ld_context {
     char *bot_token;
     void *user_data;
     unsigned long log_level;
-    char *rest_base_url;
-    unsigned int gateway_state;
-//    int gateway_connected;
-//    int gateway_disconnected;
-//    int gateway_unconnected;
-//    int gateway_connecting;
+    char *gateway_url;
+    char *gateway_bot_url;
+    enum gateway_state gateway_state;
+    int shards;
     CURLM *curl_multi_handle;
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
 };
@@ -103,5 +101,25 @@ int ld_gateway_connected(struct ld_context *context);
  * returns 0 on success
  */
 int ld_connect(struct ld_context *context);
+
+/*
+ * services pending HTTP and websocket requests.
+ */
+int ld_service();
+
+/*
+ * starts a fresh gateway connection
+ * will:
+ *  start a fresh websocket connection
+ *  parse HELLO payload
+ *  create & send IDENTIFY payload
+ *  start heartbeat mechanism
+ */
+int ld_gateway_connect(struct ld_context *context);
+
+/*
+ * reconnects to the gateway (resume payload)
+ */
+//ld_gateway_resume();
 
 #endif
