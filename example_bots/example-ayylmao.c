@@ -126,25 +126,27 @@ int main(int argc, char *argv[]) {
     //while the bot is still alive
     while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
-        if((ld_gateway_connection_state(context) != LD_GATEWAY_CONNECTED) &&
-                (ld_gateway_connection_state(context) != LD_GATEWAY_CONNECTING)) {
-            //currently unconnected, will now connect
-            ld_info(context, "Connecting to Discord...");
-            ret = ld_connect(context);
-            if(ret != 0) {
-                ld_warn(context, "couldn't connect to Discord: error code %d", ret);
-            }
-            bot_exit = 1;
-        } else  if(ld_gateway_connection_state(context) == LD_GATEWAY_DISCONNECTED){
-            //we've been disconnected for some reason, so we should figure out why we were disconnected
-            ld_info(context, "Checking disconnection reason...");
-            bot_exit = 1;
+        switch (ld_gateway_connection_state(context)) {
+            case LD_GATEWAY_CONNECTED:
+                bot_exit = 1;
+                break;
+            case LD_WEBSOCKET_CONNECTING:
+                ;
+                break;
+            case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
+                break;
+            case LD_GATEWAY_UNCONNECTED:
+                ret = ld_connect(context);
+                if(ret != 0) {
+                    ld_warn(context, "error connecting to discord: error code %d", ret);
+                    bot_exit = 1;
+                }
+                break;
+            default:
+                break;
         }
 
-        //what if we're not disconnected/unconnected, but just simply still in the process of connecting?
-        //what does it mean to be "connecting"?
-        //service the connection
-        ld_debug(context, "servicing connection");
+        ld_service(context);
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnected from discord");

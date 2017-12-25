@@ -99,13 +99,16 @@ int ld_gateway_connected(struct ld_context *context);
  *  check the bot token's validity here
  * websocket/gateway connection and initialization
  * returns 0 on success
+ * returns 1 on connection error
+ * returns 2 for a curl error
+ * returns 3 for a jansson error (JSON parsing error: didn't get what we were expecting)
  */
 int ld_connect(struct ld_context *context);
 
 /*
  * services pending HTTP and websocket requests.
  */
-int ld_service();
+int ld_service(struct ld_context *context);
 
 /*
  * starts a fresh gateway connection
@@ -120,6 +123,13 @@ int ld_gateway_connect(struct ld_context *context);
 /*
  * reconnects to the gateway (resume payload)
  */
-//ld_gateway_resume();
+int ld_gateway_resume(struct ld_context *context);
+
+/*
+ * callback used for lws
+ */
+int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
+                    void *user, void *in, size_t len);
+
 
 #endif

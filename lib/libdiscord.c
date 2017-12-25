@@ -4,6 +4,28 @@
 #include "libdiscord.h"
 
 
+
+static struct lws_protocols protocols[] = {
+        {
+                "DiscordBot",
+                ld_lws_callback,
+                sizeof(struct ld_context *),
+                4096, //rx buffer size
+        },
+        {
+                NULL, NULL, 0 //null terminator
+        }
+};
+
+static const struct lws_extension exts[] = { //default lws extension, code from lws test-app/test-echo.c
+        {
+                "permessage-deflate",
+                lws_extension_callback_pm_deflate,
+                "permessage-deflate; client_no_context_takeover; client_max_window_bits"
+        },
+        { NULL, NULL, NULL /* terminator */ }
+};
+
 struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     //assuming the values passed in are good
     struct ld_context *context;
@@ -215,6 +237,9 @@ int ld_connect(struct ld_context *context) {
         return 3;
     }
 
+    context->gateway_bot_url = malloc(strlen(json_string_value(tmp)) + 1);
+    context->gateway_bot_url = strcpy(context->gateway_url, json_string_value(tmp));
+
     tmp = json_object_get(object, "shards");
     if(tmp == NULL) {
         ld_err(context, "jansson: couldn't find key \"shards\" in JSON object from /gateway/bot."
@@ -234,13 +259,23 @@ int ld_connect(struct ld_context *context) {
     switch(context->gateway_state) {
         case LD_GATEWAY_UNCONNECTED:
             //we were never connected, so we should start a fresh connection
-            ld_gateway_connect(context);
+            context->gateway_state = LD_GATEWAY_CONNECTING;
+            ret = ld_gateway_connect(context);
+            if(ret != 0){
+                return 1;
+            }
             break;
         case LD_GATEWAY_DISCONNECTED:
             //we were disconnected from the gateway.
+            context->gateway_state = LD_GATEWAY_CONNECTING;
+            ld_gateway_resume(context);
             break;
-        case LD_GATEWAY_CONNECTING:break;
-        case LD_GATEWAY_CONNECTED:break;
+        case LD_GATEWAY_CONNECTING:
+            //???
+            break;
+        case LD_GATEWAY_CONNECTED:
+            //this context already has an established connection to the gateway
+            break;
         default:
             //???
             break;
@@ -249,18 +284,59 @@ int ld_connect(struct ld_context *context) {
     return 0;
 }
 
-int ld_service() {
+int ld_service(struct ld_context *context) {
     /*
      * HTTP servicing
      */
-
+//    ld_debug(context, "servicing REST requests");
     /*
      * gateway servicing
      * if sufficient time has passed, add a heartbeat payload to the queue
      */
+//    ld_debug(context, "servicing gateway payloads");
     return 0;
 }
 
 int ld_gateway_connect(struct ld_context *context) {
+    //lws context creation info
+    struct lws_context_creation_info *info;
+    struct lws_context *lws_context;
+    struct lws_client_connect_info *i;
+
+    lws_set_log_level(7, lwsl_emit_syslog);
+
+    info = malloc(sizeof(struct lws_context_creation_info));
+    memset(info, 0, sizeof(struct lws_client_connect_info));
+    i = calloc(0, sizeof(struct lws_client_connect_info));
+
+    info->port = CONTEXT_PORT_NO_LISTEN;
+    info->port = 443;
+    info->iface = NULL; //todo: add some way of specifying which interface lws should use
+    info->protocols = protocols;
+    info->extensions = exts;
+    info->options = 0 | LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    info->ssl_cert_filepath = NULL;
+    info->ssl_private_key_filepath = NULL;
+    info->gid = -1;
+    info->uid = -1;
+
+    lws_context = lws_create_context(info);
+    if(lws_context == NULL) {
+        ld_err(context, "lws init failed trying to connect to the gateway");
+        return -1;
+    }
+    i->context = lws_context;
+    char gateway_url[1000];
+    sprintf(gateway_url, "%s/?v=%d&encoding=json", context->gateway_bot_url, LD_WS_API_VERSION);
+    i->address = gateway_url;
+    return 0;
+}
+
+int ld_gateway_resume(struct ld_context *context) {
+    return 0;
+}
+
+int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
+                    void *user, void *in, size_t len) {
     return 0;
 }

@@ -9,6 +9,7 @@ set(LD_VERSION "${LD_VERSION_MAJOR}${LD_VERSION_MINOR}${LD_VERSION_PATCH}")
 ## Discord connection options
 set(LD_API_URL "\"https://discordapp.com/api\"")
 set(LD_REST_API_VERSION "\"/v6\"")
+set(LD_WS_API_VERSION 6)
 #set(LD_GATEWAY_API_VERSION 3 "Only version 3 of the gateway API is supported")
 
 set(CMAKE_C_STANDARD 99)
