@@ -1,4 +1,5 @@
 #include <stdlib.h>
+//#include "libwebsockets/lib/libwebsockets.h"
 #include <libwebsockets.h>
 #include <jansson.h>
 #include "libdiscord.h"
@@ -303,7 +304,7 @@ int ld_gateway_connect(struct ld_context *context) {
     struct lws_context *lws_context;
     struct lws_client_connect_info *i;
 
-    lws_set_log_level(7, lwsl_emit_syslog);
+    lws_set_log_level(15, lwsl_emit_syslog);
 
     info = malloc(sizeof(struct lws_context_creation_info));
     memset(info, 0, sizeof(struct lws_client_connect_info));
@@ -311,7 +312,7 @@ int ld_gateway_connect(struct ld_context *context) {
 
     info->port = CONTEXT_PORT_NO_LISTEN;
     info->port = 443;
-    info->iface = NULL; //todo: add some way of specifying which interface lws should use
+    info->iface = NULL;
     info->protocols = protocols;
     info->extensions = exts;
     info->options = 0 | LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
@@ -319,6 +320,7 @@ int ld_gateway_connect(struct ld_context *context) {
     info->ssl_private_key_filepath = NULL;
     info->gid = -1;
     info->uid = -1;
+    info->server_string = NULL;
 
     lws_context = lws_create_context(info);
     if(lws_context == NULL) {

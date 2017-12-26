@@ -50,7 +50,7 @@ git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v${LWS_VERSION}
     mkdir build && cd build
-        cmake ..
+        cmake .. -DCMAKE_BUILD_TYPE=Debug
         make
         sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
         sudo ldconfig
