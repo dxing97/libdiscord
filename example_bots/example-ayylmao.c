@@ -128,14 +128,14 @@ int main(int argc, char *argv[]) {
         //if the bot isn't connected to discord, connect to discord
         switch (ld_gateway_connection_state(context)) {
             case LD_GATEWAY_CONNECTED:
-                bot_exit = 1;
+                bot_exit = 0;
                 break;
             case LD_WEBSOCKET_CONNECTING:
                 ld_service(context);
                 break;
             case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
-                bot_exit = 0;
-                context->gateway_state = LD_GATEWAY_UNCONNECTED;
+                bot_exit = 1; //if we get disconnected let's quit for now
+//                context->gateway_state = LD_GATEWAY_UNCONNECTED;
                 break;
             case LD_GATEWAY_UNCONNECTED:
                 ret = ld_connect(context);

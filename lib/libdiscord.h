@@ -78,6 +78,7 @@ struct ld_context {
     int last_seq; //last sequence number received in the gateway
     void *gateway_queue;
     int close_code;
+    int heartbeat; //0 for don't send, 1 for send
 };
 
 /*

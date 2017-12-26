@@ -295,7 +295,7 @@ int ld_service(struct ld_context *context) {
      * gateway servicing
      * if sufficient time has passed, add a heartbeat payload to the queue
      */
-    ld_debug(context, "servicing gateway payloads");
+//    ld_debug(context, "servicing gateway payloads");
     lws_service(context->lws_context, 20);
     return 0;
 }
@@ -436,7 +436,9 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             context->gateway_queue = NULL;
             break;
         case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
-            ld_info(context, "lws: gateway initiated close of websocket: close code: %u\nCONTEXT:\n%s", (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1], in+2);
+            ld_info(context, "lws: gateway initiated close of websocket: "
+                    "close code: %u\nCONTEXT:\n%s",
+                    (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1], in+2);
             context->close_code = (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1];
             break;
         default:
@@ -600,11 +602,14 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
         ld_warn(context, "couldn't set opcode in new payload");
         return NULL;
     }
-    ret = json_object_set_new(payload, "d", d);
-    if(ret != 0) {
-        ld_warn(context, "couldn't set data in new payload");
-        return NULL;
+    if(d != NULL){ //can be null for heartbeat ACKs
+        ret = json_object_set_new(payload, "d", d);
+        if(ret != 0) {
+            ld_warn(context, "couldn't set data in new payload");
+            return NULL;
+        }
     }
+
     if(t != NULL) {
         ret = json_object_set_new(payload, "t", t);
         if(ret != 0) {
