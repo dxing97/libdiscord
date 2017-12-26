@@ -117,6 +117,7 @@ int ld_service(struct ld_context *context);
  *  parse HELLO payload
  *  create & send IDENTIFY payload
  *  start heartbeat mechanism
+ * returns 0 on success
  */
 int ld_gateway_connect(struct ld_context *context);
 

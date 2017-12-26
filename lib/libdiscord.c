@@ -48,6 +48,8 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->bot_token = malloc(strlen(info->bot_token) + 1);
     context->bot_token = strcpy(context->bot_token, info->bot_token);
 
+    lws_set_log_level(15, NULL);
+
     return context;
 }
 
@@ -300,37 +302,52 @@ int ld_service(struct ld_context *context) {
 
 int ld_gateway_connect(struct ld_context *context) {
     //lws context creation info
-    struct lws_context_creation_info *info;
+    struct lws_context_creation_info info;
     struct lws_context *lws_context;
     struct lws_client_connect_info *i;
 
-    lws_set_log_level(15, lwsl_emit_syslog);
 
-    info = malloc(sizeof(struct lws_context_creation_info));
-    memset(info, 0, sizeof(struct lws_client_connect_info));
+
+    lwsl_info("log level set to %d", 15);
+
+    memset(&info, 0, sizeof(info));
     i = calloc(0, sizeof(struct lws_client_connect_info));
 
-    info->port = CONTEXT_PORT_NO_LISTEN;
-    info->port = 443;
-    info->iface = NULL;
-    info->protocols = protocols;
-    info->extensions = exts;
-    info->options = 0 | LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-    info->ssl_cert_filepath = NULL;
-    info->ssl_private_key_filepath = NULL;
-    info->gid = -1;
-    info->uid = -1;
-    info->server_string = NULL;
+    info.port = CONTEXT_PORT_NO_LISTEN;
+    info.iface = NULL;
+    info.protocols = protocols;
+    info.extensions = exts;
+    info.options = 0 | LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    info.ssl_cert_filepath = NULL;
+    info.ssl_private_key_filepath = NULL;
+    info.gid = -1;
+    info.uid = -1;
+    info.server_string = NULL;
 
-    lws_context = lws_create_context(info);
+    lws_context = lws_create_context(&info);
     if(lws_context == NULL) {
-        ld_err(context, "lws init failed trying to connect to the gateway");
+        ld_err(context, "lws context init failed while trying to connect to the gateway");
         return -1;
     }
     i->context = lws_context;
     char gateway_url[1000];
-    sprintf(gateway_url, "%s/?v=%d&encoding=json", context->gateway_bot_url, LD_WS_API_VERSION);
-    i->address = gateway_url;
+    sprintf(gateway_url, "/?v=%d&encoding=json", LD_WS_API_VERSION);
+    i->address = context->gateway_bot_url + 6; //omit "wss://" part
+    i->port = 443;
+    i->ssl_connection = 1;
+    i->path = gateway_url;
+    i->host = context->gateway_bot_url;
+    i->origin = context->gateway_bot_url;
+    i->protocol = protocols[0].name;
+
+    ld_debug(context, "connecting to gateway");
+    struct lws *wsi;
+    wsi = lws_client_connect_via_info(i);
+    if(wsi == NULL) {
+        ld_err(context, "failed to connect to gateway (%s)", i->address);
+        return 1;
+    }
+
     return 0;
 }
 
