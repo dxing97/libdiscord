@@ -1,7 +1,6 @@
 ## Todo
-* Define all possible connection states
+* Use jansson increment/decrement function to free memory
 * Identify potential useful callback locations
-* Use curl instead of ulfius
 ## Goal
 * get a stable working example bot with minimal spaghetti
 

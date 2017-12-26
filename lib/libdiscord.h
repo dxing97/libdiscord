@@ -3,6 +3,7 @@
 
 #include <curl/curl.h>
 #include <libwebsockets.h>
+#include <jansson.h>
 #include "libdiscord_config.h"
 #include "log.h"
 
@@ -25,19 +26,20 @@ enum ld_gateway_state {
 };
 
 enum ld_gateway_opcode {
-    LD_GATEWAY_DISPATCH = 0,
-    LD_GATEWAY_HEARTBEAT = 1,
-    LD_GATEWAY_IDENTIFY = 2,
-    LD_GATEWAY_PRESENCE = 3,
-    LD_GATEWAY_VOICE_STATE = 4,
-    LD_GATEWAY_VOICE_PING = 5,
-    LD_GATEWAY_RESUME = 6,
-    LD_GATEWAY_RECONNECT = 7,
-    LD_GATEWAY_REQUEST_MEMBERS = 8,
-    LD_GATEWAY_INVALIDATE_SESSION = 9,
-    LD_GATEWAY_HELLO = 10,
-    LD_GATEWAY_HEARTBEAT_ACK = 11,
-    LD_GATEWAY_GUILD_SYNC = 12
+    LD_GATEWAY_OPCODE_UNKNOWN = -1,
+    LD_GATEWAY_OPCODE_DISPATCH = 0,
+    LD_GATEWAY_OPCODE_HEARTBEAT = 1,
+    LD_GATEWAY_OPCODE_IDENTIFY = 2,
+    LD_GATEWAY_OPCODE_PRESENCE = 3,
+    LD_GATEWAY_OPCODE_VOICE_STATE = 4,
+    LD_GATEWAY_OPCODE_VOICE_PING = 5,
+    LD_GATEWAY_OPCODE_RESUME = 6,
+    LD_GATEWAY_OPCODE_RECONNECT = 7,
+    LD_GATEWAY_OPCODE_REQUEST_MEMBERS = 8,
+    LD_GATEWAY_OPCODE_INVALIDATE_SESSION = 9,
+    LD_GATEWAY_OPCODE_HELLO = 10,
+    LD_GATEWAY_OPCODE_HEARTBEAT_ACK = 11,
+    LD_GATEWAY_OPCODE_GUILD_SYNC = 12
 };
 
 enum ld_gateway_payloadtype {
@@ -63,14 +65,19 @@ struct ld_context {
     unsigned long log_level;
     char *gateway_url;
     char *gateway_bot_url;
-    enum gateway_state gateway_state;
+    enum ld_gateway_state gateway_state;
     int shards;
     CURLM *curl_multi_handle;
     struct lws_context *lws_context;
+    struct lws *lws_wsi;
     int (*user_callback)
             (struct ld_context *context,
              enum ld_callback_reason reason,
              const char *data, int len);
+    unsigned int heartbeat_interval; //always in ms
+    int last_seq; //last sequence number received in the gateway
+    void *gateway_queue;
+    int close_code;
 };
 
 /*
@@ -167,4 +174,9 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
  * returns 1 on jansson (JSON parsing) error
  */
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
+
+/*
+ * creates a gateway payload with four json fields
+ */
+json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 #endif

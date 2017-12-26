@@ -1,7 +1,6 @@
 #include <stdlib.h>
 //#include "libwebsockets/lib/libwebsockets.h"
 
-#include <jansson.h>
 #include "libdiscord.h"
 
 
@@ -10,7 +9,7 @@ static struct lws_protocols protocols[] = {
         {
                 "DiscordBot",
                 ld_lws_callback,
-                sizeof(struct ld_context *),
+                4096,
                 4096, //rx buffer size
         },
         {
@@ -356,6 +355,7 @@ int ld_gateway_connect(struct ld_context *context) {
         ld_err(context, "failed to connect to gateway (%s)", i->address);
         return 1;
     }
+    context->lws_wsi = wsi;
     free(ads_port);
     return 0;
 }
@@ -369,7 +369,8 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
     struct ld_context *context;
     context = lws_context_user(lws_get_context(wsi)); //retrieve ld_context pointer
-
+    int i;
+    char *payload = (char *) user;
 
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
@@ -412,9 +413,31 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             ld_debug(context, "lws: client writable callback");
+            if(context->gateway_queue == NULL) {
+                ld_notice(context, "nothing in queue to send");
+                break;
+            }
+            i = sprintf(payload + LWS_PRE, "%s", (char *) context->gateway_queue);
+            if(i <= 0) {
+                ld_err(context, "couldn't write payload to buffer");
+                return -1;
+            }
+            lwsl_notice("TX: %s\n", payload + LWS_PRE);
+            i = lws_write(wsi, (unsigned char *) (payload + LWS_PRE), strlen(context->gateway_queue), LWS_WRITE_TEXT);
+            if(i < 0) {
+                lwsl_err("ERROR %d writing to socket, hanging up\n", i);
+                return -1;
+            }
+            if(i < strlen(context->gateway_queue)) {
+                lwsl_err("Partial write\n");
+                return -1;
+            }
+            free(context->gateway_queue);
+            context->gateway_queue = NULL;
             break;
         case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
-            ld_info(context, "lws: gateway initiated closure of websocket");
+            ld_info(context, "lws: gateway initiated close of websocket: close code: %u\nCONTEXT:\n%s", (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1], in+2);
+            context->close_code = (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1];
             break;
         default:
             ld_debug(context, "lws: received lws callback reason %d", reason);
@@ -445,36 +468,158 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
     return LD_GATEWAY_UNKNOWN;
 }
 
+json_t *_ld_generate_identify(struct ld_context *context) {
+    json_t *ident;
+    json_error_t error;
+    //token:string, token
+    ident = json_pack_ex(&error, 0, "{"
+                    "ss" //token
+                    "si" //large_threshold
+                    "sb" //compress
+                    "s[ii]" //shard
+                    "s{ss ss ss}" //properties {$os, $browser, $device}
+                    "s{" //presence
+                      "s{ss si}" //game {name, type, url?}
+                      "ss" //status
+                      "so?" //since
+                      "sb}}", //afk
+    "token", context->bot_token,
+    "large_threshold", 250,
+    "compress", 0, //todo: implement some kind of compression
+    "shard", 0, context->shards,
+    "properties",
+              "$os", "Linux",
+              "$browser", "libdiscord",
+              "$device", "libdiscord",
+    "presence",
+        "game",
+            "name", "for alienz",
+            "type", 3,
+            //NULL, NULL,
+        "status", "online",
+        "since", NULL,
+        "afk", 0
+    );
+    if(ident == NULL) {
+        ld_err(context, "error generating IDENTIFY payload: %s\n"
+                "source: \n%s\nin line %d column %d and position %d",
+               error.text, error.source, error.line, error.column, error.position);
+
+    }
+
+    return ident;
+}
+
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) {
     //parse as JSON
-    json_t *payload, *value;
+    json_t *payload, *value, *tmp;
+    json_t *d, *t, *s, *op;
     json_error_t error;
-    char *key;
+    const char *key;
     payload = json_loadb(in, len, 0, &error);
     if(payload == NULL) {
         ld_warn(context, "couldn't parse payload from gateway");
         return 1;
     }
-    enum ld_gateway_opcode op = LD_GATEWAY_UNKNOWN;
+    enum ld_gateway_opcode opcode = LD_GATEWAY_OPCODE_UNKNOWN;
 
     json_object_foreach(payload, key, value) {
         /*
          * gateway payloads can have up to four fields in the highest level:
          *  op, t, s, d
          * not all fields are guaranteed to exist
-         * 'd' can have many objects inside it, depending on the opcode
-         * 'op' should always be specified
+         * 'd' (data) can have many objects inside it, depending on the opcode. Variable JSON type
+         * 'op' (opcode) should always be specified, always integer type
+         * 's' (sequence number) only comes with opcode 0, always integer type
+         * 't' (type) event name, only comes with opcode 0, always string type
          */
-        switch(ld_gateway_payload_objectparser(key)) {
+        switch (ld_gateway_payload_objectparser(key)) {
             case LD_GATEWAY_OP:
-                op = (enum ld_gateway_opcode) json_integer_value(value);
+                opcode = (enum ld_gateway_opcode) json_integer_value(value);
+                ld_debug(context, "received opcode %d", opcode);
                 break;
-            case LD_GATEWAY_D:break;
-            case LD_GATEWAY_T:break;
-            case LD_GATEWAY_S:break;
-            case LD_GATEWAY_UNKNOWN:break;
+            case LD_GATEWAY_D:
+                d = value;
+                ld_debug(context, "got data field in payload");
+                break;
+            case LD_GATEWAY_T:
+//                t = value;
+                break;
+            case LD_GATEWAY_S:
+                context->last_seq = (int) json_integer_value(value);
+                break;
+            case LD_GATEWAY_UNKNOWN:
+                break;
         }
     }
 
+    //if it's a HELLO payload, save the details into the context
+    unsigned int hbi = 41250;
+    if(opcode == LD_GATEWAY_OPCODE_HELLO) {
+        //save heartbeat interval
+        if(d == NULL) {
+            ld_warn(context, "couldn't get d field in hello payload");
+        }
+        tmp = json_object_get(d, "heartbeat_interval");
+        if(tmp != NULL) {
+            if(json_integer_value(tmp) != 0) {
+                hbi = (unsigned int) json_integer_value(tmp);
+            } else {
+                ld_warn(context, "unexpected type for heartbeat interval in "
+                        "hello payload (not integer)");
+            }
+        } else {
+            ld_warn(context, "couldn't find heartbeat interval in hello payload");
+        }
+        ld_debug(context, "heartbeat interval is %d", hbi);
+        context->heartbeat_interval = hbi;
+
+        //prepare and send a IDENTIFY payload
+        op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
+        t = NULL;
+        s = NULL;
+        d = _ld_generate_identify(context);
+        payload = ld_json_create_payload(NULL, op, d, t, s);
+        context->gateway_queue = strdup(json_dumps(payload, 0));
+        json_decref(payload);
+        ld_debug(context, "prepared JSON identify payload: \n%s", (char *)context->gateway_queue);
+
+        lws_callback_on_writable(context->lws_wsi);
+    }
+
+
     return 0;
+}
+
+json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s) {
+    json_t *payload;
+    payload = json_object();
+    int ret;
+    ret = json_object_set_new(payload, "op", op);
+    if(ret != 0) {
+        ld_warn(context, "couldn't set opcode in new payload");
+        return NULL;
+    }
+    ret = json_object_set_new(payload, "d", d);
+    if(ret != 0) {
+        ld_warn(context, "couldn't set data in new payload");
+        return NULL;
+    }
+    if(t != NULL) {
+        ret = json_object_set_new(payload, "t", t);
+        if(ret != 0) {
+            ld_warn(context, "couldn't set type in new payload");
+            return NULL;
+        }
+    }
+    if(s != NULL) {
+        ret = json_object_set_new(payload, "s", s);
+        if(ret != 0) {
+            ld_warn(context, "couldn't set sequence number in new payload");
+            return NULL;
+        }
+    }
+
+
+    return payload;
 }
