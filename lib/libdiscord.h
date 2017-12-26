@@ -2,6 +2,7 @@
 #define LIBDISCORD_0_3_LIBRARY_H
 
 #include <curl/curl.h>
+#include <libwebsockets.h>
 #include "libdiscord_config.h"
 #include "log.h"
 
@@ -41,7 +42,11 @@ struct ld_context {
     enum gateway_state gateway_state;
     int shards;
     CURLM *curl_multi_handle;
-    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
+    struct lws_context *lws_context;
+    int (*user_callback)
+            (struct ld_context *context,
+             enum ld_callback_reason reason,
+             const char *data, int len);
 };
 
 /*

@@ -131,9 +131,10 @@ int main(int argc, char *argv[]) {
                 bot_exit = 1;
                 break;
             case LD_WEBSOCKET_CONNECTING:
-                ;
+                ld_service(context);
                 break;
             case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
+                bot_exit = 1;
                 break;
             case LD_GATEWAY_UNCONNECTED:
                 ret = ld_connect(context);

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 //#include "libwebsockets/lib/libwebsockets.h"
-#include <libwebsockets.h>
+
 #include <jansson.h>
 #include "libdiscord.h"
 
@@ -296,7 +296,8 @@ int ld_service(struct ld_context *context) {
      * gateway servicing
      * if sufficient time has passed, add a heartbeat payload to the queue
      */
-//    ld_debug(context, "servicing gateway payloads");
+    ld_debug(context, "servicing gateway payloads");
+    lws_service(context->lws_context, 20);
     return 0;
 }
 
@@ -306,38 +307,46 @@ int ld_gateway_connect(struct ld_context *context) {
     struct lws_context *lws_context;
     struct lws_client_connect_info *i;
 
-
-
-    lwsl_info("log level set to %d", 15);
-
     memset(&info, 0, sizeof(info));
-    i = calloc(0, sizeof(struct lws_client_connect_info));
+    i = malloc(sizeof(struct lws_client_connect_info));
+    memset(i, 0, sizeof(struct lws_client_connect_info));
 
     info.port = CONTEXT_PORT_NO_LISTEN;
     info.iface = NULL;
     info.protocols = protocols;
     info.extensions = exts;
-    info.options = 0 | LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    info.options = LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
     info.ssl_cert_filepath = NULL;
     info.ssl_private_key_filepath = NULL;
     info.gid = -1;
     info.uid = -1;
     info.server_string = NULL;
+    info.user = context;
 
     lws_context = lws_create_context(&info);
     if(lws_context == NULL) {
         ld_err(context, "lws context init failed while trying to connect to the gateway");
         return -1;
     }
+    context->lws_context = lws_context;
+
     i->context = lws_context;
-    char gateway_url[1000];
+
+    char *gateway_url;
+    gateway_url = malloc(1000);
     sprintf(gateway_url, "/?v=%d&encoding=json", LD_WS_API_VERSION);
     i->address = context->gateway_bot_url + 6; //omit "wss://" part
+
     i->port = 443;
-    i->ssl_connection = 1;
+    i->ssl_connection = 2;
     i->path = gateway_url;
-    i->host = context->gateway_bot_url;
-    i->origin = context->gateway_bot_url;
+
+    char *ads_port;
+    ads_port = malloc((strlen(i->address) + 10) * sizeof(char));
+    sprintf(ads_port, "%s:%u", i->address, 443&65535);
+    i->host = ads_port;
+    i->origin = ads_port;
+
     i->protocol = protocols[0].name;
 
     ld_debug(context, "connecting to gateway");
@@ -347,7 +356,7 @@ int ld_gateway_connect(struct ld_context *context) {
         ld_err(context, "failed to connect to gateway (%s)", i->address);
         return 1;
     }
-
+    free(ads_port);
     return 0;
 }
 
@@ -357,5 +366,77 @@ int ld_gateway_resume(struct ld_context *context) {
 
 int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len) {
+
+    struct ld_context *context;
+    context = lws_context_user(lws_get_context(wsi)); //retrieve ld_context pointer
+
+    ld_debug(context, "recieved lws callback reason %d", reason);
+    switch(reason) {
+        case LWS_CALLBACK_ESTABLISHED:break;
+        case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
+            ld_err(context, "lws: error connecting to gateway: %.*s", in, len);
+            context->gateway_state = LD_GATEWAY_DISCONNECTED;
+            return -1;
+            break;
+        case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH:
+            ld_info(context, "lws: recieved handshake from Discord gateway");
+            return 0;
+            break;
+        case LWS_CALLBACK_CLIENT_ESTABLISHED:
+            printf("established connection to gateway\n");
+            break;
+        case LWS_CALLBACK_CLOSED:break;
+        case LWS_CALLBACK_CLOSED_HTTP:break;
+        case LWS_CALLBACK_RECEIVE:break;
+        case LWS_CALLBACK_RECEIVE_PONG:break;
+        case LWS_CALLBACK_CLIENT_RECEIVE:break;
+        case LWS_CALLBACK_CLIENT_RECEIVE_PONG:break;
+        case LWS_CALLBACK_CLIENT_WRITEABLE:break;
+        case LWS_CALLBACK_SERVER_WRITEABLE:break;
+        case LWS_CALLBACK_HTTP:break;
+        case LWS_CALLBACK_HTTP_BODY:break;
+        case LWS_CALLBACK_HTTP_BODY_COMPLETION:break;
+        case LWS_CALLBACK_HTTP_FILE_COMPLETION:break;
+        case LWS_CALLBACK_HTTP_WRITEABLE:break;
+        case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:break;
+        case LWS_CALLBACK_FILTER_HTTP_CONNECTION:break;
+        case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:break;
+        case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:break;
+        case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS:break;
+        case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_SERVER_VERIFY_CERTS:break;
+        case LWS_CALLBACK_OPENSSL_PERFORM_CLIENT_CERT_VERIFICATION:break;
+        case LWS_CALLBACK_CLIENT_APPEND_HANDSHAKE_HEADER:break;
+        case LWS_CALLBACK_CONFIRM_EXTENSION_OKAY:break;
+        case LWS_CALLBACK_CLIENT_CONFIRM_EXTENSION_SUPPORTED:break;
+        case LWS_CALLBACK_PROTOCOL_INIT:break;
+        case LWS_CALLBACK_PROTOCOL_DESTROY:break;
+        case LWS_CALLBACK_WSI_CREATE:break;
+        case LWS_CALLBACK_WSI_DESTROY:
+            context->gateway_state = LD_GATEWAY_DISCONNECTED;
+            return -1;
+            break;
+        case LWS_CALLBACK_GET_THREAD_ID:
+            return 0;
+            break;
+        case LWS_CALLBACK_ADD_POLL_FD:break;
+        case LWS_CALLBACK_DEL_POLL_FD:break;
+        case LWS_CALLBACK_CHANGE_MODE_POLL_FD:break;
+        case LWS_CALLBACK_LOCK_POLL:break;
+        case LWS_CALLBACK_UNLOCK_POLL:break;
+        case LWS_CALLBACK_OPENSSL_CONTEXT_REQUIRES_PRIVATE_KEY:break;
+        case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:break;
+        case LWS_CALLBACK_WS_EXT_DEFAULTS:break;
+        case LWS_CALLBACK_CGI:break;
+        case LWS_CALLBACK_CGI_TERMINATED:break;
+        case LWS_CALLBACK_CGI_STDIN_DATA:break;
+        case LWS_CALLBACK_CGI_STDIN_COMPLETED:break;
+        case LWS_CALLBACK_ESTABLISHED_CLIENT_HTTP:break;
+        case LWS_CALLBACK_CLOSED_CLIENT_HTTP:break;
+        case LWS_CALLBACK_RECEIVE_CLIENT_HTTP:break;
+        case LWS_CALLBACK_COMPLETED_CLIENT_HTTP:break;
+        case LWS_CALLBACK_RECEIVE_CLIENT_HTTP_READ:break;
+        case LWS_CALLBACK_USER:break;
+
+    }
     return 0;
 }
