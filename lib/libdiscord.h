@@ -17,11 +17,35 @@ enum ld_callback_reason {
     LD_WEBSOCKET_CONNECTING = 2
 };
 
-enum gateway_state {
+enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0,
     LD_GATEWAY_DISCONNECTED = 1,
     LD_GATEWAY_CONNECTING = 2,
     LD_GATEWAY_CONNECTED = 3
+};
+
+enum ld_gateway_opcode {
+    LD_GATEWAY_DISPATCH = 0,
+    LD_GATEWAY_HEARTBEAT = 1,
+    LD_GATEWAY_IDENTIFY = 2,
+    LD_GATEWAY_PRESENCE = 3,
+    LD_GATEWAY_VOICE_STATE = 4,
+    LD_GATEWAY_VOICE_PING = 5,
+    LD_GATEWAY_RESUME = 6,
+    LD_GATEWAY_RECONNECT = 7,
+    LD_GATEWAY_REQUEST_MEMBERS = 8,
+    LD_GATEWAY_INVALIDATE_SESSION = 9,
+    LD_GATEWAY_HELLO = 10,
+    LD_GATEWAY_HEARTBEAT_ACK = 11,
+    LD_GATEWAY_GUILD_SYNC = 12
+};
+
+enum ld_gateway_payloadtype {
+    LD_GATEWAY_OP = 0,
+    LD_GATEWAY_D = 1,
+    LD_GATEWAY_T = 2,
+    LD_GATEWAY_S = 3,
+    LD_GATEWAY_UNKNOWN = 100
 };
 
 /*
@@ -137,5 +161,10 @@ int ld_gateway_resume(struct ld_context *context);
 int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len);
 
-
+/*
+ * takes a gateway payload and parses it
+ * returns 0 on success
+ * returns 1 on jansson (JSON parsing) error
+ */
+int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 #endif

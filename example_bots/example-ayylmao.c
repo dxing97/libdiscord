@@ -134,7 +134,8 @@ int main(int argc, char *argv[]) {
                 ld_service(context);
                 break;
             case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
-                bot_exit = 1;
+                bot_exit = 0;
+                context->gateway_state = LD_GATEWAY_UNCONNECTED;
                 break;
             case LD_GATEWAY_UNCONNECTED:
                 ret = ld_connect(context);

@@ -230,7 +230,7 @@ int ld_connect(struct ld_context *context) {
     tmp = json_object_get(object, "url");
     if(tmp == NULL) {
         ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway/bot."
-                "is the bot token valid?");
+                " is the bot token valid? are we being ratelimited?");
         return 3;
     }
 
@@ -338,7 +338,7 @@ int ld_gateway_connect(struct ld_context *context) {
     i->address = context->gateway_bot_url + 6; //omit "wss://" part
 
     i->port = 443;
-    i->ssl_connection = 2;
+    i->ssl_connection = 1;
     i->path = gateway_url;
 
     char *ads_port;
@@ -370,11 +370,10 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
     struct ld_context *context;
     context = lws_context_user(lws_get_context(wsi)); //retrieve ld_context pointer
 
-    ld_debug(context, "recieved lws callback reason %d", reason);
+
     switch(reason) {
-        case LWS_CALLBACK_ESTABLISHED:break;
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-            ld_err(context, "lws: error connecting to gateway: %.*s", in, len);
+            ld_err(context, "lws: error connecting to gateway: %.*s(%d)", in, len, len);
             context->gateway_state = LD_GATEWAY_DISCONNECTED;
             return -1;
             break;
@@ -383,34 +382,9 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             return 0;
             break;
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
-            printf("established connection to gateway\n");
+            ld_info(context, "established websocket connection to gateway");
             break;
-        case LWS_CALLBACK_CLOSED:break;
-        case LWS_CALLBACK_CLOSED_HTTP:break;
-        case LWS_CALLBACK_RECEIVE:break;
-        case LWS_CALLBACK_RECEIVE_PONG:break;
-        case LWS_CALLBACK_CLIENT_RECEIVE:break;
-        case LWS_CALLBACK_CLIENT_RECEIVE_PONG:break;
-        case LWS_CALLBACK_CLIENT_WRITEABLE:break;
-        case LWS_CALLBACK_SERVER_WRITEABLE:break;
-        case LWS_CALLBACK_HTTP:break;
-        case LWS_CALLBACK_HTTP_BODY:break;
-        case LWS_CALLBACK_HTTP_BODY_COMPLETION:break;
-        case LWS_CALLBACK_HTTP_FILE_COMPLETION:break;
-        case LWS_CALLBACK_HTTP_WRITEABLE:break;
-        case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:break;
-        case LWS_CALLBACK_FILTER_HTTP_CONNECTION:break;
-        case LWS_CALLBACK_SERVER_NEW_CLIENT_INSTANTIATED:break;
-        case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:break;
-        case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_CLIENT_VERIFY_CERTS:break;
-        case LWS_CALLBACK_OPENSSL_LOAD_EXTRA_SERVER_VERIFY_CERTS:break;
-        case LWS_CALLBACK_OPENSSL_PERFORM_CLIENT_CERT_VERIFICATION:break;
-        case LWS_CALLBACK_CLIENT_APPEND_HANDSHAKE_HEADER:break;
-        case LWS_CALLBACK_CONFIRM_EXTENSION_OKAY:break;
-        case LWS_CALLBACK_CLIENT_CONFIRM_EXTENSION_SUPPORTED:break;
-        case LWS_CALLBACK_PROTOCOL_INIT:break;
-        case LWS_CALLBACK_PROTOCOL_DESTROY:break;
-        case LWS_CALLBACK_WSI_CREATE:break;
+
         case LWS_CALLBACK_WSI_DESTROY:
             context->gateway_state = LD_GATEWAY_DISCONNECTED;
             return -1;
@@ -418,25 +392,89 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
         case LWS_CALLBACK_GET_THREAD_ID:
             return 0;
             break;
-        case LWS_CALLBACK_ADD_POLL_FD:break;
-        case LWS_CALLBACK_DEL_POLL_FD:break;
-        case LWS_CALLBACK_CHANGE_MODE_POLL_FD:break;
-        case LWS_CALLBACK_LOCK_POLL:break;
-        case LWS_CALLBACK_UNLOCK_POLL:break;
-        case LWS_CALLBACK_OPENSSL_CONTEXT_REQUIRES_PRIVATE_KEY:break;
-        case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:break;
-        case LWS_CALLBACK_WS_EXT_DEFAULTS:break;
-        case LWS_CALLBACK_CGI:break;
-        case LWS_CALLBACK_CGI_TERMINATED:break;
-        case LWS_CALLBACK_CGI_STDIN_DATA:break;
-        case LWS_CALLBACK_CGI_STDIN_COMPLETED:break;
-        case LWS_CALLBACK_ESTABLISHED_CLIENT_HTTP:break;
-        case LWS_CALLBACK_CLOSED_CLIENT_HTTP:break;
-        case LWS_CALLBACK_RECEIVE_CLIENT_HTTP:break;
-        case LWS_CALLBACK_COMPLETED_CLIENT_HTTP:break;
-        case LWS_CALLBACK_RECEIVE_CLIENT_HTTP_READ:break;
-        case LWS_CALLBACK_USER:break;
-
+        case LWS_CALLBACK_ESTABLISHED:
+            ld_info(context, "lws: established websocket connection to gateway");
+            break;
+        case LWS_CALLBACK_CLOSED:
+            ld_notice(context, "lws: websocket connection to gateway closed");
+            break;
+        case LWS_CALLBACK_CLIENT_RECEIVE: {
+            char *tmp;
+            tmp = malloc(len + 1);
+            strncpy(tmp, in, len);
+            ld_debug(context, "lws: received data from gateway: \n%s", tmp);
+            free(tmp);
+            }
+            ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
+            break;
+        case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
+            ld_debug(context, "lws: recieved pong from gateway");
+            break;
+        case LWS_CALLBACK_CLIENT_WRITEABLE:
+            ld_debug(context, "lws: client writable callback");
+            break;
+        case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
+            ld_info(context, "lws: gateway initiated closure of websocket");
+            break;
+        default:
+            ld_debug(context, "lws: received lws callback reason %d", reason);
+            break;
     }
+    return 0;
+}
+
+/*
+ *
+ */
+enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
+    //compare key to d,t,s,op and return appropriate enum
+    int cmp;
+    cmp = strcmp(key, "op");
+    if(cmp == 0)
+        return LD_GATEWAY_OP;
+    cmp = strcmp(key, "d");
+    if(cmp == 0)
+        return LD_GATEWAY_D;
+    cmp = strcmp(key, "t");
+    if(cmp == 0)
+        return LD_GATEWAY_T;
+    cmp = strcmp(key, "s");
+    if(cmp == 0)
+        return LD_GATEWAY_S;
+
+    return LD_GATEWAY_UNKNOWN;
+}
+
+int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) {
+    //parse as JSON
+    json_t *payload, *value;
+    json_error_t error;
+    char *key;
+    payload = json_loadb(in, len, 0, &error);
+    if(payload == NULL) {
+        ld_warn(context, "couldn't parse payload from gateway");
+        return 1;
+    }
+    enum ld_gateway_opcode op = LD_GATEWAY_UNKNOWN;
+
+    json_object_foreach(payload, key, value) {
+        /*
+         * gateway payloads can have up to four fields in the highest level:
+         *  op, t, s, d
+         * not all fields are guaranteed to exist
+         * 'd' can have many objects inside it, depending on the opcode
+         * 'op' should always be specified
+         */
+        switch(ld_gateway_payload_objectparser(key)) {
+            case LD_GATEWAY_OP:
+                op = (enum ld_gateway_opcode) json_integer_value(value);
+                break;
+            case LD_GATEWAY_D:break;
+            case LD_GATEWAY_T:break;
+            case LD_GATEWAY_S:break;
+            case LD_GATEWAY_UNKNOWN:break;
+        }
+    }
+
     return 0;
 }
