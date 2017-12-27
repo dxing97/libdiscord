@@ -4,6 +4,8 @@ A Discord library written in C.
 The goal(s) of this library currently is/are:
 * be easy to use
 
+Currently only tested to work with Ubuntu 17.10.
+
 ## Example Bots
 ### example-ayylmao
 Currently this is the only example bot under development. This will be the first working bot using libdiscord, and 

@@ -154,7 +154,7 @@ int ld_connect(struct ld_context *context) {
     curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway");
     curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _ld_curl_response_string);
     curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&buffer);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3) ");
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
 
     ret = curl_easy_perform(handle);
 
@@ -200,7 +200,7 @@ int ld_connect(struct ld_context *context) {
      */
     struct curl_slist *headers = NULL;
     char auth_header[1024];
-    sprintf(auth_header, "Authorization: %s", context->bot_token);
+    sprintf(auth_header, "Authorization: Bot %s", context->bot_token); //for some reason this works without the "Bot" prefix
     headers = curl_slist_append(headers, auth_header);
 
     //check the bot token's validity by trying to connect to /gateway/bot
@@ -295,6 +295,7 @@ int ld_service(struct ld_context *context, int timeout) {
 //    ld_debug(context, "servicing REST requests");
     /*
      * gateway servicing
+     * if sufficient time has passed, add a heartbeat payload to the queue
      * if sufficient time has passed, add a heartbeat payload to the queue
      */
 //    ld_debug(context, "servicing gateway payloads");
@@ -566,7 +567,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
                 ld_debug(context, "got data field in payload");
                 break;
             case LD_GATEWAY_T:
-//                t = value;
+                t = value;
                 break;
             case LD_GATEWAY_S:
                 context->last_seq = (int) json_integer_value(value);
@@ -582,7 +583,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     switch (opcode) {
         case LD_GATEWAY_OPCODE_DISPATCH:
             //check t for dispatch type
-
+            ld_gateway_dispatch_parser(context, t, d);
             break;
         case LD_GATEWAY_OPCODE_HEARTBEAT:
             //can be sent by the gateway every now and then
@@ -680,4 +681,34 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
 
 
     return payload;
+}
+
+int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data) {
+    //check type
+    ld_debug(context, "parsing dispatch type");
+    int i;
+    const char *typestr;
+    typestr = json_string_value(type);
+    if(typestr == NULL) {
+        ld_warn(context, "jansson: couldn't identify gateway dispatch type");
+        return 1;
+    }
+
+    //maybe have this be initialized at context init time or make it global
+    struct ld_dispatch dispatch_dict[] = {
+            {"READY", LD_CALLBACK_READY},
+            {"CHANNEL_CREATE", LD_CALLBACK_CHANNEL_CREATE},
+            {"CHANNEL_UPDATE", LD_CALLBACK_CHANNEL_UPDATE},
+            /* add more later */
+            {"MESSAGE_CREATE", LD_CALLBACK_MESSAGE_CREATE},
+            {NULL, LD_CALLBACK_UNKNOWN}
+    };
+    for(i = 0; dispatch_dict[i].name != NULL; i++) {
+        if(strcmp(typestr, dispatch_dict[i].name) == 0) {
+            ld_debug(context, "dispatch type is %s, callback reason is %d", dispatch_dict[i].name, dispatch_dict[i].cbk_reason);
+            context->user_callback(context, dispatch_dict[i].cbk_reason, data);
+            return 0;
+        }
+    }
+    return 0;
 }

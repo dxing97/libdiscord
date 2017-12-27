@@ -14,6 +14,7 @@
  * LD_CALLBACK_MESSAGE_CREATE: recieved dispatch of type MESSAGE_CREATE. data is of type json_t
  */
 enum ld_callback_reason {
+    LD_CALLBACK_UNKNOWN = -1, //placeholder
     LD_CALLBACK_HELLO = 0, //opcode 10
     LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_RESUMED = 2, //opcode 6
@@ -49,7 +50,6 @@ enum ld_callback_reason {
     LD_CALLBACK_VOICE_STATE_UPDATE = 32,
     LD_CALLBACK_VOICE_SERVER_UPDATE = 33,
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
-    LD_CALLBACK_USER = -1 //placeholder
 };
 
 enum ld_gateway_state {
@@ -107,7 +107,7 @@ struct ld_context {
     int (*user_callback)
             (struct ld_context *context,
              enum ld_callback_reason reason,
-             const char *data, int len);
+             json_t *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
     void *gateway_queue;
@@ -126,10 +126,13 @@ struct ld_context {
 struct ld_context_info {
     char *bot_token;
     unsigned long log_level;
-    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len);
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, json_t *data);
 };
 
-
+struct ld_dispatch {
+    const char* name;
+    enum ld_callback_reason cbk_reason;
+};
 
 
 
@@ -217,3 +220,12 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
  */
 json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 #endif
+
+/*
+ * type: json string object for dispatch type
+ * data: json object containing dispatch data
+ * generates user callbacks based on dispatch type
+ * returns 0 on success
+ * returns 1 on jansson (JSON parsing) error
+ */
+int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);

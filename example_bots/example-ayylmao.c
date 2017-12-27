@@ -10,6 +10,12 @@
 
 #include <getopt.h>
 
+size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
+    fprintf(stderr, buffer);
+    return strlen(buffer);
+}
+
+
 /*
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
@@ -27,14 +33,93 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
         //post a "lmao" to the channel
         //create a new message info struct with content "lmao"
         //add that context to the send queue
+    CURLcode res;
+    const char *key, *content, *channelid;
+    json_t *value;
+    int ayystat = 0;
+
     switch(reason){
-        case LD_CALLBACK_USER:
+        case LD_CALLBACK_UNKNOWN:
             break;
         case LD_CALLBACK_MESSAGE_CREATE:
-            //if content == ayy
-            //do curl easyhandle POST request to that channel
+            //if content == "ayy", POST "lmao" to that channel
+            ld_info(context, "received MESSAGE_CREATE dispatch");
+            //we want the "content" and "channel id" fields
+            json_object_foreach(data, key, value) {
+                if(strcmp(key, "content") == 0) {
+                    content = json_string_value(value);
+                    if(content == NULL) {
+                        ld_warn(context, "couldn't get message content");
+                        break;
+                    }
+                    if(strcmp(content, "ayy") == 0) {
+                        ayystat++;
+                    }
+
+                }
+                if(strcmp(key, "channel_id") == 0) {
+                    channelid = json_string_value(value);
+                    if(channelid == NULL) {
+                        ld_warn(context, "couldn't get channel_id");
+                        break;
+                    }
+                    ayystat++;
+
+                }
+            }
             break;
     }
+
+    ld_info(context, "ayystat = %d", ayystat);
+
+    if(ayystat != 2) {
+        return 0;
+    }
+    //generate POST message
+    json_t *body;
+    body = json_pack("{ss}", "content", "lmao");
+    if(body == NULL) {
+        ld_err(context, "couldn't create JSON object for lmao data");
+        return 0;
+    }
+    char *tmp;
+    tmp = json_dumps(body, 0);
+    if(tmp == NULL) {
+        ld_err(context, "couldn't dump JSON string for lmao data");
+        return 0;
+    }
+    char *jsonbody = strdup(tmp);
+    ld_debug(context, "body to post: %s", jsonbody);
+
+    //curl POST to that channel
+    struct curl_slist *headers = NULL;
+    char auth_header[1000];
+    sprintf(auth_header, "Authorization: Bot %s ", context->bot_token);
+    headers = curl_slist_append(headers, auth_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    char url[1000];
+    sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
+
+    CURL *handle;
+    handle = curl_easy_init();
+
+    curl_easy_setopt(handle, CURLOPT_URL, url);
+    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
+    curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
+    curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback_write);
+    res = curl_easy_perform(handle);
+    if(res != CURLE_OK) {
+        ld_err(context, "couldn't POST lmao");
+    }
+
+    free(jsonbody);
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(handle);
+
     return 0;
 }
 
@@ -105,7 +190,7 @@ int main(int argc, char *argv[]) {
 
     info->bot_token = strdup(bot_token);
     info->log_level = log_level;
-    info->user_callback = (&callback);
+    info->user_callback = callback;
     free(bot_token);
 
     //initialize context with context info
