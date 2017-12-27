@@ -1,6 +1,7 @@
 ## Todo
 * Use jansson increment/decrement function to free memory
-* Identify potential useful callback locations
+* Identify potential useful callback locations and make them availabe for user code
+* Finish ayylmao example bot
 ## Goal
 * get a stable working example bot with minimal spaghetti
 
