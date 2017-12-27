@@ -11,7 +11,7 @@
 #include <getopt.h>
 
 size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
-    fprintf(stderr, buffer);
+    fprintf(stderr, "%s", buffer);
     return strlen(buffer);
 }
 
