@@ -10,10 +10,10 @@
 
 #include <getopt.h>
 
-size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
-    fprintf(stderr, "%s", buffer);
-    return strlen(buffer);
-}
+//size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
+//    fprintf(stderr, "%s", buffer);
+//    return strlen(buffer);
+//}
 
 
 /*
@@ -110,7 +110,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
     curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
     curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback_write);
+//    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback_write);
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
         ld_err(context, "couldn't POST lmao");
