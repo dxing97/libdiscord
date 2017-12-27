@@ -9,8 +9,8 @@ static struct lws_protocols protocols[] = {
         {
                 "DiscordBot",
                 ld_lws_callback,
-                4096,
-                4096, //rx buffer size
+                8192,
+                8192, //rx buffer size
         },
         {
                 NULL, NULL, 0 //null terminator
@@ -419,7 +419,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             char *tmp;
             tmp = malloc(len + 1);
             strncpy(tmp, in, len);
-            ld_debug(context, "lws: received data from gateway: \n%s", tmp);
+            lwsl_notice("RX: %s\n", tmp);
             free(tmp);
             }
             ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
@@ -580,7 +580,10 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     //This must be handled first so we'll do it here
     unsigned int hbi = 41250;
     switch (opcode) {
-        case LD_GATEWAY_OPCODE_DISPATCH:break;
+        case LD_GATEWAY_OPCODE_DISPATCH:
+            //check t for dispatch type
+
+            break;
         case LD_GATEWAY_OPCODE_HEARTBEAT:
             //can be sent by the gateway every now and then
             break;

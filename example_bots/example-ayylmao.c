@@ -14,13 +14,12 @@
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
  *
- * ld_context is an opaque internal bot identifier.
- * ld_callback_reason is the reason for the library calling the callback.
+ * ld_context contains info about the bot. The user shouldn't have to mess with it.
+ * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  *
- * if the return value is not 0, libdiscord will interpret it as that to mean disconnect from Discord.
  */
-int callback(struct ld_context *context, enum ld_callback_reason reason, const char *data, int len) {
+int callback(struct ld_context *context, enum ld_callback_reason reason, json_t *data) {
     /*
      * depending on the reason, do stuff
      */
@@ -30,6 +29,10 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, const c
         //add that context to the send queue
     switch(reason){
         case LD_CALLBACK_USER:
+            break;
+        case LD_CALLBACK_MESSAGE_CREATE:
+            //if content == ayy
+            //do curl easyhandle POST request to that channel
             break;
     }
     return 0;
