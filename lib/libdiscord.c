@@ -49,6 +49,8 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
 
     lws_set_log_level(15, NULL);
 
+    context->heartbeat = 0;
+
     return context;
 }
 
@@ -286,7 +288,7 @@ int ld_connect(struct ld_context *context) {
     return 0;
 }
 
-int ld_service(struct ld_context *context) {
+int ld_service(struct ld_context *context, int timeout) {
     /*
      * HTTP servicing
      */
@@ -296,7 +298,21 @@ int ld_service(struct ld_context *context) {
      * if sufficient time has passed, add a heartbeat payload to the queue
      */
 //    ld_debug(context, "servicing gateway payloads");
-    lws_service(context->lws_context, 20);
+    //check heartbeat timer
+    if((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) {
+//        context->heartbeat = 1;
+        //put heartbeat payload in gateway_queue
+        json_t *hb;
+        hb = ld_json_create_payload(context, json_integer(LD_GATEWAY_OPCODE_HEARTBEAT),
+                               json_integer(context->last_seq), NULL, NULL);
+        if(context->gateway_queue == NULL) { //in case there's something already in the "queue"
+            context->gateway_queue = strdup(json_dumps(hb, 0));
+            context->last_hb = lws_now_secs();
+        }
+
+        lws_callback_on_writable(context->lws_wsi);
+    }
+    lws_service(context->lws_context, timeout); //todo: determine optimal/changing of delay for servicing
     return 0;
 }
 
@@ -441,6 +457,10 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1], in+2);
             context->close_code = (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1];
             break;
+        case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
+        case LWS_CALLBACK_LOCK_POLL:
+        case LWS_CALLBACK_UNLOCK_POLL:
+            break;
         default:
             ld_debug(context, "lws: received lws callback reason %d", reason);
             break;
@@ -523,6 +543,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
         ld_warn(context, "couldn't parse payload from gateway");
         return 1;
     }
+    d = NULL;
     enum ld_gateway_opcode opcode = LD_GATEWAY_OPCODE_UNKNOWN;
 
     json_object_foreach(payload, key, value) {
@@ -555,38 +576,67 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
         }
     }
 
-    //if it's a HELLO payload, save the details into the context
+    //if it's a HELLO payload, save the details into the context.
+    //This must be handled first so we'll do it here
     unsigned int hbi = 41250;
-    if(opcode == LD_GATEWAY_OPCODE_HELLO) {
-        //save heartbeat interval
-        if(d == NULL) {
-            ld_warn(context, "couldn't get d field in hello payload");
-        }
-        tmp = json_object_get(d, "heartbeat_interval");
-        if(tmp != NULL) {
-            if(json_integer_value(tmp) != 0) {
-                hbi = (unsigned int) json_integer_value(tmp);
-            } else {
-                ld_warn(context, "unexpected type for heartbeat interval in "
-                        "hello payload (not integer)");
+    switch (opcode) {
+        case LD_GATEWAY_OPCODE_DISPATCH:break;
+        case LD_GATEWAY_OPCODE_HEARTBEAT:
+            //can be sent by the gateway every now and then
+            break;
+        case LD_GATEWAY_OPCODE_IDENTIFY:break;
+        case LD_GATEWAY_OPCODE_PRESENCE:break;
+        case LD_GATEWAY_OPCODE_VOICE_STATE:break;
+        case LD_GATEWAY_OPCODE_VOICE_PING:break;
+        case LD_GATEWAY_OPCODE_RESUME:break;
+        case LD_GATEWAY_OPCODE_RECONNECT:break;
+        case LD_GATEWAY_OPCODE_REQUEST_MEMBERS:break;
+        case LD_GATEWAY_OPCODE_INVALIDATE_SESSION:break;
+        case LD_GATEWAY_OPCODE_HELLO:
+            //save heartbeat interval
+
+            if(d == NULL) {
+                ld_warn(context, "couldn't get d field in hello payload");
             }
-        } else {
-            ld_warn(context, "couldn't find heartbeat interval in hello payload");
-        }
-        ld_debug(context, "heartbeat interval is %d", hbi);
-        context->heartbeat_interval = hbi;
+            tmp = json_object_get(d, "heartbeat_interval");
+            if(tmp != NULL) {
+                if(json_integer_value(tmp) != 0) {
+                    hbi = (unsigned int) json_integer_value(tmp);
+                } else {
+                    ld_warn(context, "unexpected type for heartbeat interval in "
+                            "hello payload (not integer)");
+                }
+            } else {
+                ld_warn(context, "couldn't find heartbeat interval in hello payload");
+            }
+            ld_debug(context, "heartbeat interval is %d", hbi);
+            context->heartbeat_interval = hbi;
 
-        //prepare and send a IDENTIFY payload
-        op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
-        t = NULL;
-        s = NULL;
-        d = _ld_generate_identify(context);
-        payload = ld_json_create_payload(NULL, op, d, t, s);
-        context->gateway_queue = strdup(json_dumps(payload, 0));
-        json_decref(payload);
-        ld_debug(context, "prepared JSON identify payload: \n%s", (char *)context->gateway_queue);
+            //prepare IDENTIFY payload
+            op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
+            t = NULL;
+            s = NULL;
+            d = _ld_generate_identify(context);
+            payload = ld_json_create_payload(NULL, op, d, t, s);
+            context->gateway_queue = strdup(json_dumps(payload, 0));
+            json_decref(payload);
+            ld_debug(context, "prepared JSON identify payload: \n%s", (char *)context->gateway_queue);
 
-        lws_callback_on_writable(context->lws_wsi);
+            lws_callback_on_writable(context->lws_wsi); //send identify payload
+
+            //set heartbeat timer here
+            context->last_hb = lws_now_secs(); //seconds since 1970-1-1
+            break;
+        case LD_GATEWAY_OPCODE_HEARTBEAT_ACK:
+            //we should ack HBs sent by the gateway
+            break;
+        case LD_GATEWAY_OPCODE_GUILD_SYNC:
+            //only seen on user accounts
+            break;
+        case LD_GATEWAY_OPCODE_UNKNOWN:
+        default:
+            ld_warn(context, "received payload with unknown opcode");
+            break;
     }
 
 

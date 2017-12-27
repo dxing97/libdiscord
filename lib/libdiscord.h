@@ -13,9 +13,9 @@
  * LD_WEBSOCKET_CONNECTING: We're connecting to the gateway (why do we need this one?)
  */
 enum ld_callback_reason {
-    LD_WEBSOCKET_RECEIVE = 0,
-    LD_WEBSOCKET_SENDABLE = 1,
-    LD_WEBSOCKET_CONNECTING = 2
+
+
+    LD_CALLBACK_USER = -1 //placeholder
 };
 
 enum ld_gateway_state {
@@ -79,6 +79,7 @@ struct ld_context {
     void *gateway_queue;
     int close_code;
     int heartbeat; //0 for don't send, 1 for send
+    unsigned long last_hb;
 };
 
 /*
@@ -144,8 +145,9 @@ int ld_connect(struct ld_context *context);
 
 /*
  * services pending HTTP and websocket requests.
+ * checks if the heartbeat timer is up
  */
-int ld_service(struct ld_context *context);
+int ld_service(struct ld_context *context, int timeout);
 
 /*
  * starts a fresh gateway connection
@@ -153,7 +155,7 @@ int ld_service(struct ld_context *context);
  *  start a fresh websocket connection
  *  parse HELLO payload
  *  create & send IDENTIFY payload
- *  start heartbeat mechanism
+ *  start timekeeping for heartbeats
  * returns 0 on success
  */
 int ld_gateway_connect(struct ld_context *context);

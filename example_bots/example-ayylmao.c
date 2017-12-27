@@ -29,14 +29,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, const c
         //create a new message info struct with content "lmao"
         //add that context to the send queue
     switch(reason){
-        case LD_WEBSOCKET_RECEIVE:
-            ld_debug(context, "Recieved data from gateway.");
-            break;
-        case LD_WEBSOCKET_SENDABLE:
-            ld_debug(context, "We can now send data to the gateway");
-            break;
-        case LD_WEBSOCKET_CONNECTING:
-            ld_debug(context, "We are now connecting to the gateway");
+        case LD_CALLBACK_USER:
             break;
     }
     return 0;
@@ -130,8 +123,8 @@ int main(int argc, char *argv[]) {
             case LD_GATEWAY_CONNECTED:
                 bot_exit = 0;
                 break;
-            case LD_WEBSOCKET_CONNECTING:
-                ld_service(context);
+            case LD_GATEWAY_CONNECTING:
+                ld_service(context, 20);
                 break;
             case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
                 bot_exit = 1; //if we get disconnected let's quit for now
@@ -147,8 +140,8 @@ int main(int argc, char *argv[]) {
             default:
                 break;
         }
-
-        ld_service(context);
+        ld_service(context, 20);
+//        sleep(1);
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnected from discord");

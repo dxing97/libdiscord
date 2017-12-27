@@ -11,6 +11,11 @@ Connections to Discord can't be characterized simply as "connected" and "disconn
 A bot that's not connected to the gateway can still send API requests over the REST API.
 
 ### The gateway
+Heartbeats are expected approximately every 42 seconds and can be delayed by up to 10 seconds
+as of December 2017. This should not be treated as a hard rule. Since we have a leeway of 10 seconds,
+using seconds as our precision for keeping track of heartbeat intervals shouldn't pose a problem in the near future.
+
+States:
 * Connected
   * The bot is connected to Discord and everything is normal.
 * Unconnected
@@ -19,6 +24,8 @@ A bot that's not connected to the gateway can still send API requests over the R
   * The bot has been disconected either by Discord or by the bot. Depending on the disconnection reason, reconnection
   can be made using certain 
 * Connecting
+  * Complicated
+
 
 ## Gateway Initialization
 Steps required to connect to discord:
@@ -36,4 +43,3 @@ Steps required to connect to discord:
         * Recieve HELLO
         * Start heartbeating
     
-        
