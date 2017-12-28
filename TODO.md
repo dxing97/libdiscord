@@ -1,11 +1,26 @@
+## Goals
+* Get a stable working minimal example bot (done) with minimal spaghetti (almost there)
+* Get 100% coverage of all non-voice API functions
+* Make a bot that can turn my SSH lights on and off
+
 ## Todo
-* Use jansson increment/decrement function to free memory
-* Identify potential useful callback locations and make them availabe for user code
-* Finish ayylmao example bot
-## Goal
-* get a stable working example bot with minimal spaghetti
+* Choose a licence
+* Graceful shutdown of the bot
+* Implement queue functionality for gateway payloads
+* Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
+* Add nonblocking REST implementation using curl-multi
+* See if jansson increment/decrement needs to be used
+* Implement more user callbacks
+* CMake OS detection for IDENTIFY payload
+* Add more robust options for logging (libyder?)
+* Better documentation (comments in the source code is NOT good documentation)
+
+## Planned
+* latency bot
 
 ## Far Future
 * Rich presence integration for IoT
 * A command line application for scripting
 * Support for voice channels (UDP connections)
+* Support for file-based bot configuration allowing in-flight changing of bot behavior
+* Example bot with image generation

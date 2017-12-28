@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 LWS_VERSION=2.4.1
-ULFIUS_VERSION=2.2
+#ULFIUS_VERSION=2.2
 ## libdiscord dependencies installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
-# todo: remove ulfius, add curl
 
 #future plans:
 # check what version is required for each package
@@ -30,8 +29,8 @@ sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-d
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
                  zlib1g-dev libssl-dev libcurl4-gnutls-dev
-sudo apt install libulfius-dev
-sudo apt install libwebsockets-dev
+#sudo apt install libulfius-dev
+#sudo apt install libwebsockets-dev
 
 ##libulfius is not included with Debian 9.3 at the present, and should be compiled.
 #echo "Installing libulfius"
@@ -46,24 +45,25 @@ sudo apt install libwebsockets-dev
 #        cd ../..
 #    make && sudo checkinstall
 #cd ..
-#
-#git clone https://github.com/warmcat/libwebsockets
-#cd libwebsockets
-#    git checkout v${LWS_VERSION}
-#    mkdir build && cd build
-#        cmake .. -DCMAKE_BUILD_TYPE=Debug
-#        make
-#        sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
-#        sudo ldconfig
-#    cd ..
-#cd ..
-#
-##build libdiscord examples
-#git clone https://github.com/dxing97/libdiscord.git
-#cd libdiscord
-#    mkdir build && cd build
-#        cmake ..
-#        make
+
+git clone https://github.com/warmcat/libwebsockets
+cd libwebsockets
+    git checkout v${LWS_VERSION}
+    mkdir build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Debug
+        make
+        sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
+        sudo ldconfig
+    cd ..
+cd ..
+
+
+## build libdiscord and example bots
+git clone https://github.com/dxing97/libdiscord.git
+cd libdiscord
+    mkdir build && cd build
+        cmake ..
+        make
 #    cd ..
 #cd ..
 

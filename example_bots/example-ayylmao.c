@@ -10,6 +10,8 @@
 
 #include <getopt.h>
 
+static int bot_exit = 0;
+
 //size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
 //    fprintf(stderr, "%s", buffer);
 //    return strlen(buffer);
@@ -135,7 +137,7 @@ int main(int argc, char *argv[]) {
      * if an "ayy" is detected, POST a message to the same channel with content "lmao"
      * continue ad infinitum (or until the bot is killed)
      */
-    int c, bot_exit = 0; //bot_exit: 0 for don't exit, 1 for exit
+    int c; //bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
     unsigned long log_level = 31;
     if(argc == 1) {
@@ -207,6 +209,8 @@ int main(int argc, char *argv[]) {
     //while the bot is still alive
     while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
+        //maybe the user shouldn't worry about whether or not we've connected here in the user code
+        //move state stuff to reasons in the user callback
         switch (ld_gateway_connection_state(context)) {
             case LD_GATEWAY_CONNECTED:
                 bot_exit = 0;
@@ -214,9 +218,8 @@ int main(int argc, char *argv[]) {
             case LD_GATEWAY_CONNECTING:
                 ld_service(context, 20);
                 break;
-            case LD_GATEWAY_DISCONNECTED: //todo: should the user care if the bot got disconnected from the gateway?
+            case LD_GATEWAY_DISCONNECTED:
                 bot_exit = 1; //if we get disconnected let's quit for now
-//                context->gateway_state = LD_GATEWAY_UNCONNECTED;
                 break;
             case LD_GATEWAY_UNCONNECTED:
                 ret = ld_connect(context);

@@ -8,10 +8,8 @@
 #include "log.h"
 
 /*
- * LD_WEBSOCKET_RECEIVE: We've received data from the gateway
- * LD_WEBSOCKET_SENDABLE: We can now send data to the gateway
- * LD_WEBSOCKET_CONNECTING: We're connecting to the gateway (why do we need this one?)
- * LD_CALLBACK_MESSAGE_CREATE: recieved dispatch of type MESSAGE_CREATE. data is of type json_t
+ * right now there are only callbacks for a small number of gateway events
+ * More will be added eventually
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
@@ -52,6 +50,12 @@ enum ld_callback_reason {
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
 };
 
+/*
+ * connected: everything's normal
+ * connecting: still working out the details
+ * unconnected: we're not connected and we can start a fresh connection
+ * disconnected:
+ */
 enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0,
     LD_GATEWAY_DISCONNECTED = 1,
@@ -203,7 +207,8 @@ int ld_gateway_connect(struct ld_context *context);
 int ld_gateway_resume(struct ld_context *context);
 
 /*
- * callback used for lws
+ * lws user callback
+ * picks out interesting callback reasons (like recieve and writeable) and does stuff
  */
 int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len);
@@ -216,7 +221,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 
 /*
- * creates a gateway payload with four json fields
+ * creates a gateway payload with four json objects
  */
 json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 #endif
@@ -224,7 +229,7 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
 /*
  * type: json string object for dispatch type
  * data: json object containing dispatch data
- * generates user callbacks based on dispatch type
+ * takes dispatch data from the gateway and generates user callbacks based on dispatch type
  * returns 0 on success
  * returns 1 on jansson (JSON parsing) error
  */

@@ -15,7 +15,7 @@ set(LD_WS_API_VERSION 6)
 set(CMAKE_C_STANDARD 99)
 
 set(PACKAGE libdiscord)
-set(CPACK_PACKAGE_NAME )
+set(CPACK_PACKAGE_NAME libdiscord)
 
 include_directories(example_bots lib cmake)
 

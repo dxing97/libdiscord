@@ -8,7 +8,8 @@ Connections to Discord can't be characterized simply as "connected" and "disconn
 * the websocket API
 * the voice connection (not implemented yet)
 
-A bot that's not connected to the gateway can still send API requests over the REST API.
+A bot that's not connected to the gateway can still send API requests over the REST API as long as the bot
+token has connected to and identified on the gateway at least once
 
 ### The gateway
 Heartbeats are expected approximately every 42 seconds and can be delayed by up to 10 seconds
@@ -19,12 +20,11 @@ States:
 * Connected
   * The bot is connected to Discord and everything is normal.
 * Unconnected
-  * The bot has never connected to Discord before, or we were disconnected and told to start a fresh session.
+  * The bot has never connected to Discord before, or we were disconnected and should start a fresh session.
 * Disconnected
-  * The bot has been disconected either by Discord or by the bot. Depending on the disconnection reason, reconnection
-  can be made using certain 
+  * The bot has been disconected either by Discord or by the bot. The way we reconnect will depend on how we were disconnected.
 * Connecting
-  * Complicated
+  * multi-step process
 
 
 ## Gateway Initialization
