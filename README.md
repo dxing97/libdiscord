@@ -1,7 +1,7 @@
 ### libdiscord
 A Discord library written in C.
 
-The goal(s) of this library currently is/are:
+The goal of this library currently is:
 * be easy to use
 
 ## Building
@@ -11,11 +11,13 @@ See `install.sh` for the commands you will have to run
 
 Dependencies: 
 * libwebsockets (tested to work with v2.4.1, compiled from source)
-* jansson-dev
+* jansson-dev (used package bundled with ubuntu 17.10)
+* libcurl (used package bundled with ubuntu 17.10)
 
 ## Example Bots
 ### example-ayylmao
-Currently this is the only example bot under development. This will be the first working bot using libdiscord, and 
+Currently this is the only example bot under development. 
+This is the first working bot using libdiscord, and 
 is currently under development.
 
 Responds to every "ayy" with "lmao" in the same channel the "ayy" was sent in.
