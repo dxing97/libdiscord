@@ -14,9 +14,18 @@ set(LD_WS_API_VERSION 6)
 
 set(CMAKE_C_STANDARD 99)
 
+IF (CYGWIN)
+    SET (CMAKE_FIND_LIBRARY_PREFIXES "")
+    SET (CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".LIB" ".dll" ".DLL")
+ELSE()
+    SET (CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    SET (CMAKE_FIND_LIBRARY_SUFFIXES ".so" ".a")
+ENDIF (CYGWIN)
+
 set(PACKAGE libdiscord)
 set(CPACK_PACKAGE_NAME libdiscord)
 
+include_directories(/usr/local/lib /usr/local/include)
 include_directories(example_bots lib cmake)
 
 configure_file(
@@ -28,7 +37,7 @@ include_directories("${PROJECT_BINARY_DIR}")
 # If libwebsockets was compiled and installed in Cygwin:
 include_directories(/usr/local/lib/include)
 
-set(LD_LIBS websockets ulfius yder orcania jansson config curl)
+set(LD_LIBS websockets jansson curl)
 
 set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h)
 add_library(libdiscord SHARED ${LD_SOURCE})
