@@ -112,7 +112,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
     curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
     curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
-//    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, curl_callback_write);
+
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
         ld_err(context, "couldn't POST lmao");

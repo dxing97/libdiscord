@@ -12,7 +12,7 @@
 * See if jansson increment/decrement needs to be used
 * Implement more user callbacks
 * CMake OS detection for IDENTIFY payload
-* Add more robust options for logging (libyder?)
+* Potentially add more robust options for logging (libyder?)
 * Better documentation (comments in the source code is NOT good documentation)
 
 ## Planned
@@ -24,3 +24,4 @@
 * Support for voice channels (UDP connections)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation
+* Example tool for a basic Discord CLI client.
