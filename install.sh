@@ -46,6 +46,7 @@ sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-d
 #    make && sudo checkinstall
 #cd ..
 
+# need to compile for v2.4.1
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v${LWS_VERSION}

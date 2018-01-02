@@ -5,17 +5,18 @@
 
 ## Todo
 * Choose a licence
-* Graceful shutdown of the bot
+* Graceful shutdown of the bot using signals
 * Implement queue functionality for gateway payloads
+* Handle gateway-side disconnections elegantly
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi
+
+## Planned
 * See if jansson increment/decrement needs to be used
 * Implement more user callbacks
 * CMake OS detection for IDENTIFY payload
 * Potentially add more robust options for logging (libyder?)
 * Better documentation (comments in the source code is NOT good documentation)
-
-## Planned
 * latency bot
 
 ## Far Future

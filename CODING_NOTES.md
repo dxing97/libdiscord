@@ -1,12 +1,13 @@
 ## URLs
-All URLs defined by libdiscord are set at compile time and can be changed in the CMake build file.
-URLs will begin with ``https://`` or ``wss://`` and will not end with ``/``.
+All URLs defined by libdiscord are set at compile time and (eventually) can be changed in the CMake build file.
+URLs will begin with ``https://`` or ``wss://`` and will not end with ``/``. Some libwebsockets context options require 
+the `scheme://` part to be omitted.
 
 ## Connection states
 Connections to Discord can't be characterized simply as "connected" and "disconnected". Connections include:
 * the idempotent REST API
 * the websocket API
-* the voice connection (not implemented yet)
+* the UDP voice connection (not implemented yet)
 
 A bot that's not connected to the gateway can still send API requests over the REST API as long as the bot
 token has connected to and identified on the gateway at least once
@@ -21,9 +22,9 @@ States:
   * The bot is connected to Discord and everything is normal.
 * Unconnected
   * The bot has never connected to Discord before, or we were disconnected and should start a fresh session.
-* Disconnected
+* Disconnected (complicated)
   * The bot has been disconected either by Discord or by the bot. The way we reconnect will depend on how we were disconnected.
-* Connecting
+* Connecting (complicated)
   * multi-step process
 
 

@@ -13,6 +13,8 @@ Dependencies:
 * libwebsockets (tested to work with v2.4.1, compiled from source)
 * jansson-dev (used package bundled with ubuntu 17.10)
 * libcurl (used package bundled with ubuntu 17.10)
+* getopt (required for ayylmao example bot, should be included with your *nix distribution)
+
 
 ## Example Bots
 ### example-ayylmao

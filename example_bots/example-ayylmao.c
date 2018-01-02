@@ -12,12 +12,6 @@
 
 static int bot_exit = 0;
 
-//size_t curl_callback_write(char *buffer, size_t size, size_t nitems, void* usrptr) {
-//    fprintf(stderr, "%s", buffer);
-//    return strlen(buffer);
-//}
-
-
 /*
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
