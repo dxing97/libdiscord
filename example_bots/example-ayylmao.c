@@ -68,7 +68,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
 
     ld_info(context, "ayystat = %d", ayystat);
 
-    if(ayystat != 2) {
+    if(ayystat != 2) { //did not get channel ID and ayy content
         return 0;
     }
     //generate POST message

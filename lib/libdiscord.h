@@ -10,6 +10,7 @@
 /*
  * right now there are only callbacks for a small number of gateway events
  * More will be added eventually
+ * todo: add callback for recieved playloads
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
@@ -208,7 +209,8 @@ int ld_gateway_resume(struct ld_context *context);
 
 /*
  * lws user callback
- * picks out interesting callback reasons (like recieve and writeable) and does stuff
+ * picks out interesting callback reasons (like receive and writeable) and does stuff
+ * responsible for connecting/disconnecting from the gateway, receiving payloads, and sending payloads
  */
 int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len);
@@ -221,7 +223,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 
 /*
- * creates a gateway payload with four json objects
+ * takes four json_t objects and creates a payload
  */
 json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 #endif

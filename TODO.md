@@ -1,6 +1,6 @@
 ## Goals
 * Get a stable working minimal example bot (done) with minimal spaghetti (almost there)
-* Get 100% coverage of all non-voice API functions
+* Get 100% coverage of all non-voice API functions (v0.3 point release)
 * Make a bot that can turn my SSH lights on and off
 
 ## Todo
