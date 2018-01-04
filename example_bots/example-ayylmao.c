@@ -9,8 +9,13 @@
  */
 
 #include <getopt.h>
+#include <signal.h>
 
 static int bot_exit = 0;
+
+void int_handler(int i){
+    bot_exit = 1;
+}
 
 /*
  * main way of user interaction with libdiscord
@@ -180,6 +185,8 @@ int main(int argc, char *argv[]) {
     printf("Bot token: %s\n", bot_token);
     printf("Initializing libdiscord with log level %lu\n", log_level);
 
+    signal(SIGINT, int_handler);
+
     //define context info, including bot token
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
@@ -207,7 +214,6 @@ int main(int argc, char *argv[]) {
         //move state stuff to reasons in the user callback
         switch (ld_gateway_connection_state(context)) {
             case LD_GATEWAY_CONNECTED:
-                bot_exit = 0;
                 break;
             case LD_GATEWAY_CONNECTING:
                 ld_service(context, 20);
@@ -229,7 +235,7 @@ int main(int argc, char *argv[]) {
 //        sleep(1);
     }
     //disconnect from discord gracefully
-    ld_info(context, "disconnected from discord");
+    ld_info(context, "disconnecting from discord");
     //destroy the context
     ld_destroy_context(context);
     return 0;

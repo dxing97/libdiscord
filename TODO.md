@@ -4,7 +4,6 @@
 * Make a bot that can turn my SSH lights on and off
 
 ## Todo
-* Choose a licence
 * Graceful shutdown of the bot using signals
 * Implement queue functionality for gateway payloads
 * Handle gateway-side disconnections elegantly

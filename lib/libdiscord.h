@@ -226,7 +226,6 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
  * takes four json_t objects and creates a payload
  */
 json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
-#endif
 
 /*
  * type: json string object for dispatch type
@@ -236,3 +235,9 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
  * returns 1 on jansson (JSON parsing) error
  */
 int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
+
+/*
+ * disconnects from the gateway
+ */
+int ld_gateway_disconnect(struct ld_context *context);
+#endif

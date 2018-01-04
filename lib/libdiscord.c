@@ -57,6 +57,7 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
 void ld_destroy_context(struct ld_context *context) {
     curl_multi_cleanup(context->curl_multi_handle);
     curl_global_cleanup();
+    lws_context_destroy(context->lws_context);
     free(context);
 }
 
