@@ -90,6 +90,16 @@ enum ld_gateway_payloadtype {
 };
 
 /*
+ * gateway ringbuffer elements
+ * contains payload to be send and metadata
+ */
+struct ld_gateway_payload {
+    char *payload;
+    size_t len; //size of payload
+
+};
+
+/*
  * context for each bot
  * one context can have multiple gateway (websocket) connections to discord
  *  sharding, voice connections
@@ -119,6 +129,7 @@ struct ld_context {
     int close_code;
     int heartbeat; //0 for don't send, 1 for send
     unsigned long last_hb;
+    struct lws_ring *gateway_ring;
 };
 
 /*
@@ -132,6 +143,7 @@ struct ld_context_info {
     char *bot_token;
     unsigned long log_level;
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, json_t *data);
+    size_t gateway_ringbuffer_size;
 };
 
 struct ld_dispatch {

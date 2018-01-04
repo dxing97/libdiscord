@@ -42,14 +42,21 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->curl_multi_handle=curl_multi_init();
 
     if(info->bot_token == NULL) {
+        ld_err(context, "bot token is null");
         return NULL;
     }
     context->bot_token = malloc(strlen(info->bot_token) + 1);
     context->bot_token = strcpy(context->bot_token, info->bot_token);
 
-    lws_set_log_level(15, NULL);
+    lws_set_log_level(31, NULL);
 
-    context->heartbeat = 0;
+    context->gateway_ring = lws_ring_create(sizeof(struct ld_gateway_payload), info->gateway_ringbuffer_size, NULL); //todo: make max number of ring elements configurable
+    if(context->gateway_ring == NULL) {
+        ld_err(context, "couldn't init gateway ringbuffer");
+        return NULL;
+    }
+
+    context->heartbeat = 0; //todo: do we still need this?
 
     return context;
 }

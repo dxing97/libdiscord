@@ -17,6 +17,8 @@ Heartbeats are expected approximately every 42 seconds and can be delayed by up 
 as of December 2017. This should not be treated as a hard rule. Since we have a leeway of 10 seconds,
 using seconds as our precision for keeping track of heartbeat intervals shouldn't pose a problem in the near future.
 
+User initiated disconnection from the gateway should be taken to mean closure of the bot (for now)
+
 States:
 * Connected
   * The bot is connected to Discord and everything is normal.

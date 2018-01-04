@@ -4,7 +4,7 @@
 * Make a bot that can turn my SSH lights on and off
 
 ## Todo
-* Graceful shutdown of the bot using signals
+* Use nonzero return value from user callback to mean disconnect from gateway(??)
 * Implement queue functionality for gateway payloads
 * Handle gateway-side disconnections elegantly
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
