@@ -5,7 +5,7 @@
 
 ## Todo
 * Use nonzero return value from user callback to mean disconnect from gateway(??)
-* Implement queue functionality for gateway payloads
+* Implement ring buffer for gateway payloads
 * Handle gateway-side disconnections elegantly
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi
