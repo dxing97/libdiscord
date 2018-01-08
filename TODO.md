@@ -8,6 +8,7 @@
 * Rethink connection states
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi
+* Implement ratelimiting
 
 ## Planned
 * make example-ayylmao not respond to other bots
