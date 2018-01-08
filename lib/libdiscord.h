@@ -10,7 +10,6 @@
 /*
  * right now there are only callbacks for a small number of gateway events
  * More will be added eventually
- * todo: add callback for recieved playloads
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder

@@ -149,7 +149,6 @@ int _ld_get_gateway(struct ld_context *context) {
     /*
      * check to see if we can even connect to Discord's servers
      * examine /gateway and see if we get a valid response
-     * todo: if there's already a cached gateway URL then we should skip this part
      */
     int ret;
     CURL *handle;
@@ -308,18 +307,18 @@ int ld_connect(struct ld_context *context) {
     /*
      * initiates a connection to Discord, mainly though the gateway.
      * First it GETs th3e gateway URL from /gateway, mainly done to make sure we even have access to the internet.
-     * todo: It will only do this if there isn't one already cached
      * Then it uses the bot token to GET shard information from /gateway/bot and to make sure the bot token
      * is valid.
      * Then it checks the context state and determines what should be done next.
      * If we're unconnected, it'll call ld_connect
      * If we're disconnected, it'll call gateway_resume
      */
-
-    ret = _ld_get_gateway(context);
-    if(ret != 0) {
-        ld_err(context, "couldn't get gateway URL from /gateway");
-        return ret;
+    if(context->gateway_url == NULL) {
+        ret = _ld_get_gateway(context);
+        if(ret != 0) {
+            ld_err(context, "couldn't get gateway URL from /gateway");
+            return ret;
+        }
     }
 
     ret = _ld_get_gateway_bot(context);
@@ -337,7 +336,6 @@ int ld_connect(struct ld_context *context) {
             }
             break;
         case LD_GATEWAY_DISCONNECTED:
-            //todo: add disconnection reasons and handle them
             context->gateway_state = LD_GATEWAY_CONNECTING;
             ld_gateway_resume(context);
             break;
@@ -392,7 +390,7 @@ int ld_service(struct ld_context *context, int timeout) {
     if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) != 0)
         lws_callback_on_writable(context->lws_wsi);
 service:
-    lws_service(context->lws_context, timeout); //todo: determine optimal/changing of delay for servicing
+    lws_service(context->lws_context, timeout);
     return 0;
 }
 
@@ -599,7 +597,7 @@ json_t *_ld_generate_identify(struct ld_context *context) {
                       "sb}}", //afk
     "token", context->bot_token,
     "large_threshold", 250,
-    "compress", 0, //todo: implement some kind of compression
+    "compress", 0,
     "shard", 0, context->shards,
     "properties",
               "$os", "Linux",

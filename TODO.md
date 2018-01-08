@@ -5,11 +5,13 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Handle gateway-side disconnections elegantly
+* Rethink connection states
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi
 
 ## Planned
+* make example-ayylmao not respond to other bots
+* zlib compression support in gateway payloads
 * See if jansson increment/decrement needs to be used
 * Implement more user callbacks
 * CMake OS detection for IDENTIFY payload
