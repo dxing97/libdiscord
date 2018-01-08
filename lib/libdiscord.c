@@ -59,8 +59,6 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
         return NULL;
     }
 
-    context->heartbeat = 0; //todo: do we still need this?
-
     return context;
 }
 
@@ -141,25 +139,19 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
     return recieved_size;
 }
 
-
-
-int ld_connect(struct ld_context *context) {
-    int ret;
-    /*
-     * initiates a connection to Discord, mainly though the gateway.
-     * First it GETs th3e gateway URL from /gateway, mainly done to make sure we even have access to the internet.
-     * todo: It will only do this if there isn't one already cached
-     * Then it uses the bot token to GET shard information from /gateway/bot and to make sure the bot token
-     * is valid.
-     * Then it checks the context state and determines what should be done next.
-     * If we're unconnected, it'll call ld_connect
-     * If we're disconnected, it'll call gateway_resume
-     */
+/*
+ * internal GET /gateway function
+ * returns 0 on success
+ * returns 2 on curl error
+ * returns 3 on jansson error
+ */
+int _ld_get_gateway(struct ld_context *context) {
     /*
      * check to see if we can even connect to Discord's servers
      * examine /gateway and see if we get a valid response
      * todo: if there's already a cached gateway URL then we should skip this part
      */
+    int ret;
     CURL *handle;
     struct _ld_buffer buffer;
 
@@ -179,6 +171,8 @@ int ld_connect(struct ld_context *context) {
     curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
 
     ret = curl_easy_perform(handle);
+
+    curl_easy_cleanup(handle);
 
     if(ret != CURLE_OK) {
         ld_err(context, "curl: couldn't get gateway url from /gateway");
@@ -215,12 +209,33 @@ int ld_connect(struct ld_context *context) {
 
     free(tmp);
     free(object);
+    return 0;
+}
 
+/*
+ * internal /gateway/bot function
+ * returns 0 on success
+ * returns 2 on curl error
+ * returns 3 on jansson error
+ */
+int _ld_get_gateway_bot(struct ld_context *context){
     /*
      * we got a valid response from the REST API, which should mean
      *  Discord is connectable at basic level
      *  Now we should check the bot token validity using /gateway/bot
      */
+    int ret;
+    struct _ld_buffer buffer;
+    buffer.string = malloc(1);
+    buffer.size = 0;
+    buffer.context = context;
+
+    json_t *object, *tmp;
+    json_error_t error;
+
+    CURL *handle;
+    handle = curl_easy_init();
+
     struct curl_slist *headers = NULL;
     char auth_header[1024];
     sprintf(auth_header, "Authorization: Bot %s", context->bot_token); //for some reason this works without the "Bot" prefix
@@ -228,6 +243,9 @@ int ld_connect(struct ld_context *context) {
 
     //check the bot token's validity by trying to connect to /gateway/bot
 
+    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _ld_curl_response_string);
+    curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&buffer);
+    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway/bot");
 
@@ -282,7 +300,33 @@ int ld_connect(struct ld_context *context) {
 
     context->shards = (int) json_integer_value(tmp);
     ld_info(context, "shards: %d", context->shards);
+    return 0;
+}
 
+int ld_connect(struct ld_context *context) {
+    int ret;
+    /*
+     * initiates a connection to Discord, mainly though the gateway.
+     * First it GETs th3e gateway URL from /gateway, mainly done to make sure we even have access to the internet.
+     * todo: It will only do this if there isn't one already cached
+     * Then it uses the bot token to GET shard information from /gateway/bot and to make sure the bot token
+     * is valid.
+     * Then it checks the context state and determines what should be done next.
+     * If we're unconnected, it'll call ld_connect
+     * If we're disconnected, it'll call gateway_resume
+     */
+
+    ret = _ld_get_gateway(context);
+    if(ret != 0) {
+        ld_err(context, "couldn't get gateway URL from /gateway");
+        return ret;
+    }
+
+    ret = _ld_get_gateway_bot(context);
+    if(ret != 0) {
+        ld_err(context, "couldn't get gateway URL from /gateway/bot");
+        return ret;
+    }
     switch(context->gateway_state) {
         case LD_GATEWAY_UNCONNECTED:
             //we were never connected, so we should start a fresh connection
@@ -308,7 +352,6 @@ int ld_connect(struct ld_context *context) {
             //???
             break;
     }
-    //we're already connected...
     return 0;
 }
 
@@ -458,10 +501,10 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             char *tmp;
             tmp = malloc(len + 1);
             strncpy(tmp, in, len);
-            lwsl_notice("RX: %s\n", tmp);
+            lwsl_notice("RX: %s", tmp);
             free(tmp);
             }
-            ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
+            return ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
             break;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
             ld_debug(context, "lws: recieved pong from gateway");
@@ -631,7 +674,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     switch (opcode) {
         case LD_GATEWAY_OPCODE_DISPATCH:
             //check t for dispatch type
-            ld_gateway_dispatch_parser(context, t, d);
+            return ld_gateway_dispatch_parser(context, t, d);
             break;
         case LD_GATEWAY_OPCODE_HEARTBEAT:
             //can be sent by the gateway every now and then
@@ -753,15 +796,42 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
             {"READY", LD_CALLBACK_READY},
             {"CHANNEL_CREATE", LD_CALLBACK_CHANNEL_CREATE},
             {"CHANNEL_UPDATE", LD_CALLBACK_CHANNEL_UPDATE},
-            /* add more later */
+            {"CHANNEL_DELETE", LD_CALLBACK_CHANNEL_DELETE},
+            {"CHANNEL_PINS_UPDATE", LD_CALLBACK_CHANNEL_PINS_UPDATE},
+            {"GUILD_CREATE", LD_CALLBACK_GUILD_CREATE},
+            {"GUILD_UPDATE", LD_CALLBACK_GUILD_UPDATE},
+            {"GUILD_DELETE", LD_CALLBACK_GUILD_DELETE},
+            {"GUILD_BAN_ADD", LD_CALLBACK_GUILD_BAN_ADD},
+            {"GUILD_BAN_REMOVE", LD_CALLBACK_GUILD_BAN_REMOVE},
+            {"GUILD_EMOJIS_UPDATE", LD_CALLBACK_GUILD_EMOJIS_UPDATE},
+            {"GUILD_INTEGRATIONS_UPDATE", LD_CALLBACK_GUILD_INTEGRATIONS_UPDATE},
+            {"GUILD_MEMBER_ADD", LD_CALLBACK_GUILD_MEMBER_ADD},
+            {"GUILD_MEMBER_REMOVE", LD_CALLBACK_GUILD_MEMBER_REMOVE},
+            {"GUILD_MEMBER_UPDATE", LD_CALLBACK_GUILD_MEMBER_UPDATE},
+            {"GUILD_MEMBERS_CHUNK", LD_CALLBACK_GUILD_MEMBERS_CHUNK},
+            {"GUILD_ROLE_CREATE", LD_CALLBACK_GUILD_ROLE_CREATE},
+            {"GUILD_ROLE_UPDATE", LD_CALLBACK_GUILD_ROLE_UPDATE},
+            {"GUILD_ROLE_DELETE", LD_CALLBACK_GUILD_ROLE_DELETE},
             {"MESSAGE_CREATE", LD_CALLBACK_MESSAGE_CREATE},
-            {NULL, LD_CALLBACK_UNKNOWN}
+            {"MESSAGE_UPDATE", LD_CALLBACK_MESSAGE_UPDATE},
+            {"MESSAGE_DELETE", LD_CALLBACK_MESSAGE_DELETE},
+            {"MESSAGE_DELETE_BULK", LD_CALLBACK_MESSAGE_DELETE_BULK},
+            {"MESSAGE_REACTION_ADD", LD_CALLBACK_MESSAGE_REACTION_ADD},
+            {"MESSAGE_REACTION_REMOVE", LD_CALLBACK_MESSAGE_REACTION_REMOVE},
+            {"MESSAGE_REACTION_REMOVE_ALL", LD_CALLBACK_MESSAGE_REACTION_REMOVE_ALL},
+            {"PRESENCE_UPDATE", LD_CALLBACK_PRESENCE_UPDATE},
+            {"TYPING_START", LD_CALLBACK_TYPING_START},
+            {"USER_UPDATE", LD_CALLBACK_USER_UPDATE},
+            {"VOICE_STATE_UPDATE", LD_CALLBACK_VOICE_STATE_UPDATE},
+            {"VOICE_SERVER_UPDATE", LD_CALLBACK_VOICE_SERVER_UPDATE},
+            {"WEBHOOKS_UPDATE", LD_CALLBACK_WEBHOOKS_UPDATE},
+            {NULL, LD_CALLBACK_UNKNOWN} //null terminator
     };
     for(i = 0; dispatch_dict[i].name != NULL; i++) {
         if(strcmp(typestr, dispatch_dict[i].name) == 0) {
             ld_debug(context, "dispatch type is %s, callback reason is %d", dispatch_dict[i].name, dispatch_dict[i].cbk_reason);
-            context->user_callback(context, dispatch_dict[i].cbk_reason, data);
-            return 0;
+            i = context->user_callback(context, dispatch_dict[i].cbk_reason, data);
+            return i;
         }
     }
     return 0;

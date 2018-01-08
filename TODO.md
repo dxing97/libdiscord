@@ -5,8 +5,6 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Split off /gateway and /gateway/bot into their own functions
-* Use nonzero return value from user callback to mean disconnect from gateway(??)
 * Handle gateway-side disconnections elegantly
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi

@@ -6,6 +6,7 @@
 
 /*
  * This bot will respond to every "ayy" with "lmao"
+ * todo: won't respond to other bots
  */
 
 #include <getopt.h>
@@ -40,8 +41,6 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     int ayystat = 0;
 
     switch(reason){
-        case LD_CALLBACK_UNKNOWN:
-            break;
         case LD_CALLBACK_MESSAGE_CREATE:
             //if content == "ayy", POST "lmao" to that channel
             ld_info(context, "received MESSAGE_CREATE dispatch");
@@ -69,6 +68,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
                 }
             }
             break;
+//        case LD_CALLBACK_MESSAGE_UPDATE:
+//            return 1;
     }
 
     ld_info(context, "ayystat = %d", ayystat);

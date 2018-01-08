@@ -46,3 +46,5 @@ Steps required to connect to discord:
         * Recieve HELLO
         * Start heartbeating
     
+## User callback
+Returning a non-zero number from the user callback will be taken to mean disconnect from the gateway.

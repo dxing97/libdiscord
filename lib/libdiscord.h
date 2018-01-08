@@ -129,13 +129,9 @@ struct ld_context {
              json_t *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
-    void *gateway_queue; //string object
-    int close_code;
-    int heartbeat; //0 for don't send, 1 for send
     unsigned long last_hb;
     struct lws_ring *gateway_ring;
-    enum ld_gateway_disconnect_reason disconnect_reason;
-    char *disconnect_info;
+    unsigned int close_code;
 };
 
 /*
@@ -185,11 +181,6 @@ void ld_destroy_context(struct ld_context *context);
  * returns enum corresponding to the gateway connection state
  */
 int ld_gateway_connection_state(struct ld_context *context);
-
-/*
- *
- */
-int ld_gateway_connected(struct ld_context *context);
 
 /*
  * connect to discord
