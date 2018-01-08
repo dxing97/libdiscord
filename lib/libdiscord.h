@@ -89,13 +89,17 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_UNKNOWN = 100
 };
 
+enum ld_gateway_disconnect_reason {
+    LD_GATEWAY_DISCONNECT_NULL = 0
+};
+
 /*
  * gateway ringbuffer elements
  * contains payload to be send and metadata
  */
 struct ld_gateway_payload {
-    char *payload;
-    size_t len; //size of payload
+    void *payload; //array of chars to send
+    size_t len; //size of payload in bytes
 
 };
 
@@ -125,11 +129,13 @@ struct ld_context {
              json_t *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
-    void *gateway_queue;
+    void *gateway_queue; //string object
     int close_code;
     int heartbeat; //0 for don't send, 1 for send
     unsigned long last_hb;
     struct lws_ring *gateway_ring;
+    enum ld_gateway_disconnect_reason disconnect_reason;
+    char *disconnect_info;
 };
 
 /*

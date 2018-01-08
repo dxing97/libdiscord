@@ -50,7 +50,10 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
 
     lws_set_log_level(31, NULL);
 
-    context->gateway_ring = lws_ring_create(sizeof(struct ld_gateway_payload), info->gateway_ringbuffer_size, NULL); //todo: make max number of ring elements configurable
+    context->gateway_ring = lws_ring_create(
+            sizeof(struct ld_gateway_payload),
+            info->gateway_ringbuffer_size,
+            NULL);
     if(context->gateway_ring == NULL) {
         ld_err(context, "couldn't init gateway ringbuffer");
         return NULL;
@@ -65,6 +68,7 @@ void ld_destroy_context(struct ld_context *context) {
     curl_multi_cleanup(context->curl_multi_handle);
     curl_global_cleanup();
     lws_context_destroy(context->lws_context);
+    lws_ring_destroy(context->gateway_ring);
     free(context);
 }
 
@@ -141,10 +145,20 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
 
 int ld_connect(struct ld_context *context) {
     int ret;
-
+    /*
+     * initiates a connection to Discord, mainly though the gateway.
+     * First it GETs th3e gateway URL from /gateway, mainly done to make sure we even have access to the internet.
+     * todo: It will only do this if there isn't one already cached
+     * Then it uses the bot token to GET shard information from /gateway/bot and to make sure the bot token
+     * is valid.
+     * Then it checks the context state and determines what should be done next.
+     * If we're unconnected, it'll call ld_connect
+     * If we're disconnected, it'll call gateway_resume
+     */
     /*
      * check to see if we can even connect to Discord's servers
      * examine /gateway and see if we get a valid response
+     * todo: if there's already a cached gateway URL then we should skip this part
      */
     CURL *handle;
     struct _ld_buffer buffer;
@@ -201,6 +215,7 @@ int ld_connect(struct ld_context *context) {
 
     free(tmp);
     free(object);
+
     /*
      * we got a valid response from the REST API, which should mean
      *  Discord is connectable at basic level
@@ -278,12 +293,13 @@ int ld_connect(struct ld_context *context) {
             }
             break;
         case LD_GATEWAY_DISCONNECTED:
-            //we were disconnected from the gateway.
+            //todo: add disconnection reasons and handle them
             context->gateway_state = LD_GATEWAY_CONNECTING;
             ld_gateway_resume(context);
             break;
         case LD_GATEWAY_CONNECTING:
-            //???
+            //??? do nothing
+            ld_notice(context, "ld_connect called while connecting to gateway!");
             break;
         case LD_GATEWAY_CONNECTED:
             //this context already has an established connection to the gateway
@@ -304,23 +320,35 @@ int ld_service(struct ld_context *context, int timeout) {
     /*
      * gateway servicing
      * if sufficient time has passed, add a heartbeat payload to the queue
-     * if sufficient time has passed, add a heartbeat payload to the queue
      */
 //    ld_debug(context, "servicing gateway payloads");
     //check heartbeat timer
+    struct ld_gateway_payload *tmp;
+    size_t ret;
     if((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) {
-//        context->heartbeat = 1;
         //put heartbeat payload in gateway_queue
         json_t *hb;
         hb = ld_json_create_payload(context, json_integer(LD_GATEWAY_OPCODE_HEARTBEAT),
                                json_integer(context->last_seq), NULL, NULL);
-        if(context->gateway_queue == NULL) { //in case there's something already in the "queue"
-            context->gateway_queue = strdup(json_dumps(hb, 0));
-            context->last_hb = lws_now_secs();
+        if(lws_ring_get_count_free_elements(context->gateway_ring) == 0) {
+            ld_warn(context, "can't fit any new payloads into gateway ringbuffer");
+            goto service;
         }
+        tmp = malloc(sizeof(struct ld_gateway_payload));
+        tmp->len = strlen(json_dumps(hb, 0)); //JSONs can't have \0 chars
+        tmp->payload = strdup(json_dumps(hb, 0));
 
-        lws_callback_on_writable(context->lws_wsi);
+        ret = lws_ring_insert(context->gateway_ring, tmp, 1);
+        if(ret != 1){
+            ld_warn(context, "couldn't fit heartbeat payload into gateway ringbuffer");
+        }
+        ld_debug(context, "put heartbeat payload in ringbuffer");
+        context->last_hb = lws_now_secs();
     }
+
+    if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) != 0)
+        lws_callback_on_writable(context->lws_wsi);
+service:
     lws_service(context->lws_context, timeout); //todo: determine optimal/changing of delay for servicing
     return 0;
 }
@@ -386,6 +414,7 @@ int ld_gateway_connect(struct ld_context *context) {
 }
 
 int ld_gateway_resume(struct ld_context *context) {
+    //doesn't do anything yet
     return 0;
 }
 
@@ -396,6 +425,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
     context = lws_context_user(lws_get_context(wsi)); //retrieve ld_context pointer
     int i;
     char *payload = (char *) user;
+    struct ld_gateway_payload *gateway_payload;
 
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
@@ -438,27 +468,37 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             ld_debug(context, "lws: client writable callback");
-            if(context->gateway_queue == NULL) {
-                ld_notice(context, "nothing in queue to send");
+            gateway_payload = malloc(sizeof(struct ld_gateway_payload));
+
+            if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) == 0) {
+                ld_debug(context, "nothing in queue to send");
                 break;
             }
-            i = sprintf(payload + LWS_PRE, "%s", (char *) context->gateway_queue);
+
+            i = (int) lws_ring_consume(context->gateway_ring, NULL, gateway_payload, 1);
+            if(i != 1) {
+                ld_warn(context, "couldn't consume payload from ringbuffer");
+                break;
+            }
+
+            i = sprintf(payload + LWS_PRE, "%s", (char *) gateway_payload->payload);
             if(i <= 0) {
                 ld_err(context, "couldn't write payload to buffer");
                 return -1;
             }
             lwsl_notice("TX: %s\n", payload + LWS_PRE);
-            i = lws_write(wsi, (unsigned char *) (payload + LWS_PRE), strlen(context->gateway_queue), LWS_WRITE_TEXT);
+            i = lws_write(wsi, (unsigned char *) (payload + LWS_PRE), strlen(gateway_payload->payload), LWS_WRITE_TEXT);
             if(i < 0) {
                 lwsl_err("ERROR %d writing to socket, hanging up\n", i);
                 return -1;
             }
-            if(i < strlen(context->gateway_queue)) {
+            if(i < strlen(gateway_payload->payload)) {
                 lwsl_err("Partial write\n");
                 return -1;
             }
-            free(context->gateway_queue);
-            context->gateway_queue = NULL;
+            free(gateway_payload->payload);
+            free(gateway_payload);
+//            context->gateway_queue = NULL;
             break;
         case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
             ld_info(context, "lws: gateway initiated close of websocket: "
@@ -630,11 +670,17 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             s = NULL;
             d = _ld_generate_identify(context);
             payload = ld_json_create_payload(NULL, op, d, t, s);
-            context->gateway_queue = strdup(json_dumps(payload, 0));
-            json_decref(payload);
-            ld_debug(context, "prepared JSON identify payload: \n%s", (char *)context->gateway_queue);
 
-            lws_callback_on_writable(context->lws_wsi); //send identify payload
+            struct ld_gateway_payload *toinsert;
+            toinsert = malloc(sizeof(struct ld_gateway_payload));
+            toinsert->payload = strdup(json_dumps(payload, 0));
+            toinsert->len = strlen(toinsert->payload);
+            lws_ring_insert(context->gateway_ring, toinsert, 1);
+
+            json_decref(payload);
+            ld_debug(context, "prepared JSON identify payload: \n%s", (char *)toinsert->payload);
+
+//            lws_callback_on_writable(context->lws_wsi); //send identify payload
 
             //set heartbeat timer here
             context->last_hb = lws_now_secs(); //seconds since 1970-1-1

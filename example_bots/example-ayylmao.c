@@ -206,8 +206,7 @@ int main(int argc, char *argv[]) {
     }
     free(info);
 
-    int ret;
-
+    int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
