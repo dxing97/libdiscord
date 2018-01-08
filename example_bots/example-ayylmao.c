@@ -12,7 +12,7 @@
 #include <signal.h>
 
 static int bot_exit = 0;
-
+CURL *handle;
 void int_handler(int i){
     bot_exit = 1;
 }
@@ -102,8 +102,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     char url[1000];
     sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
 
-    CURL *handle;
-    handle = curl_easy_init();
+
+
 
     curl_easy_setopt(handle, CURLOPT_URL, url);
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
@@ -119,7 +119,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
 
     free(jsonbody);
     curl_slist_free_all(headers);
-    curl_easy_cleanup(handle);
+
 
     return 0;
 }
@@ -206,6 +206,8 @@ int main(int argc, char *argv[]) {
     }
     free(info);
 
+    handle = curl_easy_init();
+
     int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
@@ -238,5 +240,6 @@ int main(int argc, char *argv[]) {
     ld_info(context, "disconnecting from discord");
     //destroy the context
     ld_destroy_context(context);
+    curl_easy_cleanup(handle);
     return 0;
 }
