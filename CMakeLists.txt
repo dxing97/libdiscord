@@ -40,18 +40,18 @@ include_directories(/usr/local/lib/include)
 set(LD_LIBS websockets jansson curl)
 
 set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h)
-add_library(libdiscord SHARED ${LD_SOURCE})
+add_library(discord SHARED ${LD_SOURCE})
 
-target_link_libraries(libdiscord ${LD_LIBS})
-set_target_properties(libdiscord PROPERTIES VERSION ${PROJECT_VERSION})
-target_compile_options(libdiscord PRIVATE "-Wall")
-target_compile_options(libdiscord PRIVATE "-Werror")
+target_link_libraries(discord ${LD_LIBS})
+set_target_properties(discord PROPERTIES VERSION ${PROJECT_VERSION})
+target_compile_options(discord PRIVATE "-Wall")
+target_compile_options(discord PRIVATE "-Werror")
 
 set(BOT_AYY_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ayylmao ${BOT_AYY_SOURCE})
 
-target_link_libraries(example-bot-ayylmao libdiscord)
+target_link_libraries(example-bot-ayylmao discord)
 
 set(BOT_PING_SOURCE example_bots/example-ping.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ping ${BOT_PING_SOURCE})
-target_link_libraries(example-bot-ping libdiscord)
+target_link_libraries(example-bot-ping discord)
