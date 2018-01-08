@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <jansson.h>
 //#include "libwebsockets/lib/libwebsockets.h"
 
 #include "libdiscord.h"
@@ -495,15 +496,61 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
         case LWS_CALLBACK_CLOSED:
             ld_notice(context, "lws: websocket connection to gateway closed");
             break;
-        case LWS_CALLBACK_CLIENT_RECEIVE: {
-            char *tmp;
-            tmp = malloc(len + 1);
-            strncpy(tmp, in, len);
-            lwsl_notice("RX: %s", tmp);
-            free(tmp);
+        case LWS_CALLBACK_CLIENT_RECEIVE:
+            //check to see if we've received a new fragment
+            ld_debug(context, "first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
+            if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {//first fragment is also the last fragment
+                //we're
+                ld_notice(context, "first gateway fragment is also last fragment");
+                i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
+
+                lwsl_notice("single RX: %s", (char *) in);
+                context->gateway_rx_buffer = NULL;
+                context->gateway_rx_buffer_len = 0;
+
+                return i;
             }
-            return ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
-            break;
+
+            if (lws_is_first_fragment(wsi)) { //first fragment
+                //new fragment
+                context->gateway_rx_buffer = malloc(len + 1);
+                strncpy(context->gateway_rx_buffer, in, len);
+                context->gateway_rx_buffer_len = len;
+
+                return 0;
+            }
+            if(lws_is_final_fragment(wsi)) { //last fragment of multi-fragment payload
+                /*
+                 * append fragment to previous fragment
+                 */
+                context->gateway_rx_buffer = realloc(context->gateway_rx_buffer,
+                                                     context->gateway_rx_buffer_len + len + 2);
+                strncpy(context->gateway_rx_buffer + context->gateway_rx_buffer_len, in, len);
+                context->gateway_rx_buffer_len += len;
+                context->gateway_rx_buffer[context->gateway_rx_buffer_len] = '\0';
+                if(context->gateway_rx_buffer_len > 8000) {
+                    ld_notice(context, "multi RX: %.*s...", 8000, context->gateway_rx_buffer);
+                } else {
+                    ld_notice(context, "multi RX: %s", context->gateway_rx_buffer);
+                }
+
+                i = ld_gateway_payload_parser(context, context->gateway_rx_buffer, context->gateway_rx_buffer_len);
+                ld_debug(context, "payload parser code: %d", i);
+                free(context->gateway_rx_buffer);
+                context->gateway_rx_buffer = NULL;
+                context->gateway_rx_buffer_len = 0;
+
+                return i;
+            }
+            //not first or last fragment
+            context->gateway_rx_buffer = realloc(context->gateway_rx_buffer,
+                                                 context->gateway_rx_buffer_len + len + 1);
+            strncpy(context->gateway_rx_buffer + context->gateway_rx_buffer_len, in, len);
+            context->gateway_rx_buffer_len += len;
+
+//            ld_notice(context, "multi RX: %.*s", context->gateway_rx_buffer, context->gateway_rx_buffer_len);
+
+            return 0;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
             ld_debug(context, "lws: recieved pong from gateway");
             break;
@@ -630,7 +677,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     const char *key;
     payload = json_loadb(in, len, 0, &error);
     if(payload == NULL) {
-        ld_warn(context, "couldn't parse payload from gateway");
+        ld_debug(context, "couldn't parse payload from gateway: %s", error.text);
         return 1;
     }
     d = NULL;
@@ -673,7 +720,6 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
         case LD_GATEWAY_OPCODE_DISPATCH:
             //check t for dispatch type
             return ld_gateway_dispatch_parser(context, t, d);
-            break;
         case LD_GATEWAY_OPCODE_HEARTBEAT:
             //can be sent by the gateway every now and then
             break;

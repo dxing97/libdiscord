@@ -131,6 +131,8 @@ struct ld_context {
     unsigned long last_hb;
     struct lws_ring *gateway_ring;
     unsigned int close_code;
+    char *gateway_rx_buffer;
+    size_t gateway_rx_buffer_len;
 };
 
 /*
