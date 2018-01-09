@@ -12,7 +12,7 @@
 #include <signal.h>
 
 static int bot_exit = 0;
-
+CURL *handle;
 void int_handler(int i){
     bot_exit = 1;
 }
@@ -40,8 +40,6 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     int ayystat = 0;
 
     switch(reason){
-        case LD_CALLBACK_UNKNOWN:
-            break;
         case LD_CALLBACK_MESSAGE_CREATE:
             //if content == "ayy", POST "lmao" to that channel
             ld_info(context, "received MESSAGE_CREATE dispatch");
@@ -69,6 +67,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
                 }
             }
             break;
+//        case LD_CALLBACK_MESSAGE_UPDATE:
+//            return 1;
     }
 
     ld_info(context, "ayystat = %d", ayystat);
@@ -102,8 +102,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     char url[1000];
     sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
 
-    CURL *handle;
-    handle = curl_easy_init();
+
+
 
     curl_easy_setopt(handle, CURLOPT_URL, url);
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
@@ -119,7 +119,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
 
     free(jsonbody);
     curl_slist_free_all(headers);
-    curl_easy_cleanup(handle);
+
 
     return 0;
 }
@@ -191,10 +191,17 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
+    struct ld_presence presence;
+    presence.statustype = LD_PRESENCE_ONLINE;
+    presence.gametype = LD_PRESENCE_LISTENING;
+    presence.game = "for ayys";
+
+    info->init_presence = presence;
     info->bot_token = strdup(bot_token);
     info->log_level = log_level;
     info->user_callback = callback;
-    info->gateway_ringbuffer_size = 8; //todo: fine tune this value
+    info->gateway_ringbuffer_size = 8;
+
     free(bot_token);
 
     //initialize context with context info
@@ -206,8 +213,9 @@ int main(int argc, char *argv[]) {
     }
     free(info);
 
-    int ret;
+    handle = curl_easy_init();
 
+    int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
         //if the bot isn't connected to discord, connect to discord
@@ -233,11 +241,11 @@ int main(int argc, char *argv[]) {
                 break;
         }
         ld_service(context, 20);
-//        sleep(1);
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnecting from discord");
     //destroy the context
     ld_destroy_context(context);
+    curl_easy_cleanup(handle);
     return 0;
 }

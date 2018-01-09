@@ -10,7 +10,6 @@
 /*
  * right now there are only callbacks for a small number of gateway events
  * More will be added eventually
- * todo: add callback for recieved playloads
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
@@ -89,14 +88,38 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_UNKNOWN = 100
 };
 
+enum ld_gateway_disconnect_reason {
+    LD_GATEWAY_DISCONNECT_NULL = 0
+};
+
+enum ld_presence_game_type {
+    LD_PRESENCE_PLAYING = 0,
+    LD_PRESENCE_STREAMING = 1,
+    LD_PRESENCE_LISTENING = 2,
+    LD_PRESENCE_WATCHING = 3
+};
+
+enum ld_presence_status_type {
+    LD_PRESENCE_IDLE = 0,
+    LD_PRESENCE_DND = 1,
+    LD_PRESENCE_ONLINE = 2,
+    LD_PRESENCE_OFFLINE = 3
+};
+
 /*
  * gateway ringbuffer elements
  * contains payload to be send and metadata
  */
 struct ld_gateway_payload {
-    char *payload;
-    size_t len; //size of payload
+    void *payload; //array of chars to send
+    size_t len; //size of payload in bytes
 
+};
+
+struct ld_presence {
+    char *game;
+    enum ld_presence_game_type gametype;
+    enum ld_presence_status_type statustype;
 };
 
 /*
@@ -125,11 +148,12 @@ struct ld_context {
              json_t *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
-    void *gateway_queue;
-    int close_code;
-    int heartbeat; //0 for don't send, 1 for send
     unsigned long last_hb;
     struct lws_ring *gateway_ring;
+    unsigned int close_code;
+    char *gateway_rx_buffer;
+    size_t gateway_rx_buffer_len;
+    struct ld_presence presence;
 };
 
 /*
@@ -144,6 +168,7 @@ struct ld_context_info {
     unsigned long log_level;
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, json_t *data);
     size_t gateway_ringbuffer_size;
+    struct ld_presence init_presence;
 };
 
 struct ld_dispatch {
@@ -179,11 +204,6 @@ void ld_destroy_context(struct ld_context *context);
  * returns enum corresponding to the gateway connection state
  */
 int ld_gateway_connection_state(struct ld_context *context);
-
-/*
- *
- */
-int ld_gateway_connected(struct ld_context *context);
 
 /*
  * connect to discord

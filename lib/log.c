@@ -38,7 +38,7 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
     time_string[24] = '\0';
 
     //message part
-    char msg[4096];
+    char msg[16000]; //watch for buffer overflows here
     int ret;
 
     ret = vsprintf(msg, log_message, arg);

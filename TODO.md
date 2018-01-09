@@ -5,13 +5,14 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Use nonzero return value from user callback to mean disconnect from gateway(??)
-* Implement ring buffer for gateway payloads
-* Handle gateway-side disconnections elegantly
+* Rethink connection states
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
 * Add nonblocking REST implementation using curl-multi
+* Implement ratelimiting
 
 ## Planned
+* make example-ayylmao not respond to other bots
+* zlib compression support in gateway payloads
 * See if jansson increment/decrement needs to be used
 * Implement more user callbacks
 * CMake OS detection for IDENTIFY payload
