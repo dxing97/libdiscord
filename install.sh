@@ -28,7 +28,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev\
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
-                 zlib1g-dev libssl-dev libcurl4-gnutls-dev
+                 zlib1g-dev libssl-dev libcurl4-openssl-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 
