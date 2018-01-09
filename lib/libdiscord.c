@@ -60,10 +60,14 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
         return NULL;
     }
 
+    context->presence.game = strdup(info->init_presence.game);
+    context->presence.gametype = LD_PRESENCE_LISTENING;
+    context->presence.statustype = LD_PRESENCE_ONLINE;
     return context;
 }
 
 void ld_destroy_context(struct ld_context *context) {
+    free(context->presence.game);
     curl_multi_cleanup(context->curl_multi_handle);
     curl_global_cleanup();
     lws_context_destroy(context->lws_context);
@@ -504,7 +508,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                 ld_notice(context, "first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
-                lwsl_notice("single RX: %s", (char *) in);
+                ld_notice(context, "single RX: %s", (char *) in);
                 context->gateway_rx_buffer = NULL;
                 context->gateway_rx_buffer_len = 0;
 
@@ -606,7 +610,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 }
 
 /*
- *
+ * returns payload type enum
  */
 enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
     //compare key to d,t,s,op and return appropriate enum
@@ -625,6 +629,20 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
         return LD_GATEWAY_S;
 
     return LD_GATEWAY_UNKNOWN;
+}
+
+const char *ld_presence_status_to_str(enum ld_presence_status_type type){
+    switch(type) {
+        case LD_PRESENCE_IDLE:
+            return "idle";
+        case LD_PRESENCE_DND:
+            return "dnd";
+        case LD_PRESENCE_ONLINE:
+            return "online";
+        case LD_PRESENCE_OFFLINE:
+            return "offline";
+    }
+    return NULL;
 }
 
 json_t *_ld_generate_identify(struct ld_context *context) {
@@ -652,10 +670,10 @@ json_t *_ld_generate_identify(struct ld_context *context) {
               "$device", "libdiscord",
     "presence",
         "game",
-            "name", "for alienz",
-            "type", 3,
+            "name", context->presence.game,
+            "type", context->presence.gametype,
             //NULL, NULL,
-        "status", "online",
+        "status", ld_presence_status_to_str(context->presence.statustype),
         "since", NULL,
         "afk", 0
     );

@@ -191,10 +191,17 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
+    struct ld_presence presence;
+    presence.statustype = LD_PRESENCE_ONLINE;
+    presence.gametype = LD_PRESENCE_LISTENING;
+    presence.game = "for ayys";
+
+    info->init_presence = presence;
     info->bot_token = strdup(bot_token);
     info->log_level = log_level;
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
+
     free(bot_token);
 
     //initialize context with context info
@@ -234,7 +241,6 @@ int main(int argc, char *argv[]) {
                 break;
         }
         ld_service(context, 20);
-//        sleep(1);
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnecting from discord");
