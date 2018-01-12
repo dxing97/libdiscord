@@ -5,10 +5,10 @@
 * Discord developer ToS compliant
 
 ## Todo
+* Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * Rethink connection states
 * Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
-* Add nonblocking REST implementation using curl-multi
-* Implement ratelimiting
+* Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 
 ## Planned
 * make example-ayylmao not respond to other bots
