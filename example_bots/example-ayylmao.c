@@ -11,7 +11,8 @@
 #include <getopt.h>
 #include <signal.h>
 
-static int bot_exit = 0;
+static int bot_exit = 0; //0: no exit, 1: exit
+static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 CURL *handle;
 void int_handler(int i){
     bot_exit = 1;
@@ -26,7 +27,7 @@ void int_handler(int i){
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  *
  */
-int callback(struct ld_context *context, enum ld_callback_reason reason, json_t *data) {
+int callback(struct ld_context *context, enum ld_callback_reason reason, void *data) {
     /*
      * depending on the reason, do stuff
      */
@@ -36,29 +37,29 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
         //add that context to the send queue
     CURLcode res;
     const char *key, *content, *channelid;
-    json_t *value;
     int ayystat = 0;
 
     switch(reason){
-        case LD_CALLBACK_MESSAGE_CREATE:
+        case LD_CALLBACK_MESSAGE_CREATE: {
+            json_t *jdata = data, *value;
             //if content == "ayy", POST "lmao" to that channel
             ld_info(context, "received MESSAGE_CREATE dispatch");
             //we want the "content" and "channel id" fields
-            json_object_foreach(data, key, value) {
-                if(strcmp(key, "content") == 0) {
+            json_object_foreach(jdata, key, value) {
+                if (strcmp(key, "content") == 0) {
                     content = json_string_value(value);
-                    if(content == NULL) {
+                    if (content == NULL) {
                         ld_warn(context, "couldn't get message content");
                         break;
                     }
-                    if(strcmp(content, "ayy") == 0) {
+                    if (strcmp(content, "ay") == 0) {
                         ayystat++;
                     }
 
                 }
-                if(strcmp(key, "channel_id") == 0) {
+                if (strcmp(key, "channel_id") == 0) {
                     channelid = json_string_value(value);
-                    if(channelid == NULL) {
+                    if (channelid == NULL) {
                         ld_warn(context, "couldn't get channel_id");
                         break;
                     }
@@ -66,9 +67,12 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
 
                 }
             }
+        }
             break;
 //        case LD_CALLBACK_MESSAGE_UPDATE:
 //            return 1;
+        default:
+            break;
     }
 
     ld_info(context, "ayystat = %d", ayystat);
@@ -78,7 +82,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     }
     //generate POST message
     json_t *body;
-    body = json_pack("{ss}", "content", "lmao");
+    body = json_pack("{ss}", "content", "lmo");
     if(body == NULL) {
         ld_err(context, "couldn't create JSON object for lmao data");
         return 0;
@@ -102,9 +106,6 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     char url[1000];
     sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
 
-
-
-
     curl_easy_setopt(handle, CURLOPT_URL, url);
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
@@ -115,6 +116,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, json_t 
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
         ld_err(context, "couldn't POST lmao");
+        return 1;
     }
 
     free(jsonbody);
@@ -165,7 +167,7 @@ int main(int argc, char *argv[]) {
                                "%s [-t bot_token]\n\n"
                                "Options: \n\t"
                                "-t, --bot-token [bot_token]\n\t\t"
-                               "Discord bot token. See Discord developer pages on hwo to obtain one\n\t"
+                               "Discord bot token. See Discord developer pages on how to obtain one\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
@@ -194,7 +196,7 @@ int main(int argc, char *argv[]) {
     struct ld_presence presence;
     presence.statustype = LD_PRESENCE_ONLINE;
     presence.gametype = LD_PRESENCE_LISTENING;
-    presence.game = "for ayys";
+    presence.game = "ayys";
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
@@ -221,26 +223,17 @@ int main(int argc, char *argv[]) {
         //if the bot isn't connected to discord, connect to discord
         //maybe the user shouldn't worry about whether or not we've connected here in the user code
         //move state stuff to reasons in the user callback
-        switch (ld_gateway_connection_state(context)) {
-            case LD_GATEWAY_CONNECTED:
-                break;
-            case LD_GATEWAY_CONNECTING:
-                ld_service(context, 20);
-                break;
-            case LD_GATEWAY_DISCONNECTED:
-                bot_exit = 1; //if we get disconnected let's quit for now
-                break;
-            case LD_GATEWAY_UNCONNECTED:
-                ret = ld_connect(context);
-                if(ret != 0) {
-                    ld_warn(context, "error connecting to discord: error code %d", ret);
-                    bot_exit = 1;
-                }
-                break;
-            default:
-                break;
+        if(bot_state == 0) {
+            //bot isn't connected, so we should try connecting
+            ret = ld_connect(context);
+            if(ret != 0) {
+                ld_warn(context, "error connecting to discord: error code %d", ret);
+                bot_exit = 1;
+            }
+            bot_state = 1;
         }
-        ld_service(context, 20);
+
+        ld_service(context, 20); //service the connection
     }
     //disconnect from discord gracefully
     ld_info(context, "disconnecting from discord");

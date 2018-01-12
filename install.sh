@@ -28,7 +28,7 @@ sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev\
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
-                 zlib1g-dev libssl-dev libcurl4-gnutls-dev
+                 zlib1g-dev libssl-dev libcurl4-gnutls-dev libuv1-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 
@@ -51,7 +51,7 @@ git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v${LWS_VERSION}
     mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug
+        cmake .. -DCMAKE_BUILD_TYPE=Debug DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
         make
         sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
         sudo ldconfig

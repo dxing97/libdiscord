@@ -48,6 +48,9 @@ enum ld_callback_reason {
     LD_CALLBACK_VOICE_STATE_UPDATE = 32,
     LD_CALLBACK_VOICE_SERVER_UPDATE = 33,
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
+    LD_CALLBACK_WS_ESTABLISHED = 35, //websocket connection established and ready to rx/tx
+    LD_CALLBACK_WS_CONNECTION_ERROR = 36 //error connecting to the gateway:
+
 };
 
 /*
@@ -58,7 +61,6 @@ enum ld_callback_reason {
  */
 enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0,
-    LD_GATEWAY_DISCONNECTED = 1,
     LD_GATEWAY_CONNECTING = 2,
     LD_GATEWAY_CONNECTED = 3
 };
@@ -145,15 +147,17 @@ struct ld_context {
     int (*user_callback)
             (struct ld_context *context,
              enum ld_callback_reason reason,
-             json_t *data);
+             void *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
     unsigned long last_hb;
+    int hb_count; //increments for every sent heartbeat, decrements for every received HB_ACK
     struct lws_ring *gateway_ring;
     unsigned int close_code;
     char *gateway_rx_buffer;
     size_t gateway_rx_buffer_len;
     struct ld_presence presence;
+    char *gateway_session_id;
 };
 
 /*
@@ -166,7 +170,7 @@ struct ld_context {
 struct ld_context_info {
     char *bot_token;
     unsigned long log_level;
-    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, json_t *data);
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data);
     size_t gateway_ringbuffer_size;
     struct ld_presence init_presence;
 };
@@ -174,6 +178,7 @@ struct ld_context_info {
 struct ld_dispatch {
     const char* name;
     enum ld_callback_reason cbk_reason;
+    int (*dispatch_callback)(struct ld_context *context, json_t *data);
 };
 
 
@@ -199,11 +204,6 @@ struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
  * destroys context
  */
 void ld_destroy_context(struct ld_context *context);
-
-/*
- * returns enum corresponding to the gateway connection state
- */
-int ld_gateway_connection_state(struct ld_context *context);
 
 /*
  * connect to discord
@@ -235,11 +235,6 @@ int ld_service(struct ld_context *context, int timeout);
 int ld_gateway_connect(struct ld_context *context);
 
 /*
- * reconnects to the gateway (resume payload)
- */
-int ld_gateway_resume(struct ld_context *context);
-
-/*
  * lws user callback
  * picks out interesting callback reasons (like receive and writeable) and does stuff
  * responsible for connecting/disconnecting from the gateway, receiving payloads, and sending payloads
@@ -260,6 +255,12 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 
 /*
+ * callback for parsing READY dispatches
+ * saves session_id for resuming
+ */
+int ld_dispatch_ready(struct ld_context *context, json_t *data);
+
+/*
  * type: json string object for dispatch type
  * data: json object containing dispatch data
  * takes dispatch data from the gateway and generates user callbacks based on dispatch type
@@ -269,7 +270,14 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
 int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
 
 /*
- * disconnects from the gateway
+ * queues a heartbeat in the gateway tx ringbuffer
  */
-int ld_gateway_disconnect(struct ld_context *context);
+int ld_gateway_send_heartbeat(struct ld_context *context);
+
+/*
+ * calls lws_context_destroy to close the ws connection
+ * sets the gateway state to unconnected
+ * calls ld_gateway_connect to reinitialize the connection to the gateway
+ */
+int ld_gateway_reconnect(struct ld_context *context);
 #endif

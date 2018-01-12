@@ -48,3 +48,4 @@ Steps required to connect to discord:
     
 ## User callback
 Returning a non-zero number from the user callback will be taken to mean disconnect from the gateway.
+Do state control within callbacks
