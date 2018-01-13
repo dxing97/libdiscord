@@ -52,7 +52,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_warn(context, "couldn't get message content");
                         break;
                     }
-                    if (strcmp(content, "ay") == 0) {
+                    if (strcmp(content, "ayy") == 0) {
                         ayystat++;
                     }
 
@@ -82,7 +82,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     }
     //generate POST message
     json_t *body;
-    body = json_pack("{ss}", "content", "lmo");
+    body = json_pack("{ss}", "content", "lmao");
     if(body == NULL) {
         ld_err(context, "couldn't create JSON object for lmao data");
         return 0;

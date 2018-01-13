@@ -158,6 +158,10 @@ struct ld_context {
     size_t gateway_rx_buffer_len;
     struct ld_presence presence;
     char *gateway_session_id;
+    int gateway_bot_limit; //ratelimit reset amount
+    int gateway_bot_remaining; //last ratelimit remaining value
+    unsigned long gateway_bot_reset; //unix time for reset
+
 };
 
 /*
@@ -205,6 +209,8 @@ struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
  */
 void ld_destroy_context(struct ld_context *context);
 
+int _ld_get_gateway_bot(struct ld_context *context);
+
 /*
  * connect to discord
  * HTTP authorization initialization
@@ -215,6 +221,13 @@ void ld_destroy_context(struct ld_context *context);
  * returns 2 for a curl error
  * returns 3 for a jansson error (JSON parsing error: didn't get what we were expecting)
  */
+
+size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr);
+
+int _ld_get_gateway(struct ld_context *context);
+
+size_t ld_curl_print_headers(char *buffer, size_t size, size_t nitems, void *userdata);
+
 int ld_connect(struct ld_context *context);
 
 /*
@@ -272,7 +285,7 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
 /*
  * queues a heartbeat in the gateway tx ringbuffer
  */
-int ld_gateway_send_heartbeat(struct ld_context *context);
+int ld_gateway_queue_heartbeat(struct ld_context *context);
 
 /*
  * calls lws_context_destroy to close the ws connection
