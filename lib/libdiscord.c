@@ -63,6 +63,10 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->presence.game = strdup(info->init_presence.game);
     context->presence.gametype = LD_PRESENCE_LISTENING;
     context->presence.statustype = LD_PRESENCE_ONLINE;
+
+    context->gateway_bot_limit = 1;
+    context->gateway_bot_remaining = 1;
+    context->gateway_bot_reset = lws_now_secs();
     return context;
 }
 
@@ -125,6 +129,9 @@ struct _ld_buffer {
     struct ld_context *context;
 };
 
+/*
+ * curl callback function used to read data returned from HTTP request
+ */
 size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr){
     size_t recieved_size = size * nmemb;
     struct _ld_buffer *buffer = (struct _ld_buffer *) userptr;
@@ -215,6 +222,24 @@ int _ld_get_gateway(struct ld_context *context) {
 }
 
 /*
+ * curl callback function
+ * prints headers
+ */
+size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *userdata) {
+    struct ld_context *context = userdata;
+    char *tmp;
+
+    if(size*nitems == 2) {
+        return 2;
+    }
+
+    tmp = strndup(buffer, size*nitems - 1);
+    ld_debug(context, "headers(%d): %s", (int) nitems*size, tmp);
+    free(tmp);
+    return size*nitems;
+}
+
+/*
  * internal /gateway/bot function
  * returns 0 on success
  * returns 2 on curl error
@@ -222,10 +247,12 @@ int _ld_get_gateway(struct ld_context *context) {
  */
 int _ld_get_gateway_bot(struct ld_context *context){
     /*
+     * check ratelimits first
      * we got a valid response from the REST API, which should mean
      *  Discord is connectable at basic level
      *  Now we should check the bot token validity using /gateway/bot
      */
+    
     int ret;
     struct _ld_buffer buffer;
     buffer.string = malloc(1);
@@ -250,6 +277,8 @@ int _ld_get_gateway_bot(struct ld_context *context){
     curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
     curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway/bot");
+    curl_easy_setopt(handle, CURLOPT_HEADERDATA, context);
+    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, ld_curl_header_parser);
 
     free(buffer.string);
     buffer.string = malloc(1);
@@ -367,7 +396,7 @@ int ld_service(struct ld_context *context, int timeout) {
             //didn't receive HB_ACK
 
         }
-        ret = ld_gateway_send_heartbeat(context);
+        ret = ld_gateway_queue_heartbeat(context);
         if(ret != 0) {
             ld_warn(context, "couldn't put heartbeat into gateway tx ringbuffer");
             context->hb_count--;
@@ -900,7 +929,7 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
     return 0;
 }
 
-int ld_gateway_send_heartbeat(struct ld_context *context) {
+int ld_gateway_queue_heartbeat(struct ld_context *context) {
     size_t ret;
     struct ld_gateway_payload *tmp;
     json_t *hb;
