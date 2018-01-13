@@ -252,7 +252,7 @@ int _ld_get_gateway_bot(struct ld_context *context){
      *  Discord is connectable at basic level
      *  Now we should check the bot token validity using /gateway/bot
      */
-    
+
     int ret;
     struct _ld_buffer buffer;
     buffer.string = malloc(1);
