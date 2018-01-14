@@ -13,10 +13,14 @@
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
+
+    /* payload opcodes */
     LD_CALLBACK_HELLO = 0, //opcode 10
-    LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_RESUMED = 2, //opcode 6
     LD_CALLBACK_INVALID_SESSION = 3, //opcode 9
+
+    /* Dispatches */
+    LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_CHANNEL_CREATE = 4,
     LD_CALLBACK_CHANNEL_UPDATE = 5,
     LD_CALLBACK_CHANNEL_DELETE = 6,
@@ -48,6 +52,8 @@ enum ld_callback_reason {
     LD_CALLBACK_VOICE_STATE_UPDATE = 32,
     LD_CALLBACK_VOICE_SERVER_UPDATE = 33,
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
+
+    /* websocket specifis */
     LD_CALLBACK_WS_ESTABLISHED = 35, //websocket connection established and ready to rx/tx
     LD_CALLBACK_WS_CONNECTION_ERROR = 36 //error connecting to the gateway:
 
@@ -57,7 +63,6 @@ enum ld_callback_reason {
  * connected: everything's normal
  * connecting: still working out the details
  * unconnected: we're not connected and we can start a fresh connection
- * disconnected:
  */
 enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0,

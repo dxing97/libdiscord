@@ -5,20 +5,21 @@
 * Discord developer ToS compliant
 
 ## Todo
-* parse HTTP headers for ratelimit info in /gateway/bot
-* Add REST API functions
+* Find a better way of logging stuff/make logging better so we can start moving functions out of libdiscord.h
+* HTTP header parsing function (this was easier with ulfius, so make it like ulfius: array of key-value pairs)
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
+* parse HTTP headers for ratelimit info in /gateway/bot
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * Rethink connection states
-* Allow user code to specify in IDENTIFY payload parameters like game name/status and OS
+* user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
 
 ## Planned
+* Add REST API functions
 * make example-ayylmao not respond to other bots
 * zlib compression support in gateway payloads
 * See if jansson increment/decrement needs to be used
-* Implement more user callbacks
+* OAuth support
 * CMake OS detection for IDENTIFY payload
-* Find a better way of logging stuff/make logging better
 * Better documentation (comments in the source code is NOT good documentation)
 * latency bot
 

@@ -16,6 +16,7 @@ token has connected to and identified on the gateway at least once
 Heartbeats are expected approximately every 42 seconds and can be delayed by up to 10 seconds
 as of December 2017. This should not be treated as a hard rule. Since we have a leeway of 10 seconds,
 using seconds as our precision for keeping track of heartbeat intervals shouldn't pose a problem in the near future.
+If the margin of error shrinks, use ms to keep track of heartbeat intervals
 
 User initiated disconnection from the gateway should be taken to mean closure of the bot (for now)
 
@@ -23,11 +24,10 @@ States:
 * Connected
   * The bot is connected to Discord and everything is normal.
 * Unconnected
-  * The bot has never connected to Discord before, or we were disconnected and should start a fresh session.
-* Disconnected (complicated)
-  * The bot has been disconected either by Discord or by the bot. The way we reconnect will depend on how we were disconnected.
+  * The bot has never connected to Discord before, or we were disconnected and should start a new websocket connection
 * Connecting (complicated)
   * multi-step process
+  * If we've been disconnected previously, starting a new connection depends on how we were disconnected previously
 
 
 ## Gateway Initialization
@@ -42,10 +42,12 @@ Steps required to connect to discord:
     * have callbacks to optionally modify websocket settings
     * Initialize the gateway send and receive queues (FILO)
     * Connect to the Discord websocket as a client
-        * Send IDENTIFY
         * Recieve HELLO
         * Start heartbeating
+        * Send IDENTIFY
+        * note: HELLO/heartbeat and IDENTIFY/Ready don't have to be sent in a certain order.
+        Just don't send a heartbeat before HELLO and don't send non-hb-related payloads before IDENTIFY
     
 ## User callback
-Returning a non-zero number from the user callback will be taken to mean disconnect from the gateway.
-Do state control within callbacks
+A non-zero return value from the user callback will be taken to mean disconnect from the gateway.
+Do state control within callbacks?

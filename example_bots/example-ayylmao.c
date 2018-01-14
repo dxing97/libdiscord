@@ -25,7 +25,6 @@ void int_handler(int i){
  * ld_context contains info about the bot. The user shouldn't have to mess with it.
  * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
- *
  */
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data) {
     /*
@@ -210,7 +209,7 @@ int main(int argc, char *argv[]) {
     struct ld_context *context;
     context = ld_create_context_via_info(info); //garbage in, garbage out
     if(context == NULL) {
-        fprintf(stderr, "error creating ld context\n");
+        fprintf(stderr, "error creating libdiscord context\n");
         return 1;
     }
     free(info);
