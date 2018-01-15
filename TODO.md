@@ -1,6 +1,6 @@
 ## Goals
 * Get a stable working minimal example bot (done) with minimal spaghetti (almost there)
-* Get 100% coverage of all non-voice API functions (v0.3 point release)
+* Get 100% coverage of all non-voice API functions (v1.0 release)
 * Make a bot that can turn my SSH lights on and off
 * Discord developer ToS compliant
 

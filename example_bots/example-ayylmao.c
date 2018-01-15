@@ -42,13 +42,13 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         case LD_CALLBACK_MESSAGE_CREATE: {
             json_t *jdata = data, *value;
             //if content == "ayy", POST "lmao" to that channel
-            _ld_info(context, "received MESSAGE_CREATE dispatch");
+            ld_info("received MESSAGE_CREATE dispatch");
             //we want the "content" and "channel id" fields
             json_object_foreach(jdata, key, value) {
                 if (strcmp(key, "content") == 0) {
                     content = json_string_value(value);
                     if (content == NULL) {
-                        _ld_warn(context, "couldn't get message content");
+                        ld_warning("couldn't get message content");
                         break;
                     }
                     if (strcmp(content, "ayy") == 0) {
@@ -59,7 +59,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 if (strcmp(key, "channel_id") == 0) {
                     channelid = json_string_value(value);
                     if (channelid == NULL) {
-                        _ld_warn(context, "couldn't get channel_id");
+                        ld_warning("couldn't get channel_id");
                         break;
                     }
                     ayystat++;
@@ -74,7 +74,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             break;
     }
 
-    _ld_info(context, "ayystat = %d", ayystat);
+    ld_info("ayystat = %d", ayystat);
 
     if(ayystat != 2) { //did not get channel ID and ayy content
         return 0;
@@ -83,17 +83,17 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     json_t *body;
     body = json_pack("{ss}", "content", "lmao");
     if(body == NULL) {
-        _ld_err(context, "couldn't create JSON object for lmao data");
+        ld_error("couldn't create JSON object for lmao data");
         return 0;
     }
     char *tmp;
     tmp = json_dumps(body, 0);
     if(tmp == NULL) {
-        _ld_err(context, "couldn't dump JSON string for lmao data");
+        ld_error("couldn't dump JSON string for lmao data");
         return 0;
     }
     char *jsonbody = strdup(tmp);
-    _ld_dbug(context, "body to post: %s", jsonbody);
+    ld_debug("body to post: %s", jsonbody);
 
     //curl POST to that channel
     struct curl_slist *headers = NULL;
@@ -114,7 +114,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
-        _ld_err(context, "couldn't POST lmao");
+        ld_error("couldn't POST lmao");
         return 1;
     }
 
