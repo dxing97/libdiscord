@@ -42,13 +42,13 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         case LD_CALLBACK_MESSAGE_CREATE: {
             json_t *jdata = data, *value;
             //if content == "ayy", POST "lmao" to that channel
-            ld_info(context, "received MESSAGE_CREATE dispatch");
+            _ld_info(context, "received MESSAGE_CREATE dispatch");
             //we want the "content" and "channel id" fields
             json_object_foreach(jdata, key, value) {
                 if (strcmp(key, "content") == 0) {
                     content = json_string_value(value);
                     if (content == NULL) {
-                        ld_warn(context, "couldn't get message content");
+                        _ld_warn(context, "couldn't get message content");
                         break;
                     }
                     if (strcmp(content, "ayy") == 0) {
@@ -59,7 +59,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                 if (strcmp(key, "channel_id") == 0) {
                     channelid = json_string_value(value);
                     if (channelid == NULL) {
-                        ld_warn(context, "couldn't get channel_id");
+                        _ld_warn(context, "couldn't get channel_id");
                         break;
                     }
                     ayystat++;
@@ -74,7 +74,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             break;
     }
 
-    ld_info(context, "ayystat = %d", ayystat);
+    _ld_info(context, "ayystat = %d", ayystat);
 
     if(ayystat != 2) { //did not get channel ID and ayy content
         return 0;
@@ -83,17 +83,17 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     json_t *body;
     body = json_pack("{ss}", "content", "lmao");
     if(body == NULL) {
-        ld_err(context, "couldn't create JSON object for lmao data");
+        _ld_err(context, "couldn't create JSON object for lmao data");
         return 0;
     }
     char *tmp;
     tmp = json_dumps(body, 0);
     if(tmp == NULL) {
-        ld_err(context, "couldn't dump JSON string for lmao data");
+        _ld_err(context, "couldn't dump JSON string for lmao data");
         return 0;
     }
     char *jsonbody = strdup(tmp);
-    ld_debug(context, "body to post: %s", jsonbody);
+    _ld_dbug(context, "body to post: %s", jsonbody);
 
     //curl POST to that channel
     struct curl_slist *headers = NULL;
@@ -114,7 +114,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
-        ld_err(context, "couldn't POST lmao");
+        _ld_err(context, "couldn't POST lmao");
         return 1;
     }
 
@@ -183,8 +183,15 @@ int main(int argc, char *argv[]) {
 
     printf("Example bot 1 \"ayylmao\" starting up using libdiscord v%s\n", LD_VERSION);
 
-    printf("Bot token: %s\n", bot_token);
+    if(bot_token == NULL){
+        printf("Bot token not set!");
+        return 1;
+    }
+
+    printf("Bot token set");
     printf("Initializing libdiscord with log level %lu\n", log_level);
+
+    ld_set_logging_level(log_level);
 
     signal(SIGINT, int_handler);
 
@@ -209,7 +216,7 @@ int main(int argc, char *argv[]) {
     struct ld_context *context;
     context = ld_create_context_via_info(info); //garbage in, garbage out
     if(context == NULL) {
-        fprintf(stderr, "error creating libdiscord context\n");
+        ld_error("error creating libdiscord context\n");
         return 1;
     }
     free(info);
@@ -226,16 +233,20 @@ int main(int argc, char *argv[]) {
             //bot isn't connected, so we should try connecting
             ret = ld_connect(context);
             if(ret != 0) {
-                ld_warn(context, "error connecting to discord: error code %d", ret);
+                ld_warning("error connecting to discord: error code %d", ret);
                 bot_exit = 1;
             }
             bot_state = 1;
         }
 
-        ld_service(context, 20); //service the connection
+        ret = ld_service(context, 20); //service the connection
+        if(ret != 0) {
+            ld_debug("ld_service returned non-0");
+            break;
+        }
     }
     //disconnect from discord gracefully
-    ld_info(context, "disconnecting from discord");
+    ld_info("disconnecting from discord");
     //destroy the context
     ld_destroy_context(context);
     curl_easy_cleanup(handle);

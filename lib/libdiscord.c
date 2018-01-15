@@ -43,7 +43,7 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->curl_multi_handle=curl_multi_init();
 
     if(info->bot_token == NULL) {
-        ld_err(context, "bot token is null");
+        _ld_err(context, "bot token is null");
         return NULL;
     }
     context->bot_token = malloc(strlen(info->bot_token) + 1);
@@ -56,7 +56,7 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
             info->gateway_ringbuffer_size,
             NULL);
     if(context->gateway_ring == NULL) {
-        ld_err(context, "couldn't init gateway ringbuffer");
+        _ld_err(context, "couldn't init gateway ringbuffer");
         return NULL;
     }
 
@@ -80,44 +80,44 @@ void ld_destroy_context(struct ld_context *context) {
     free(context);
 }
 
-void ld_err(struct ld_context *context, const char *message, ...) {
-    if((ld_log_error & context->log_level) != 0) {
+void _ld_err(struct ld_context *context, const char *message, ...) {
+    if((LD_LOG_ERROR & context->log_level) != 0) {
         va_list myargs;
         va_start(myargs, message);
-        _ld_log(ld_log_error, context->log_level, message, myargs);
+        _ld_log(LD_LOG_ERROR, context->log_level, message, myargs);
         va_end(myargs);
     }
 }
 
-void ld_warn(struct ld_context *context, const char *message, ...) {
-    if((ld_log_warning & context->log_level) != 0) {
+void _ld_warn(struct ld_context *context, const char *message, ...) {
+    if((LD_LOG_WARNING & context->log_level) != 0) {
         va_list myargs;
         va_start(myargs, message);
-        _ld_log(ld_log_warning, context->log_level, message, myargs);
+        _ld_log(LD_LOG_WARNING, context->log_level, message, myargs);
         va_end(myargs);
     }
 }
-void ld_info(struct ld_context *context, const char *message, ...) {
-    if((ld_log_info & context->log_level) != 0) {
+void _ld_info(struct ld_context *context, const char *message, ...) {
+    if((LD_LOG_INFO & context->log_level) != 0) {
         va_list myargs;
         va_start(myargs, message);
-        _ld_log(ld_log_info, context->log_level, message, myargs);
+        _ld_log(LD_LOG_INFO, context->log_level, message, myargs);
         va_end(myargs);
     }
 }
-void ld_notice(struct ld_context *context, const char *message, ...) {
-    if((ld_log_notice & context->log_level) != 0) {
+void _ld_note(struct ld_context *context, const char *message, ...) {
+    if((LD_LOG_NOTICE & context->log_level) != 0) {
         va_list myargs;
         va_start(myargs, message);
-        _ld_log(ld_log_notice, context->log_level, message, myargs);
+        _ld_log(LD_LOG_NOTICE, context->log_level, message, myargs);
         va_end(myargs);
     }
 }
-void ld_debug(struct ld_context *context, const char *message, ...) {\
-    if((ld_log_debug & context->log_level) != 0) {\
+void _ld_dbug(struct ld_context *context, const char *message, ...) {\
+    if((LD_LOG_DEBUG & context->log_level) != 0) {\
         va_list myargs;
         va_start(myargs, message);
-        _ld_log(ld_log_debug, context->log_level, message, myargs);
+        _ld_log(LD_LOG_DEBUG, context->log_level, message, myargs);
         va_end(myargs);
     }
 }
@@ -138,8 +138,8 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
 
     buffer->string = realloc(buffer->string, buffer->size + recieved_size + 1);
     if(buffer->string == NULL) {
-        ld_err(buffer->context,
-               "realloc: couldn't allocate memory for curl response string in ld_connect!");
+        _ld_err(buffer->context,
+                "realloc: couldn't allocate memory for curl response string in ld_connect!");
     }
 
     memcpy(&(buffer->string[buffer->size]), contents, recieved_size);
@@ -170,7 +170,7 @@ int _ld_get_gateway(struct ld_context *context) {
     handle = curl_easy_init();
     if(handle == NULL) {
         //something went wrong trying to create the easy handle.
-        ld_err(context, "curl: couldn't init easy handle");
+        _ld_err(context, "curl: couldn't init easy handle");
         return 2;
     }
 
@@ -184,11 +184,11 @@ int _ld_get_gateway(struct ld_context *context) {
     curl_easy_cleanup(handle);
 
     if(ret != CURLE_OK) {
-        ld_err(context, "curl: couldn't get gateway url from /gateway");
+        _ld_err(context, "curl: couldn't get gateway url from /gateway");
         return 2;
     }
 
-    ld_debug(context, "received data from /gateway: \n%s", buffer.string);
+    _ld_dbug(context, "received data from /gateway: \n%s", buffer.string);
 
     //use jansson to extract the JSON data
     json_t *object, *tmp;
@@ -196,19 +196,19 @@ int _ld_get_gateway(struct ld_context *context) {
 
     object = json_loads(buffer.string, 0, &error);
     if(object == NULL) {
-        ld_err(context, "jansson: couldn't decode string returned "
+        _ld_err(context, "jansson: couldn't decode string returned "
                 "from /gateway in ld_connext: %s", buffer.string);
         return 3;
     }
 
     tmp = json_object_get(object, "url");
     if(tmp == NULL) {
-        ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway");
+        _ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway");
         return 3;
     }
 
     if(json_string_value(tmp) == NULL) {
-        ld_err(context, "jansson: didn't receive string object from "
+        _ld_err(context, "jansson: didn't receive string object from "
                 "JSON payload received from gateway");
         return 3;
     }
@@ -234,7 +234,7 @@ size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *use
     }
 
     tmp = strndup(buffer, size*nitems - 1);
-    ld_debug(context, "headers(%d): %s", (int) nitems*size, tmp);
+    _ld_dbug(context, "headers(%d): %s", (int) nitems * size, tmp);
     free(tmp);
     return size*nitems;
 }
@@ -286,29 +286,29 @@ int _ld_get_gateway_bot(struct ld_context *context){
 
     ret = curl_easy_perform(handle);
     if(ret != CURLE_OK) {
-        ld_err(context, "curl: couldn't get gateway url from /gateway");
+        _ld_err(context, "curl: couldn't get gateway url from /gateway");
         return 2;
     }
     curl_easy_cleanup(handle);
 
-    ld_debug(context, "received data from /gateway/bot: \n%s", buffer.string);
+    _ld_dbug(context, "received data from /gateway/bot: \n%s", buffer.string);
 
     object = json_loads(buffer.string, 0, &error);
     if(object == NULL) {
-        ld_err(context, "jansson: couldn't decode string returned "
+        _ld_err(context, "jansson: couldn't decode string returned "
                 "from /gateway/bot in ld_connect: %s", buffer.string);
         return 3;
     }
 
     tmp = json_object_get(object, "url");
     if(tmp == NULL) {
-        ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway/bot."
+        _ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway/bot."
                 " is the bot token valid? are we being ratelimited?");
         return 3;
     }
 
     if(json_string_value(tmp) == NULL) {
-        ld_err(context, "jansson: didn't receive string object in \"url\" from "
+        _ld_err(context, "jansson: didn't receive string object in \"url\" from "
                 "JSON payload received from /gateway/bot");
         return 3;
     }
@@ -318,19 +318,19 @@ int _ld_get_gateway_bot(struct ld_context *context){
 
     tmp = json_object_get(object, "shards");
     if(tmp == NULL) {
-        ld_err(context, "jansson: couldn't find key \"shards\" in JSON object from /gateway/bot."
+        _ld_err(context, "jansson: couldn't find key \"shards\" in JSON object from /gateway/bot."
                 "is the bot token valid?");
         return 3;
     }
 
     if(json_integer_value(tmp) == 0) {
-        ld_err(context, "jansson: didn't receive integer object in \"shards\" from "
+        _ld_err(context, "jansson: didn't receive integer object in \"shards\" from "
                 "JSON payload received from /gateway/bot");
         return 3;
     }
 
     context->shards = (int) json_integer_value(tmp);
-    ld_info(context, "shards: %d", context->shards);
+    _ld_info(context, "shards: %d", context->shards);
     return 0;
 }
 
@@ -348,7 +348,7 @@ int ld_connect(struct ld_context *context) {
     if(context->gateway_url == NULL) {
         ret = _ld_get_gateway(context);
         if(ret != 0) {
-            ld_err(context, "couldn't get gateway URL from /gateway");
+            _ld_err(context, "couldn't get gateway URL from /gateway");
             return ret;
         }
     }
@@ -357,7 +357,7 @@ int ld_connect(struct ld_context *context) {
         case LD_GATEWAY_UNCONNECTED:
             ret = _ld_get_gateway_bot(context);
             if(ret != 0) {
-                ld_err(context, "couldn't get gateway URL from /gateway/bot");
+                _ld_err(context, "couldn't get gateway URL from /gateway/bot");
                 return ret;
             }
 
@@ -372,7 +372,7 @@ int ld_connect(struct ld_context *context) {
             break;
         case LD_GATEWAY_CONNECTING:
             //??? do nothing
-            ld_notice(context, "ld_connect called while connecting to gateway!");
+            _ld_note(context, "ld_connect called while connecting to gateway!");
             break;
         case LD_GATEWAY_CONNECTED:
             //this context already has an established connection to the gateway
@@ -398,18 +398,18 @@ int ld_service(struct ld_context *context, int timeout) {
         }
         ret = ld_gateway_queue_heartbeat(context);
         if(ret != 0) {
-            ld_warn(context, "couldn't put heartbeat into gateway tx ringbuffer");
+            _ld_warn(context, "couldn't put heartbeat into gateway tx ringbuffer");
             context->hb_count--;
-            goto service;
+            return 1;
         }
 
         context->last_hb = lws_now_secs();
     }
 
-    //service gateway ringbuffer
+    //call writable if there's things that need to be sent
     if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) != 0)
         lws_callback_on_writable(context->lws_wsi);
-service:
+
     lws_service(context->lws_context, timeout);
     return 0;
 }
@@ -438,7 +438,7 @@ int ld_gateway_connect(struct ld_context *context) {
 
     lws_context = lws_create_context(&info);
     if(lws_context == NULL) {
-        ld_err(context, "lws context init failed while trying to connect to the gateway");
+        _ld_err(context, "lws context init failed while trying to connect to the gateway");
         return -1;
     }
     context->lws_context = lws_context;
@@ -462,11 +462,11 @@ int ld_gateway_connect(struct ld_context *context) {
 
     i->protocol = protocols[0].name;
 
-    ld_debug(context, "connecting to gateway");
+    _ld_dbug(context, "connecting to gateway");
     struct lws *wsi;
     wsi = lws_client_connect_via_info(i);
     if(wsi == NULL) {
-        ld_err(context, "failed to connect to gateway (%s)", i->address);
+        _ld_err(context, "failed to connect to gateway (%s)", i->address);
         return 1;
     }
     context->lws_wsi = wsi;
@@ -490,15 +490,15 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-            ld_err(context, "lws: error connecting to gateway: %.*s(%d)", in, len, len);
+            _ld_err(context, "lws: error connecting to gateway: %.*s(%d)", in, len, len);
             context->user_callback(context, LD_CALLBACK_WS_CONNECTION_ERROR, NULL);
             return 0;
         case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH:
-            ld_info(context, "lws: received handshake from Discord gateway");
+            _ld_info(context, "lws: received handshake from Discord gateway");
             return 0;
             break;
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
-            ld_info(context, "established websocket connection to gateway");
+            _ld_info(context, "established websocket connection to gateway");
             return context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL);
             context->gateway_state = LD_GATEWAY_CONNECTED;
             break;
@@ -507,17 +507,17 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             return 0;
             break;
         case LWS_CALLBACK_CLOSED:
-            ld_notice(context, "lws: websocket connection to gateway closed");
+            _ld_note(context, "lws: websocket connection to gateway closed");
             break;
         case LWS_CALLBACK_CLIENT_RECEIVE:
             //check to see if we've received a new fragment
-            ld_debug(context, "first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
+            _ld_dbug(context, "first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
             if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {//first fragment is also the last fragment
                 //we're
-                ld_notice(context, "first gateway fragment is also last fragment");
+                _ld_note(context, "first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
-                ld_notice(context, "single RX: %s", (char *) in);
+                _ld_note(context, "single RX: %s", (char *) in);
                 context->gateway_rx_buffer = NULL;
                 context->gateway_rx_buffer_len = 0;
 
@@ -542,14 +542,14 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                 context->gateway_rx_buffer_len += len;
                 context->gateway_rx_buffer[context->gateway_rx_buffer_len] = '\0';
                 if(context->gateway_rx_buffer_len > 8000) {
-                    ld_notice(context, "multi RX: %.*s...", 8000, context->gateway_rx_buffer);
+                    _ld_note(context, "multi RX: %.*s...", 8000, context->gateway_rx_buffer);
                 } else {
-                    ld_notice(context, "multi RX: %s", context->gateway_rx_buffer);
+                    _ld_note(context, "multi RX: %s", context->gateway_rx_buffer);
                 }
 
                 i = ld_gateway_payload_parser(context, context->gateway_rx_buffer, context->gateway_rx_buffer_len);
 
-                ld_debug(context, "payload parser code: %d", i);
+                _ld_dbug(context, "payload parser code: %d", i);
                 free(context->gateway_rx_buffer);
                 context->gateway_rx_buffer = NULL;
                 context->gateway_rx_buffer_len = 0;
@@ -562,30 +562,30 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             strncpy(context->gateway_rx_buffer + context->gateway_rx_buffer_len, in, len);
             context->gateway_rx_buffer_len += len;
 
-//            ld_notice(context, "multi RX: %.*s", context->gateway_rx_buffer, context->gateway_rx_buffer_len);
+//            _ld_note(context, "multi RX: %.*s", context->gateway_rx_buffer, context->gateway_rx_buffer_len);
 
             return 0;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
-            ld_debug(context, "lws: recieved pong from gateway");
+            _ld_dbug(context, "lws: recieved pong from gateway");
             break;
         case LWS_CALLBACK_CLIENT_WRITEABLE:
-            ld_debug(context, "lws: client writable callback");
+            _ld_dbug(context, "lws: client writable callback");
             gateway_payload = malloc(sizeof(struct ld_gateway_payload));
 
             if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) == 0) {
-                ld_debug(context, "nothing in queue to send");
+                _ld_dbug(context, "nothing in queue to send");
                 break;
             }
 
             i = (int) lws_ring_consume(context->gateway_ring, NULL, gateway_payload, 1);
             if(i != 1) {
-                ld_warn(context, "couldn't consume payload from ringbuffer");
+                _ld_warn(context, "couldn't consume payload from ringbuffer");
                 break;
             }
 
             i = sprintf(payload + LWS_PRE, "%s", (char *) gateway_payload->payload);
             if(i <= 0) {
-                ld_err(context, "couldn't write payload to buffer");
+                _ld_err(context, "couldn't write payload to buffer");
                 return -1;
             }
             lwsl_notice("TX: %s\n", payload + LWS_PRE);
@@ -603,9 +603,9 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 //            context->gateway_queue = NULL;
             break;
         case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
-            ld_info(context, "lws: gateway initiated close of websocket: "
-                    "close code: %u\nCONTEXT:\n%s",
-                    (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1], in+2);
+            _ld_info(context, "lws: gateway initiated close of websocket: "
+                             "close code: %u\nCONTEXT:\n%s",
+                     (unsigned int) ((unsigned char *) in)[0] << 8 | ((unsigned char *) in)[1], in + 2);
             context->close_code = (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1];
             break;
         case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
@@ -613,7 +613,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
         case LWS_CALLBACK_UNLOCK_POLL:
             break;
         default:
-            ld_debug(context, "lws: received lws callback reason %d", reason);
+            _ld_dbug(context, "lws: received lws callback reason %d", reason);
             break;
     }
     return 0;
@@ -688,9 +688,9 @@ json_t *_ld_generate_identify(struct ld_context *context) {
         "afk", 0
     );
     if(ident == NULL) {
-        ld_err(context, "error generating IDENTIFY payload: %s\n"
-                "source: \n%s\nin line %d column %d and position %d",
-               error.text, error.source, error.line, error.column, error.position);
+        _ld_err(context, "error generating IDENTIFY payload: %s\n"
+                        "source: \n%s\nin line %d column %d and position %d",
+                error.text, error.source, error.line, error.column, error.position);
 
     }
 
@@ -705,7 +705,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     const char *key;
     payload = json_loadb(in, len, 0, &error);
     if(payload == NULL) {
-        ld_debug(context, "couldn't parse payload from gateway: %s", error.text);
+        _ld_dbug(context, "couldn't parse payload from gateway: %s", error.text);
         return 1;
     }
     d = NULL;
@@ -724,11 +724,11 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
         switch (ld_gateway_payload_objectparser(key)) {
             case LD_GATEWAY_OP:
                 opcode = (enum ld_gateway_opcode) json_integer_value(value);
-                ld_debug(context, "received opcode %d", opcode);
+                _ld_dbug(context, "received opcode %d", opcode);
                 break;
             case LD_GATEWAY_D:
                 d = value;
-                ld_debug(context, "got data field in payload");
+                _ld_dbug(context, "got data field in payload");
                 break;
             case LD_GATEWAY_T:
                 t = value;
@@ -737,7 +737,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
                 context->last_seq = (int) json_integer_value(value);
                 break;
             case LD_GATEWAY_UNKNOWN:
-                ld_warn(context, "got unknown key in payload");
+                _ld_warn(context, "got unknown key in payload");
                 return 1;
         }
     }
@@ -764,20 +764,20 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             //save heartbeat interval
 
             if(d == NULL) {
-                ld_warn(context, "couldn't get d field in hello payload");
+                _ld_warn(context, "couldn't get d field in hello payload");
             }
             tmp = json_object_get(d, "heartbeat_interval");
             if(tmp != NULL) {
                 if(json_integer_value(tmp) != 0) {
                     hbi = (unsigned int) json_integer_value(tmp);
                 } else {
-                    ld_warn(context, "unexpected type for heartbeat interval in "
+                    _ld_warn(context, "unexpected type for heartbeat interval in "
                             "hello payload (not integer)");
                 }
             } else {
-                ld_warn(context, "couldn't find heartbeat interval in hello payload");
+                _ld_warn(context, "couldn't find heartbeat interval in hello payload");
             }
-            ld_debug(context, "heartbeat interval is %d", hbi);
+            _ld_dbug(context, "heartbeat interval is %d", hbi);
             context->heartbeat_interval = hbi;
 
             //prepare IDENTIFY payload
@@ -794,7 +794,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             lws_ring_insert(context->gateway_ring, toinsert, 1);
 
             json_decref(payload);
-            ld_debug(context, "prepared JSON identify payload: \n%s", (char *)toinsert->payload);
+            _ld_dbug(context, "prepared JSON identify payload: \n%s", (char *) toinsert->payload);
 
 //            lws_callback_on_writable(context->lws_wsi); //send identify payload
 
@@ -809,7 +809,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             break;
         case LD_GATEWAY_OPCODE_UNKNOWN:
         default:
-            ld_warn(context, "received payload with unknown opcode");
+            _ld_warn(context, "received payload with unknown opcode");
             return 1;
     }
 
@@ -823,13 +823,13 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
     int ret;
     ret = json_object_set_new(payload, "op", op);
     if(ret != 0) {
-        ld_warn(context, "couldn't set opcode in new payload");
+        _ld_warn(context, "couldn't set opcode in new payload");
         return NULL;
     }
     if(d != NULL){ //can be null for heartbeat ACKs
         ret = json_object_set_new(payload, "d", d);
         if(ret != 0) {
-            ld_warn(context, "couldn't set data in new payload");
+            _ld_warn(context, "couldn't set data in new payload");
             return NULL;
         }
     }
@@ -837,14 +837,14 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
     if(t != NULL) {
         ret = json_object_set_new(payload, "t", t);
         if(ret != 0) {
-            ld_warn(context, "couldn't set type in new payload");
+            _ld_warn(context, "couldn't set type in new payload");
             return NULL;
         }
     }
     if(s != NULL) {
         ret = json_object_set_new(payload, "s", s);
         if(ret != 0) {
-            ld_warn(context, "couldn't set sequence number in new payload");
+            _ld_warn(context, "couldn't set sequence number in new payload");
             return NULL;
         }
     }
@@ -859,7 +859,7 @@ int ld_dispatch_ready(struct ld_context *context, json_t *data) {
     json_t *value;
     json_object_foreach(data, key, value) {
         if(strcmp(key, "session_id") == 0) {
-            ld_debug(context, "gateway session_id: %s", json_string_value(value));
+            _ld_dbug(context, "gateway session_id: %s", json_string_value(value));
             context->gateway_session_id = strdup(json_string_value(value));
             return 0;
         }
@@ -869,12 +869,12 @@ int ld_dispatch_ready(struct ld_context *context, json_t *data) {
 
 int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data) {
     //check type
-    ld_debug(context, "parsing dispatch type");
+    _ld_dbug(context, "parsing dispatch type");
     int i, ret;
     const char *typestr;
     typestr = json_string_value(type);
     if(typestr == NULL) {
-        ld_warn(context, "jansson: couldn't identify gateway dispatch type");
+        _ld_warn(context, "jansson: couldn't identify gateway dispatch type");
         return 1;
     }
 
@@ -916,9 +916,10 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
     };
     for(i = 0; dispatch_dict[i].name != NULL; i++) {
         if(strcmp(typestr, dispatch_dict[i].name) == 0) {
-            ld_debug(context, "dispatch type is %s, callback reason is %d", dispatch_dict[i].name, dispatch_dict[i].cbk_reason);
+            _ld_dbug(context, "dispatch type is %s, callback reason is %d", dispatch_dict[i].name,
+                     dispatch_dict[i].cbk_reason);
             if(dispatch_dict[i].dispatch_callback != NULL) {
-                ld_debug(context, "calling dispatch libdiscord callback for ld_callback (%s)", typestr);
+                _ld_dbug(context, "calling dispatch libdiscord callback for ld_callback (%s)", typestr);
                 ret = dispatch_dict[i].dispatch_callback(context, data);
                 return ret;
             }
@@ -938,7 +939,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
                                 json_integer(context->last_seq), NULL, NULL); //create heartbeat payload
 
     if(lws_ring_get_count_free_elements(context->gateway_ring) == 0) {
-        ld_warn(context, "can't fit any new payloads into gateway ringbuffer");
+        _ld_warn(context, "can't fit any new payloads into gateway ringbuffer");
         return 1;
     }
 
@@ -948,7 +949,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
 
     ret = lws_ring_insert(context->gateway_ring, tmp, 1);
     if(ret != 1){
-        ld_warn(context, "couldn't fit heartbeat payload into gateway ringbuffer");
+        _ld_warn(context, "couldn't fit heartbeat payload into gateway ringbuffer");
         return 1;
     }
     return 0;

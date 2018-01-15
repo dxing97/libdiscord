@@ -21,12 +21,32 @@
  *  debug:      debug information
  */
 enum ld_log_level {
-    ld_log_error = 1<<0,
-    ld_log_warning = 1<<1,
-    ld_log_info = 1<<2,
-    ld_log_notice = 1<<3,
-    ld_log_debug = 1<<4
+    LD_LOG_ERROR = 1<<0,
+    LD_LOG_WARNING = 1<<1,
+    LD_LOG_NOTICE = 1<<2,
+    LD_LOG_INFO = 1<<3,
+    LD_LOG_DEBUG = 1<<4
 };
+
+/*
+ * sets the static global variable for logging function
+ * eliminates the need for keeping the log level in ld_context
+ * can call whenever, sets a static global variable in library
+ */
+unsigned long ld_set_logging_level(unsigned long ll);
+
+/*
+ * logging functions
+ * can use variable length arguments like *printf functions
+ * example:
+   ld_notice("shard: %d", shard_number); //where shard_number is an int
+   replaces old logging functions requiring ld_context as argument
+ */
+void ld_error(const char *message, ...);
+void ld_warning(const char *message, ...);
+void ld_info(const char *message, ...);
+void ld_notice(const char *message, ...);
+void ld_debug(const char *message, ...);
 
 /*
  * private logging function

@@ -141,7 +141,7 @@ struct ld_presence {
 struct ld_context {
     char *bot_token;
     void *user_data;
-    unsigned long log_level;
+    unsigned long log_level; //DEPRECIATED, use new functions in log.h
     char *gateway_url;
     char *gateway_bot_url;
     enum ld_gateway_state gateway_state;
@@ -174,11 +174,11 @@ struct ld_context {
  * includes:
  *  bot token
  *  user-defined pointer to anything, can be metadata about the bot (creator, version, etc.)
- *  libdiscord logging level (see ld_log_level)
+ *  libdiscord logging level (see ld_log_level), DEPRECIATED, use logging functions in log.h instead
  */
 struct ld_context_info {
     char *bot_token;
-    unsigned long log_level;
+    unsigned long log_level;  //DEPRECIATED, use new functions in log.h
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data);
     size_t gateway_ringbuffer_size;
     struct ld_presence init_presence;
@@ -193,15 +193,16 @@ struct ld_dispatch {
 
 
 /*
+ * DEPRECIATED, USE FUNCTIONS IN log.h INSTEAD
  * logging functions for different levels
  * context is needed to determine enabled logging levels
  */
 
-void ld_err(struct ld_context *context, const char *message, ...);
-void ld_warn(struct ld_context *context, const char *message, ...);
-void ld_info(struct ld_context *context, const char *message, ...);
-void ld_notice(struct ld_context *context, const char *message, ...);
-void ld_debug(struct ld_context *context, const char *message, ...);
+void _ld_err(struct ld_context *context, const char *message, ...);
+void _ld_warn(struct ld_context *context, const char *message, ...);
+void _ld_info(struct ld_context *context, const char *message, ...);
+void _ld_note(struct ld_context *context, const char *message, ...);
+void _ld_dbug(struct ld_context *context, const char *message, ...);
 
 /*
  * create a context from user info
@@ -238,6 +239,8 @@ int ld_connect(struct ld_context *context);
 /*
  * services pending HTTP and websocket requests.
  * checks if the heartbeat timer is up
+ * returns 0 for OK
+ * returns 1 for websocket ringbuffer error
  */
 int ld_service(struct ld_context *context, int timeout);
 
