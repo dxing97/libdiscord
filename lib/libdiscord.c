@@ -225,7 +225,6 @@ int _ld_get_gateway(struct ld_context *context) {
  * prints headers
  */
 size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *userdata) {
-    struct ld_context *context = userdata;
     char *tmp;
 
     if(size*nitems == 2) {
