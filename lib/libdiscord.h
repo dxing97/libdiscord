@@ -6,6 +6,7 @@
 #include <jansson.h>
 #include "libdiscord_config.h"
 #include "log.h"
+#include "json.h"
 
 /*
  * right now there are only callbacks for a small number of gateway events
@@ -19,7 +20,7 @@ enum ld_callback_reason {
     LD_CALLBACK_RESUMED = 2, //opcode 6
     LD_CALLBACK_INVALID_SESSION = 3, //opcode 9
 
-    /* Dispatches */
+    /* Dispatches (opcode 0 types)*/
     LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_CHANNEL_CREATE = 4,
     LD_CALLBACK_CHANNEL_UPDATE = 5,
@@ -166,7 +167,27 @@ struct ld_context {
     int gateway_bot_limit; //ratelimit reset amount
     int gateway_bot_remaining; //last ratelimit remaining value
     unsigned long gateway_bot_reset; //unix time for reset
+};
 
+/*
+ * libdiscord gateway connection info
+ * one info struct per gateway connection (i.e. one per shard)
+ * created and destroyed with each shard
+ * does NOT go away with disconnections: destroyed when a shard is closed
+ * //todo: when is a shard closed?
+ */
+struct ld_gi {
+    struct ld_context *parent_context; //pointer to the parent context
+    void *user; //user defined pointer for user stuff //todo: add way of allocating *user and setting its size
+    enum ld_gateway_state state; //connected, connecting, disconnected
+    //todo: have seperate states for websocket connecting and gateway identifying
+    int shardnum; //which shard this gateway connection refers to
+    struct lws *lws_wsi; //lws wsi corresponding to this connection
+    unsigned int hb_interval; //interval to send heartbeats at, in ms
+    int last_seq; //last sequence number recieved using this connection
+    int hb_count; //starts at 0, increment
+    struct lws_ring *tx_ringbuffer; //lws ringbuffer used to queue payloads to be sent;
+    unsigned int close_code;
 };
 
 /*
@@ -215,7 +236,28 @@ struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
  */
 void ld_destroy_context(struct ld_context *context);
 
+/*
+ * private function, makes a GET request to /gateway/bot and retrieves shard number and gateway URL/determines bot token
+ * is invalid
+ */
 int _ld_get_gateway_bot(struct ld_context *context);
+
+/*
+ * curl callback function used to read data returned from HTTP request
+ */
+size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr);
+
+/*
+ * private function, makes a GET request to /gateway and retrieves the gateway URL
+ * used to determine if we can even connect to Discord, not _strictly_ nessecary
+ * blocking
+ */
+int _ld_get_gateway(struct ld_context *context);
+
+/*
+ * curl callback function used to (currently) print out HTTP headers line by line for /gateway and /gateway/bot
+ */
+size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *userdata);
 
 /*
  * connect to discord
@@ -227,13 +269,6 @@ int _ld_get_gateway_bot(struct ld_context *context);
  * returns 2 for a curl error
  * returns 3 for a jansson error (JSON parsing error: didn't get what we were expecting)
  */
-
-size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr);
-
-int _ld_get_gateway(struct ld_context *context);
-
-size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *userdata);
-
 int ld_connect(struct ld_context *context);
 
 /*
@@ -269,11 +304,6 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
  * returns 1 on jansson (JSON parsing) error
  */
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
-
-/*
- * takes four json_t objects and creates a payload
- */
-json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
 
 /*
  * callback for parsing READY dispatches

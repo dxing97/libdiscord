@@ -170,7 +170,7 @@ int _ld_get_gateway(struct ld_context *context) {
     handle = curl_easy_init();
     if(handle == NULL) {
         //something went wrong trying to create the easy handle.
-        _ld_err(context, "curl: couldn't init easy handle");
+        ld_error("curl: couldn't init easy handle");
         return 2;
     }
 
@@ -184,11 +184,11 @@ int _ld_get_gateway(struct ld_context *context) {
     curl_easy_cleanup(handle);
 
     if(ret != CURLE_OK) {
-        _ld_err(context, "curl: couldn't get gateway url from /gateway");
+        ld_error("curl: couldn't get gateway url from /gateway");
         return 2;
     }
 
-    _ld_dbug(context, "received data from /gateway: \n%s", buffer.string);
+    ld_debug("received data from /gateway: \n%s", buffer.string);
 
     //use jansson to extract the JSON data
     json_t *object, *tmp;
@@ -196,19 +196,19 @@ int _ld_get_gateway(struct ld_context *context) {
 
     object = json_loads(buffer.string, 0, &error);
     if(object == NULL) {
-        _ld_err(context, "jansson: couldn't decode string returned "
+        ld_error("jansson: couldn't decode string returned "
                 "from /gateway in ld_connext: %s", buffer.string);
         return 3;
     }
 
     tmp = json_object_get(object, "url");
     if(tmp == NULL) {
-        _ld_err(context, "jansson: couldn't find key \"url\" in JSON object from /gateway");
+        ld_error("jansson: couldn't find key \"url\" in JSON object from /gateway");
         return 3;
     }
 
     if(json_string_value(tmp) == NULL) {
-        _ld_err(context, "jansson: didn't receive string object from "
+        ld_error("jansson: didn't receive string object from "
                 "JSON payload received from gateway");
         return 3;
     }
@@ -785,7 +785,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             t = NULL;
             s = NULL;
             d = _ld_generate_identify(context);
-            payload = ld_json_create_payload(NULL, op, d, t, s);
+            payload = ld_json_create_payload(op, d, t, s);
 
             struct ld_gateway_payload *toinsert;
             toinsert = malloc(sizeof(struct ld_gateway_payload));
@@ -817,41 +817,6 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     return 0;
 }
 
-json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s) {
-    json_t *payload;
-    payload = json_object();
-    int ret;
-    ret = json_object_set_new(payload, "op", op);
-    if(ret != 0) {
-        _ld_warn(context, "couldn't set opcode in new payload");
-        return NULL;
-    }
-    if(d != NULL){ //can be null for heartbeat ACKs
-        ret = json_object_set_new(payload, "d", d);
-        if(ret != 0) {
-            _ld_warn(context, "couldn't set data in new payload");
-            return NULL;
-        }
-    }
-
-    if(t != NULL) {
-        ret = json_object_set_new(payload, "t", t);
-        if(ret != 0) {
-            _ld_warn(context, "couldn't set type in new payload");
-            return NULL;
-        }
-    }
-    if(s != NULL) {
-        ret = json_object_set_new(payload, "s", s);
-        if(ret != 0) {
-            _ld_warn(context, "couldn't set sequence number in new payload");
-            return NULL;
-        }
-    }
-
-
-    return payload;
-}
 
 int ld_dispatch_ready(struct ld_context *context, json_t *data) {
     //save session_id
@@ -935,7 +900,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
     struct ld_gateway_payload *tmp;
     json_t *hb;
 
-    hb = ld_json_create_payload(context, json_integer(LD_GATEWAY_OPCODE_HEARTBEAT),
+    hb = ld_json_create_payload(json_integer(LD_GATEWAY_OPCODE_HEARTBEAT),
                                 json_integer(context->last_seq), NULL, NULL); //create heartbeat payload
 
     if(lws_ring_get_count_free_elements(context->gateway_ring) == 0) {

@@ -20,10 +20,10 @@
  *          G SEND STATUS_UPDATE -> G RECIEVE DISPATCH new [status]
  *          G SEND HEARTBEAT ->
  */
-#include <stdio.h>
 #include <libdiscord.h>
 
 int main(int argc, char *argv[]) {
-    printf("DOES NOT DO ANYTHING YET");
+    ld_set_logging_level(31);
+    ld_info("DOES NOT DO ANYTHING YET");
     return 0;
 }

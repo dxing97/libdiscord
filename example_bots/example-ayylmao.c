@@ -9,7 +9,6 @@
  */
 
 #include <getopt.h>
-#include <signal.h>
 
 static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
