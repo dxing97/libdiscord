@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 LWS_VERSION=2.4.1
-#ULFIUS_VERSION=2.2
+#ULFIUS_VERSION=2.2.2
 ## libdiscord dependencies installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
 
@@ -28,30 +28,31 @@ sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-dev\
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
-                 zlib1g-dev libssl-dev libcurl4-gnutls-dev
+                 zlib1g-dev libssl-dev libcurl4-gnutls-dev libuv1-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 
-##libulfius is not included with Debian 9.3 at the present, and should be compiled.
-#echo "Installing libulfius"
-#git clone https://github.com/babelouest/ulfius.git
-#cd ulfius
-#    git checkout ${ULFIUS_VERSION}
-#    cd lib/orcania
-#        make && sudo checkinstall
-#        cd ../..
-#    cd lib/yder
-#        make && sudo checkinstall
-#        cd ../..
-#    make && sudo checkinstall
-#cd ..
+#libulfius is not included with Debian 9.3 at the present, and should be compiled.
+echo "Installing libulfius"
+git clone https://github.com/babelouest/ulfius.git
+cd ulfius
+    git submodule update --init
+    git checkout ${ULFIUS_VERSION}
+    cd lib/orcania
+        make && sudo checkinstall --pkgname liborcania-sdev --install=yes
+        cd ../..
+    cd lib/yder
+        make && sudo checkinstall --pkgname libyder-sdev --install=yes
+        cd ../..
+    make && sudo checkinstall --pkgname libulfius-sdev --install=yes
+cd ..
 
 # need to compile for v2.4.1
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v${LWS_VERSION}
     mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug
+        cmake .. -DCMAKE_BUILD_TYPE=Debug DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
         make
         sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
         sudo ldconfig

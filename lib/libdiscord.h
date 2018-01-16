@@ -6,17 +6,28 @@
 #include <jansson.h>
 #include "libdiscord_config.h"
 #include "log.h"
+#include "json.h"
 
 /*
- * right now there are only callbacks for a small number of gateway events
- * More will be added eventually
+ *
+ * libdiscord header file
+ *
+ *
+ */
+
+/*
+ * reason included with user callback
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
+
+    /* payload opcodes */
     LD_CALLBACK_HELLO = 0, //opcode 10
-    LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_RESUMED = 2, //opcode 6
     LD_CALLBACK_INVALID_SESSION = 3, //opcode 9
+
+    /* Dispatches (opcode 0 types)*/
+    LD_CALLBACK_READY = 1, //dispatch (opcode 0)
     LD_CALLBACK_CHANNEL_CREATE = 4,
     LD_CALLBACK_CHANNEL_UPDATE = 5,
     LD_CALLBACK_CHANNEL_DELETE = 6,
@@ -48,17 +59,20 @@ enum ld_callback_reason {
     LD_CALLBACK_VOICE_STATE_UPDATE = 32,
     LD_CALLBACK_VOICE_SERVER_UPDATE = 33,
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
+
+    /* websocket specifis */
+    LD_CALLBACK_WS_ESTABLISHED = 35, //websocket connection established and ready to rx/tx
+    LD_CALLBACK_WS_CONNECTION_ERROR = 36 //error connecting to the gateway:
+
 };
 
 /*
  * connected: everything's normal
  * connecting: still working out the details
  * unconnected: we're not connected and we can start a fresh connection
- * disconnected:
  */
 enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0,
-    LD_GATEWAY_DISCONNECTED = 1,
     LD_GATEWAY_CONNECTING = 2,
     LD_GATEWAY_CONNECTED = 3
 };
@@ -88,10 +102,6 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_UNKNOWN = 100
 };
 
-enum ld_gateway_disconnect_reason {
-    LD_GATEWAY_DISCONNECT_NULL = 0
-};
-
 enum ld_presence_game_type {
     LD_PRESENCE_PLAYING = 0,
     LD_PRESENCE_STREAMING = 1,
@@ -118,8 +128,8 @@ struct ld_gateway_payload {
 
 struct ld_presence {
     char *game;
-    enum ld_presence_game_type gametype;
-    enum ld_presence_status_type statustype;
+    enum ld_presence_game_type game_type;
+    enum ld_presence_status_type status_type;
 };
 
 /*
@@ -134,7 +144,7 @@ struct ld_presence {
 struct ld_context {
     char *bot_token;
     void *user_data;
-    unsigned long log_level;
+    unsigned long log_level; //DEPRECIATED, use new functions in log.h
     char *gateway_url;
     char *gateway_bot_url;
     enum ld_gateway_state gateway_state;
@@ -145,15 +155,41 @@ struct ld_context {
     int (*user_callback)
             (struct ld_context *context,
              enum ld_callback_reason reason,
-             json_t *data);
+             void *data);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
     unsigned long last_hb;
+    int hb_count; //increments for every sent heartbeat, decrements for every received HB_ACK
     struct lws_ring *gateway_ring;
     unsigned int close_code;
     char *gateway_rx_buffer;
     size_t gateway_rx_buffer_len;
     struct ld_presence presence;
+    char *gateway_session_id;
+    int gateway_bot_limit; //ratelimit reset amount
+    int gateway_bot_remaining; //last ratelimit remaining value
+    unsigned long gateway_bot_reset; //unix time for reset
+};
+
+/*
+ * libdiscord gateway connection info
+ * one info struct per gateway connection (i.e. one per shard)
+ * created and destroyed with each shard
+ * does NOT go away with disconnections: destroyed when a shard is closed
+ * //todo: when is a shard closed?
+ */
+struct ld_gi {
+    struct ld_context *parent_context; //pointer to the parent context
+    void *user; //user defined pointer for user stuff //todo: add way of allocating *user and setting its size
+    enum ld_gateway_state state; //connected, connecting, disconnected
+    //todo: have seperate states for websocket connecting and gateway identifying
+    int shardnum; //which shard this gateway connection refers to
+    struct lws *lws_wsi; //lws wsi corresponding to this connection
+    unsigned int hb_interval; //interval to send heartbeats at, in ms
+    int last_seq; //last sequence number recieved using this connection
+    int hb_count; //starts at 0, increment
+    struct lws_ring *tx_ringbuffer; //lws ringbuffer used to queue payloads to be sent;
+    unsigned int close_code;
 };
 
 /*
@@ -161,12 +197,12 @@ struct ld_context {
  * includes:
  *  bot token
  *  user-defined pointer to anything, can be metadata about the bot (creator, version, etc.)
- *  libdiscord logging level (see ld_log_level)
+ *  libdiscord logging level (see ld_log_level), DEPRECIATED, use logging functions in log.h instead
  */
 struct ld_context_info {
     char *bot_token;
-    unsigned long log_level;
-    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, json_t *data);
+    unsigned long log_level;  //DEPRECIATED, use new functions in log.h
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data);
     size_t gateway_ringbuffer_size;
     struct ld_presence init_presence;
 };
@@ -174,36 +210,58 @@ struct ld_context_info {
 struct ld_dispatch {
     const char* name;
     enum ld_callback_reason cbk_reason;
+    int (*dispatch_callback)(struct ld_context *context, json_t *data);
 };
 
 
 
 /*
+ * DEPRECIATED, USE FUNCTIONS IN log.h INSTEAD
  * logging functions for different levels
  * context is needed to determine enabled logging levels
  */
 
-void ld_err(struct ld_context *context, const char *message, ...);
-void ld_warn(struct ld_context *context, const char *message, ...);
-void ld_info(struct ld_context *context, const char *message, ...);
-void ld_notice(struct ld_context *context, const char *message, ...);
-void ld_debug(struct ld_context *context, const char *message, ...);
+void _ld_err(struct ld_context *context, const char *message, ...);
+void _ld_warn(struct ld_context *context, const char *message, ...);
+void _ld_info(struct ld_context *context, const char *message, ...);
+void _ld_note(struct ld_context *context, const char *message, ...);
+void _ld_dbug(struct ld_context *context, const char *message, ...);
 
 /*
  * create a context from user info
  * returns NULL if the info struct was malformed or missing things
+ * allocates memory for the struct and internal components
  */
 struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
 
 /*
  * destroys context
+ * frees inner components and the context itself
  */
 void ld_destroy_context(struct ld_context *context);
 
 /*
- * returns enum corresponding to the gateway connection state
+ * private function, makes a GET request to /gateway/bot and retrieves shard number and gateway URL/determines bot token
+ * is invalid
  */
-int ld_gateway_connection_state(struct ld_context *context);
+int _ld_get_gateway_bot(struct ld_context *context);
+
+/*
+ * curl callback function used to read data returned from HTTP request
+ */
+size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr);
+
+/*
+ * private function, makes a GET request to /gateway and retrieves the gateway URL
+ * used to determine if we can even connect to Discord, not _strictly_ nessecary
+ * blocking
+ */
+int _ld_get_gateway(struct ld_context *context);
+
+/*
+ * curl callback function used to (currently) print out HTTP headers line by line for /gateway and /gateway/bot
+ */
+size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *userdata);
 
 /*
  * connect to discord
@@ -220,6 +278,8 @@ int ld_connect(struct ld_context *context);
 /*
  * services pending HTTP and websocket requests.
  * checks if the heartbeat timer is up
+ * returns 0 for OK
+ * returns 1 for websocket ringbuffer error
  */
 int ld_service(struct ld_context *context, int timeout);
 
@@ -233,11 +293,6 @@ int ld_service(struct ld_context *context, int timeout);
  * returns 0 on success
  */
 int ld_gateway_connect(struct ld_context *context);
-
-/*
- * reconnects to the gateway (resume payload)
- */
-int ld_gateway_resume(struct ld_context *context);
 
 /*
  * lws user callback
@@ -255,9 +310,10 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 
 /*
- * takes four json_t objects and creates a payload
+ * callback for parsing READY dispatches
+ * saves session_id for resuming
  */
-json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d, json_t *t, json_t *s);
+int ld_dispatch_ready(struct ld_context *context, json_t *data);
 
 /*
  * type: json string object for dispatch type
@@ -269,7 +325,14 @@ json_t *ld_json_create_payload(struct ld_context *context, json_t *op, json_t *d
 int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
 
 /*
- * disconnects from the gateway
+ * queues a heartbeat in the gateway tx ringbuffer
  */
-int ld_gateway_disconnect(struct ld_context *context);
+int ld_gateway_queue_heartbeat(struct ld_context *context);
+
+/*
+ * calls lws_context_destroy to close the ws connection
+ * sets the gateway state to unconnected
+ * calls ld_gateway_connect to reinitialize the connection to the gateway
+ */
+int ld_gateway_reconnect(struct ld_context *context);
 #endif

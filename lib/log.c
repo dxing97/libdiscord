@@ -4,17 +4,63 @@
 
 #include "log.h"
 
+/*
+ * internal macro used for logging
+ */
+#define __LD_LOG(logtype) \
+    if((_ld_ll & (logtype)) == 0) {\
+        return;\
+    }\
+    va_list myargs;\
+    va_start(myargs, message);\
+    _ld_log(logtype, _ld_ll, message, myargs)
+
+/*
+ * private global variable used to store the current logging level.
+ */
+static unsigned long _ld_ll;
+
+//sets static global variable for the library
+unsigned long ld_set_logging_level(unsigned long ll) {
+    _ld_ll = ll;
+    return _ld_ll;
+}
+
+/*
+ * logging functions
+ */
+void ld_error(const char *message, ...) {
+    __LD_LOG(LD_LOG_ERROR);
+}
+
+void ld_warning(const char *message, ...) {
+    __LD_LOG(LD_LOG_WARNING);
+}
+
+void ld_info(const char *message, ...) {
+    __LD_LOG(LD_LOG_INFO);
+}
+
+void ld_notice(const char *message, ...) {
+    __LD_LOG(LD_LOG_NOTICE);
+}
+
+void ld_debug(const char *message, ...) {
+    __LD_LOG(LD_LOG_DEBUG);
+}
+
+//private function used by library
 const char *ld_log_level_string(unsigned long ll) {
     switch(ll) {
-        case ld_log_error:
+        case LD_LOG_ERROR:
             return "ERROR";
-        case ld_log_warning:
+        case LD_LOG_WARNING:
             return "WARNING";
-        case ld_log_info:
+        case LD_LOG_INFO:
             return "INFO";
-        case ld_log_notice:
+        case LD_LOG_NOTICE:
             return "NOTICE";
-        case ld_log_debug:
+        case LD_LOG_DEBUG:
             return "DEBUG";
         default:
             //sum ting wong
@@ -22,6 +68,7 @@ const char *ld_log_level_string(unsigned long ll) {
     }
 }
 
+//private function used by logging system
 void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_message, va_list arg){
     if((ll & enabled_levels) == 0)
         return;
@@ -55,3 +102,4 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
     free(time_string);
     free(message);
 }
+
