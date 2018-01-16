@@ -50,3 +50,16 @@ Steps required to connect to discord:
     
 ## User callback
 A non-zero return value from the user callback will usually be taken to mean disconnect from the gateway.
+
+## REST API 
+Simple interface for endpoint coded in libdiscord in pseudocode
+```C
+request = ld_rest_get_gateway_bot(context)
+ld_rest_simple_perform(request, response)
+//process response
+```
+```C
+request = ld_create_message(char *channel_id, message_t *message);
+ld_queue_request(request);
+ld_rest_simple_perform(request, response)
+```

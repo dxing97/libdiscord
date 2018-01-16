@@ -6,6 +6,8 @@
 
 ## Todo
 * Use ulfius for blocking REST functions
+    * rewrite ld_get_gateway_bot and ld_get_gateway using
+    ulfius
 * start moving stuff out of libdiscord.h into their own separate functions
 * Make a distinction between different websocket connections/shards using wsi user pointers
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
@@ -19,13 +21,13 @@
 * make example-ayylmao not respond to other bots
 * zlib compression support in gateway payloads
 * See if jansson increment/decrement needs to be used
-* OAuth support
 * CMake OS detection for IDENTIFY payload
 * Better documentation (comments in the source code is NOT good documentation)
 * latency bot
 
 ## Far Future
 * Rich presence integration for IoT
+* OAuth support (write a OAuth2 library for C)
 * A command line application for scripting
 * Support for voice channels (UDP connections)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior

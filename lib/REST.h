@@ -9,6 +9,10 @@
 #ifndef LIBDISCORD_REST_H
 #define LIBDISCORD_REST_H
 
+/*
+ * functions related to the REST API
+ *
+ */
 
 /*
  * HTTP verb enums.
@@ -71,4 +75,6 @@ int _ld_rest_blocking_request(
         char *user_agent
 );
 
+int ld_get_gateway_bot();
+int ld_post_channel_message();
 #endif //LIBDISCORD_REST_H

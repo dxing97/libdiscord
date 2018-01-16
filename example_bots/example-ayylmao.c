@@ -118,6 +118,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
     curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
 
+    //todo: add a way to print the response
+
     res = curl_easy_perform(handle);
     if(res != CURLE_OK) {
         ld_error("couldn't POST lmao");
