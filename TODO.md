@@ -12,7 +12,7 @@
 
 ## Planned
 * make example-ayylmao not respond to other bots
-* zlib compression support in gateway payloads
+* zlib compression support in gateway payloads (check other compression methods in gateway connections)
 * See if jansson increment/decrement needs to be used
 * Implement more user callbacks
 * CMake OS detection for IDENTIFY payload

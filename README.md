@@ -1,11 +1,13 @@
-### libdiscord
-A Discord library written in C.
+#libdiscord
+A Discord library written in C, currently in development.
+
+Discord server: https://discord.gg/BGgcQQh
 
 The goal of this library currently is:
 * be easy to use
 
 ## Building
-Currently only tested against Ubuntu 17.10.
+Currently only tested against Ubuntu 17.10 and Raspbian stretch.
 
 See `install.sh` for the commands you will have to run
 
@@ -14,6 +16,7 @@ Dependencies:
 * jansson-dev (used package bundled with ubuntu 17.10)
 * libcurl (used package bundled with ubuntu 17.10)
 * getopt (required for ayylmao example bot, should be included with your *nix distribution)
+* ulfius (for simple REST requests)
 
 Tested to work on Raspberry Pi 3/Raspbian (stretch), but have to compile checkinstall for libwebsockets to be compiled. 
 
