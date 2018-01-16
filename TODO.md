@@ -5,9 +5,8 @@
 * Discord developer ToS compliant
 
 ## Todo
-* refactor old logging functions to use the new functions
+* Use ulfius for blocking REST functions
 * start moving stuff out of libdiscord.h into their own separate functions
-* HTTP header parsing function (this was easier with ulfius, so make it like ulfius: array of key-value pairs)
 * Make a distinction between different websocket connections/shards using wsi user pointers
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot

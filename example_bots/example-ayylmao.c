@@ -10,6 +10,7 @@
 
 #include <getopt.h>
 #include <signal.h>
+#include <REST.h>
 
 static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
@@ -41,8 +42,10 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     switch(reason){
         case LD_CALLBACK_MESSAGE_CREATE: {
             json_t *jdata = data, *value;
+
             //if content == "ayy", POST "lmao" to that channel
-            ld_info("received MESSAGE_CREATE dispatch");
+            ld_debug("received MESSAGE_CREATE dispatch");
+
             //we want the "content" and "channel id" fields
             json_object_foreach(jdata, key, value) {
                 if (strcmp(key, "content") == 0) {
@@ -54,8 +57,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                     if (strcmp(content, "ayy") == 0) {
                         ayystat++;
                     }
-
                 }
+
                 if (strcmp(key, "channel_id") == 0) {
                     channelid = json_string_value(value);
                     if (channelid == NULL) {
@@ -63,18 +66,15 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         break;
                     }
                     ayystat++;
-
                 }
             }
         }
             break;
-//        case LD_CALLBACK_MESSAGE_UPDATE:
-//            return 1;
         default:
             break;
     }
 
-    ld_info("ayystat = %d", ayystat);
+    ld_debug("ayystat = %d", ayystat);
 
     if(ayystat != 2) { //did not get channel ID and ayy content
         return 0;
@@ -95,12 +95,18 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     char *jsonbody = strdup(tmp);
     ld_debug("body to post: %s", jsonbody);
 
+    struct ld_rest_request *request;
+    request = ld_rest_init_request();
+
+
     //curl POST to that channel
     struct curl_slist *headers = NULL;
     char auth_header[1000];
     sprintf(auth_header, "Authorization: Bot %s ", context->bot_token);
     headers = curl_slist_append(headers, auth_header);
     headers = curl_slist_append(headers, "Content-Type: application/json");
+
+
 
     char url[1000];
     sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
@@ -200,8 +206,8 @@ int main(int argc, char *argv[]) {
     info = malloc(sizeof(struct ld_context_info));
 
     struct ld_presence presence;
-    presence.statustype = LD_PRESENCE_ONLINE;
-    presence.gametype = LD_PRESENCE_LISTENING;
+    presence.status_type = LD_PRESENCE_ONLINE;
+    presence.game_type = LD_PRESENCE_LISTENING;
     presence.game = "ayys";
 
     info->init_presence = presence;

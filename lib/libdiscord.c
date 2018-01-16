@@ -61,8 +61,8 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     }
 
     context->presence.game = strdup(info->init_presence.game);
-    context->presence.gametype = LD_PRESENCE_LISTENING;
-    context->presence.statustype = LD_PRESENCE_ONLINE;
+    context->presence.game_type = LD_PRESENCE_LISTENING;
+    context->presence.status_type = LD_PRESENCE_ONLINE;
 
     context->gateway_bot_limit = 1;
     context->gateway_bot_remaining = 1;
@@ -679,9 +679,9 @@ json_t *_ld_generate_identify(struct ld_context *context) {
     "presence",
         "game",
             "name", context->presence.game,
-            "type", context->presence.gametype,
+            "type", context->presence.game_type,
             //NULL, NULL,
-        "status", ld_presence_status_to_str(context->presence.statustype),
+        "status", ld_presence_status_to_str(context->presence.status_type),
         "since", NULL,
         "afk", 0
     );

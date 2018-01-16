@@ -9,8 +9,14 @@
 #include "json.h"
 
 /*
- * right now there are only callbacks for a small number of gateway events
- * More will be added eventually
+ *
+ * libdiscord header file
+ *
+ *
+ */
+
+/*
+ * reason included with user callback
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
@@ -96,10 +102,6 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_UNKNOWN = 100
 };
 
-enum ld_gateway_disconnect_reason {
-    LD_GATEWAY_DISCONNECT_NULL = 0
-};
-
 enum ld_presence_game_type {
     LD_PRESENCE_PLAYING = 0,
     LD_PRESENCE_STREAMING = 1,
@@ -126,8 +128,8 @@ struct ld_gateway_payload {
 
 struct ld_presence {
     char *game;
-    enum ld_presence_game_type gametype;
-    enum ld_presence_status_type statustype;
+    enum ld_presence_game_type game_type;
+    enum ld_presence_status_type status_type;
 };
 
 /*
@@ -228,11 +230,13 @@ void _ld_dbug(struct ld_context *context, const char *message, ...);
 /*
  * create a context from user info
  * returns NULL if the info struct was malformed or missing things
+ * allocates memory for the struct and internal components
  */
 struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
 
 /*
  * destroys context
+ * frees inner components and the context itself
  */
 void ld_destroy_context(struct ld_context *context);
 
