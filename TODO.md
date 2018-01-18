@@ -17,6 +17,7 @@
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
 
 ## Planned
+* Git submodules to statically link some dependencies (cygwin)
 * Add REST API functions
 * make example-ayylmao not respond to other bots
 * zlib compression support in gateway payloads (check other compression methods in gateway connections)
