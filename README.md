@@ -8,7 +8,7 @@ The goal of this library currently is:
 
 ## Building
 See [BUILD.md](building)
-Currently only tested against Ubuntu 17.10 and Raspbian stretch.
+Currently only tested against Ubuntu 17.10 Raspbian stretch, and the unofficial sparc64 port for Debian.
 
 See [install.sh](install.sh) for a quick rundown of the commands you may have to run
 

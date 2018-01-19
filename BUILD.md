@@ -13,6 +13,8 @@ Tested to buuld and work on Raspberry Pi 3 running Raspbian (stretch),
 but if you want to install libwebsockets with checkinstall, 
 then you will have to compile checkinstall yourself.
 
+Works on sparc64 debian 4.13.4-1 with no issues currently.
+
 ### Quick build instructions for libwebsockets
 
 Get a copy of libwebsockets source from github.

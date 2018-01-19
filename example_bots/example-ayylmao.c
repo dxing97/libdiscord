@@ -209,8 +209,8 @@ int main(int argc, char *argv[]) {
 
     struct ld_presence presence;
     presence.status_type = LD_PRESENCE_ONLINE;
-    presence.game_type = LD_PRESENCE_LISTENING;
-    presence.game = "ayys";
+    presence.game_type = LD_PRESENCE_PLAYING;
+    presence.game = "SPARCbot";
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
