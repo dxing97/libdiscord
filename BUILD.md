@@ -8,6 +8,7 @@ with Ubuntu 17.10 is v2.0.3 and doesn't work so you will likely need to compile 
 * jansson (tested to work with v2.10, package available for Ubuntu 17.10)
 * libcurl (package available for ubuntu, use libcurl4-gnutls-dev)
 * gcc, make, cmake, git (compiler and build tools, git to pull a copy of the source files)
+* ulfius (available through your favorite package manager for most debian related distros, otherwise compile from source)
 
 Tested to buuld and work on Raspberry Pi 3 running Raspbian (stretch), 
 but if you want to install libwebsockets with checkinstall, 
@@ -43,7 +44,7 @@ sudo checkinstall --pkgnamne libwebsockets-sdev --pkgversion="2.4.1"
 Note that you can uninstall libwebsockets afterward using apt or dpkg 
 if you install libwebsockets with checkinstall, in case something breaks
 
-Install the library (option 2)
+Install the library (option 2) if you don't have/can't get checkinstall
 ```bash
 sudo make install
 ```
