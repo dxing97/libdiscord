@@ -8,6 +8,7 @@
 * Use ulfius for blocking REST functions
     * rewrite ld_get_gateway_bot and ld_get_gateway using
     ulfius
+* make example bots comparing ulfius/frequent curl_easy_inits/frees and keeping a handle open
 * start moving stuff out of libdiscord.h into their own separate functions
 * Make a distinction between different websocket connections/shards using wsi user pointers
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
