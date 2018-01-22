@@ -37,9 +37,9 @@ include_directories("${PROJECT_BINARY_DIR}")
 # If libwebsockets was compiled and installed in Cygwin:
 include_directories(/usr/local/lib/include)
 
-set(LD_LIBS websockets jansson curl)
+set(LD_LIBS websockets jansson curl ulfius)
 
-set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h lib/json.c lib/json.h lib/REST.c lib/REST.h)
+set(LD_SOURCE lib/REST.h lib/REST.c lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h lib/json.c lib/json.h)
 add_library(discord SHARED ${LD_SOURCE})
 
 target_link_libraries(discord ${LD_LIBS})
@@ -49,7 +49,6 @@ target_compile_options(discord PRIVATE "-Werror")
 
 set(BOT_AYY_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ayylmao ${BOT_AYY_SOURCE})
-
 target_link_libraries(example-bot-ayylmao discord)
 
 set(BOT_PING_SOURCE example_bots/example-ping.c cmake/libdiscord_config.h.in)

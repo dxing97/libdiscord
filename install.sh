@@ -31,21 +31,20 @@ sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-d
                  zlib1g-dev libssl-dev libcurl4-gnutls-dev libuv1-dev
 sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
-
-#libulfius is not included with Debian 9.3 at the present, and should be compiled.
-echo "Installing libulfius"
-git clone https://github.com/babelouest/ulfius.git
-cd ulfius
-    git submodule update --init
-    git checkout ${ULFIUS_VERSION}
-    cd lib/orcania
-        make && sudo checkinstall --pkgname liborcania-sdev --install=yes
-        cd ../..
-    cd lib/yder
-        make && sudo checkinstall --pkgname libyder-sdev --install=yes
-        cd ../..
-    make && sudo checkinstall --pkgname libulfius-sdev --install=yes
-cd ..
+#
+#echo "Installing libulfius"
+#git clone https://github.com/babelouest/ulfius.git
+#cd ulfius
+#    git submodule update --init
+#    git checkout ${ULFIUS_VERSION}
+#    cd lib/orcania
+#        make && sudo checkinstall --pkgname liborcania-sdev --install=yes
+#        cd ../..
+#    cd lib/yder
+#        make && sudo checkinstall --pkgname libyder-sdev --install=yes
+#        cd ../..
+#    make && sudo checkinstall --pkgname libulfius-sdev --install=yes
+#cd ..
 
 # need to compile for v2.4.1
 git clone https://github.com/warmcat/libwebsockets

@@ -24,6 +24,17 @@
 
 int main(int argc, char *argv[]) {
     ld_set_logging_level(31);
-    ld_info("DOES NOT DO ANYTHING YET");
+
+    struct ld_rest_request request;
+    ld_rest_init_request(&request);
+
+    struct ld_rest_response response;
+    ld_rest_init_response(&response);
+
+    request.base_url = "https://xingworks.net";
+    request.endpoint = "/";
+    request.verb = LD_REST_VERB_GET;
+
+    ld_rest_send_blocking_request(&request, &response);
     return 0;
 }

@@ -96,7 +96,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     ld_debug("body to post: %s", jsonbody);
 
     struct ld_rest_request *request;
-    request = ld_rest_init_request();
+    request = ld_rest_init_request(NULL);
 
 
     //curl POST to that channel

@@ -7,6 +7,7 @@
 #include "libdiscord_config.h"
 #include "log.h"
 #include "json.h"
+#include "REST.h"
 
 /*
  *

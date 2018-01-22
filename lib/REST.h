@@ -26,34 +26,47 @@ enum ld_rest_http_verb {
 };
 
 /*
+ * rather opaque structure used to process headers
+ * utilizes ulfius' _u_map API
+ */
+struct ld_headers {
+    struct _u_map *umap;
+};
+
+/*
  * http request fields
  */
 struct ld_rest_request {
     enum ld_rest_http_verb verb;
     char *base_url;
     char *endpoint;
-    char *user_agent;
-    struct curl_slist headers; //headers
     char *body;
     size_t body_size;
+    struct ld_headers *headers;
+    int timeout; //ulfius default is 0
 };
 
-/*
- * rather opaque structure used to process headers
- * utilizes ulfius' _u_map API
- */
-struct ld_headers {
-    struct _u_map umap;
-};
+
 
 struct ld_rest_response {
     unsigned int http_response_code;
 };
 
 /*
- * creates a new request with some basic defaults for discord
+ * initializes a request with defaults
  */
-struct ld_rest_request *ld_rest_init_request();
+int ld_rest_init_request(struct ld_rest_request *request);
+
+/*
+ * initializes a response with defaults
+ */
+int ld_rest_init_response(struct ld_rest_response *response);
+
+/*
+ * converts libdiscord header structure to _u_map
+ * return value is read only
+ */
+struct _u_map * ld_rest_ldh2umap(struct ld_headers *ldh);
 
 void ld_rest_request_add_headers(struct ld_rest_request);
 
@@ -63,7 +76,7 @@ void ld_rest_request_add_headers(struct ld_rest_request);
  * rather slow, since it creates and destroys a curl handle.
  * uses ulfius
  */
-int ld_rest_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response);
+int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response);
 
 /*
  * makes a HTTP request of some kind to some URL with some headers
@@ -83,4 +96,5 @@ char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb);
 
 int ld_get_gateway_bot();
 int ld_post_channel_message();
+
 #endif //LIBDISCORD_REST_H
