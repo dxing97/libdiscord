@@ -39,11 +39,11 @@ struct ld_rest_request {
 };
 
 /*
- * key-value pairs for HTTP headers
+ * rather opaque structure used to process headers
+ * utilizes ulfius' _u_map API
  */
-struct ld_rest_header_line {
-    char *name;
-    char *value;
+struct ld_headers {
+    struct _u_map umap;
 };
 
 struct ld_rest_response {
@@ -61,6 +61,7 @@ void ld_rest_request_add_headers(struct ld_rest_request);
  * takes a request, performs it, then saves the response
  * returns 0 on successful request (even if the response is 4XX)
  * rather slow, since it creates and destroys a curl handle.
+ * uses ulfius
  */
 int ld_rest_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response);
 
@@ -74,6 +75,11 @@ int _ld_rest_blocking_request(
         struct curl_slist headers,
         char *user_agent
 );
+
+/*
+ * takes a verb enum and returns a read-only string for that verb. DO NOT MODIFY THE RETURNED VALUE.
+ */
+char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb);
 
 int ld_get_gateway_bot();
 int ld_post_channel_message();

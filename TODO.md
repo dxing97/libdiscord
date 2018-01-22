@@ -8,7 +8,9 @@
 * Use ulfius for blocking REST functions
     * rewrite ld_get_gateway_bot and ld_get_gateway using
     ulfius
+* Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
 * start moving stuff out of libdiscord.h into their own separate functions
+* A macro that loops through all _u_map members (like jansson's foreach object function)
 * Make a distinction between different websocket connections/shards using wsi user pointers
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot
@@ -24,6 +26,7 @@
 * CMake OS detection for IDENTIFY payload
 * Better documentation (comments in the source code is NOT good documentation)
 * latency bot
+
 
 ## Far Future
 * Rich presence integration for IoT
