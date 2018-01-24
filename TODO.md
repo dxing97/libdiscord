@@ -9,8 +9,8 @@
     * rewrite ld_get_gateway_bot and ld_get_gateway using
     ulfius
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
-* Add defines or enums for return codes
 * make example bots comparing ulfius/frequent curl_easy_inits/frees and keeping a handle open
+* Add defines or enums for return codes
 * start moving stuff out of libdiscord.h into their own separate functions
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 * Make a distinction between different websocket connections/shards using wsi user pointers
