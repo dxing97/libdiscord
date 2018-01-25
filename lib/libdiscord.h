@@ -222,11 +222,11 @@ struct ld_dispatch {
  * context is needed to determine enabled logging levels
  */
 
-void _ld_err(struct ld_context *context, const char *message, ...);
-void _ld_warn(struct ld_context *context, const char *message, ...);
-void _ld_info(struct ld_context *context, const char *message, ...);
-void _ld_note(struct ld_context *context, const char *message, ...);
-void _ld_dbug(struct ld_context *context, const char *message, ...);
+//void _ld_err(struct ld_context *context, const char *message, ...);
+//void _ld_warn(struct ld_context *context, const char *message, ...);
+//void _ld_info(struct ld_context *context, const char *message, ...);
+//void _ld_note(struct ld_context *context, const char *message, ...);
+//void _ld_dbug(struct ld_context *context, const char *message, ...);
 
 /*
  * create a context from user info

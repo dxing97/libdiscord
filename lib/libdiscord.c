@@ -80,47 +80,47 @@ void ld_destroy_context(struct ld_context *context) {
     free(context);
 }
 
-void _ld_err(struct ld_context *context, const char *message, ...) {
-    if((LD_LOG_ERROR & context->log_level) != 0) {
-        va_list myargs;
-        va_start(myargs, message);
-        _ld_log(LD_LOG_ERROR, context->log_level, message, myargs);
-        va_end(myargs);
-    }
-}
-
-void _ld_warn(struct ld_context *context, const char *message, ...) {
-    if((LD_LOG_WARNING & context->log_level) != 0) {
-        va_list myargs;
-        va_start(myargs, message);
-        _ld_log(LD_LOG_WARNING, context->log_level, message, myargs);
-        va_end(myargs);
-    }
-}
-void _ld_info(struct ld_context *context, const char *message, ...) {
-    if((LD_LOG_INFO & context->log_level) != 0) {
-        va_list myargs;
-        va_start(myargs, message);
-        _ld_log(LD_LOG_INFO, context->log_level, message, myargs);
-        va_end(myargs);
-    }
-}
-void _ld_note(struct ld_context *context, const char *message, ...) {
-    if((LD_LOG_NOTICE & context->log_level) != 0) {
-        va_list myargs;
-        va_start(myargs, message);
-        _ld_log(LD_LOG_NOTICE, context->log_level, message, myargs);
-        va_end(myargs);
-    }
-}
-void _ld_dbug(struct ld_context *context, const char *message, ...) {\
-    if((LD_LOG_DEBUG & context->log_level) != 0) {\
-        va_list myargs;
-        va_start(myargs, message);
-        _ld_log(LD_LOG_DEBUG, context->log_level, message, myargs);
-        va_end(myargs);
-    }
-}
+//void _ld_err(struct ld_context *context, const char *message, ...) {
+//    if((LD_LOG_ERROR & context->log_level) != 0) {
+//        va_list myargs;
+//        va_start(myargs, message);
+//        _ld_log(LD_LOG_ERROR, context->log_level, message, myargs);
+//        va_end(myargs);
+//    }
+//}
+//
+//void _ld_warn(struct ld_context *context, const char *message, ...) {
+//    if((LD_LOG_WARNING & context->log_level) != 0) {
+//        va_list myargs;
+//        va_start(myargs, message);
+//        _ld_log(LD_LOG_WARNING, context->log_level, message, myargs);
+//        va_end(myargs);
+//    }
+//}
+//void _ld_info(struct ld_context *context, const char *message, ...) {
+//    if((LD_LOG_INFO & context->log_level) != 0) {
+//        va_list myargs;
+//        va_start(myargs, message);
+//        _ld_log(LD_LOG_INFO, context->log_level, message, myargs);
+//        va_end(myargs);
+//    }
+//}
+//void _ld_note(struct ld_context *context, const char *message, ...) {
+//    if((LD_LOG_NOTICE & context->log_level) != 0) {
+//        va_list myargs;
+//        va_start(myargs, message);
+//        _ld_log(LD_LOG_NOTICE, context->log_level, message, myargs);
+//        va_end(myargs);
+//    }
+//}
+//void _ld_dbug(struct ld_context *context, const char *message, ...) {\
+//    if((LD_LOG_DEBUG & context->log_level) != 0) {\
+//        va_list myargs;
+//        va_start(myargs, message);
+//        _ld_log(LD_LOG_DEBUG, context->log_level, message, myargs);
+//        va_end(myargs);
+//    }
+//}
 
 
 struct _ld_buffer {
