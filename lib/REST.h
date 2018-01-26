@@ -42,14 +42,17 @@ struct ld_rest_request {
     char *endpoint;
     char *body;
     size_t body_size;
-    struct ld_headers *headers;
+    struct _u_map *headers;
     int timeout; //ulfius default is 0
 };
 
 
 
 struct ld_rest_response {
-    unsigned int http_response_code;
+    long http_status;
+    struct _u_map *headers;
+    void *body;
+    void *body_length;
 };
 
 /*
@@ -62,13 +65,10 @@ int ld_rest_init_request(struct ld_rest_request *request);
  */
 int ld_rest_init_response(struct ld_rest_response *response);
 
-/*
- * converts libdiscord header structure to _u_map
- * return value is read only
- */
-struct _u_map * ld_rest_ldh2umap(struct ld_headers *ldh);
+int ld_rest_free_request(struct ld_rest_request *request);
 
-void ld_rest_request_add_headers(struct ld_rest_request);
+int ld_rest_free_response(struct ld_rest_response *response);
+
 
 /*
  * takes a request, performs it, then saves the response

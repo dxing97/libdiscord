@@ -31,10 +31,14 @@ int main(int argc, char *argv[]) {
     struct ld_rest_response response;
     ld_rest_init_response(&response);
 
-    request.base_url = "https://xingworks.net";
+    request.base_url = "https://google.com";
     request.endpoint = "/";
     request.verb = LD_REST_VERB_GET;
+    request.body = NULL;
+    request.body_size = 0;
 
     ld_rest_send_blocking_request(&request, &response);
+
+    ld_info("recieved data from %s%s:\n%.*s", request.base_url, request.endpoint, response.body_length, response.body);
     return 0;
 }

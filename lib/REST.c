@@ -25,14 +25,22 @@ int ld_rest_init_response(struct ld_rest_response *response) {
         ld_error("response pointer is NULL");
         return 1;
     }
-    response->http_response_code = 0;
+    response->http_status = 0;
     return 0;
+}
+
+int ld_rest_free_request(struct ld_rest_request *request){
+
+}
+
+int ld_rest_free_response(struct ld_rest_response *response){
+
 }
 
 /*
  *
  * rest blocking request, using ulfius
- * performance is not good, use if you need a response NOW
+ * performance is not good if you need to do a lot of REST requests
  * this function won't touch the memory you pass to it, so you will have to free it yourself
  */
 int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response) {
@@ -60,32 +68,29 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
 
     int ret;
 
-    ld_debug("blocking REST request URL: %s", url);
+//    ld_debug("blocking REST request URL: %s", url);
 
     req.http_verb = strdup(ld_rest_verb_enum2str(request->verb));
     req.http_url = url;
     req.binary_body = request->body;
     req.binary_body_length = request->body_size;
-    req.map_header = ld_rest_ldh2umap(request->headers); //watch out for this
+    req.map_header = request->headers; //watch out for this
     req.timeout = request->timeout;
 
     ret = ulfius_send_http_request(&req, &resp);
     if(ret != U_OK) {
-        ld_warning("couldn't send ulfius blocking HTTP request!");
+        ld_warning("ulfius: couldn't send ulfius blocking HTTP request! (%d)", ret);
         return 1;
     }
+
+    response->http_status = resp.status;
+    response->body = strndup(resp.binary_body, resp.binary_body_length);
+    //todo: make request and response allocation and deallocation functions
 
     free(url);
     ulfius_clean_request(&req);
 
     return 0;
-}
-
-/*
- * converts ld_headers to _u_map
- */
-struct _u_map * ld_rest_ldh2umap(struct ld_headers *ldh) {
-    return ldh->umap;
 }
 
 char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb) {
