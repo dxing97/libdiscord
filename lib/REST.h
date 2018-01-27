@@ -52,21 +52,29 @@ struct ld_rest_response {
     long http_status;
     struct _u_map *headers;
     void *body;
-    void *body_length;
+    size_t body_length;
 };
 
 /*
+ * allocates memory
  * initializes a request with defaults
  */
-int ld_rest_init_request(struct ld_rest_request *request);
+struct ld_rest_request * ld_rest_init_request();
 
 /*
+ * allocates memory
  * initializes a response with defaults
  */
-int ld_rest_init_response(struct ld_rest_response *response);
+struct ld_rest_response * ld_rest_init_response();
 
+/*
+ * frees memory for request
+ */
 int ld_rest_free_request(struct ld_rest_request *request);
 
+/*
+ * frees memory for response
+ */
 int ld_rest_free_response(struct ld_rest_response *response);
 
 
@@ -74,7 +82,7 @@ int ld_rest_free_response(struct ld_rest_response *response);
  * takes a request, performs it, then saves the response
  * returns 0 on successful request (even if the response is 4XX)
  * rather slow, since it creates and destroys a curl handle.
- * uses ulfius
+ * basically a wrapper around ulfius
  */
 int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response);
 
@@ -90,11 +98,19 @@ int _ld_rest_blocking_request(
 );
 
 /*
- * takes a verb enum and returns a read-only string for that verb. DO NOT MODIFY THE RETURNED VALUE.
+ * takes a verb enum and returns a read-only string for that verb. DO NOT MODIFY THE RETURNED VALUE, it is read-only
  */
 char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb);
 
-int ld_get_gateway_bot();
+/*
+ * generates ld_rest_request for GET /gateway
+ */
+struct ld_rest_request *ld_get_gateway();
+
+/*
+ * generates ld_rest_request for GET /gateway/bot
+ */
+struct ld_rest_request *ld_get_gateway_bot();
 int ld_post_channel_message();
 
 #endif //LIBDISCORD_REST_H

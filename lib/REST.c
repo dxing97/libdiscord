@@ -4,10 +4,12 @@
 
 #include "REST.h"
 
-int ld_rest_init_request(struct ld_rest_request *request) {
+struct ld_rest_request * ld_rest_init_request() {
+    struct ld_rest_request *request;
+    request = (struct ld_rest_request *)malloc(sizeof(struct ld_rest_request));
     if(request == NULL) {
-        ld_error("request pointer is NULL");
-        return 1;
+        ld_error("couldn't allocate ld_rest_request");
+        return NULL;
     }
     request->base_url = NULL;
     request->endpoint = NULL;
@@ -16,25 +18,50 @@ int ld_rest_init_request(struct ld_rest_request *request) {
     request->body = NULL;
     request->headers = NULL;
     request->timeout = 0;
-    return 0;
+    return request;
 }
 
 
-int ld_rest_init_response(struct ld_rest_response *response) {
+struct ld_rest_response * ld_rest_init_response() {
+    struct ld_rest_response *response;
+    response = (struct ld_rest_response *)malloc(sizeof(struct ld_rest_response));
     if(response == NULL) {
-        ld_error("response pointer is NULL");
-        return 1;
+        ld_error("init response: allocated response pointer is NULL");
+        return NULL;
     }
-    response->http_status = 0;
-    return 0;
+    response->http_status = -1;
+    response->headers = (struct _u_map *)malloc(sizeof(struct _u_map));
+    if(response->headers == NULL) {
+        ld_error("init response: error allocating headers");
+        free(response);
+        return NULL;
+    }
+    if(u_map_init(response->headers) != U_OK) {
+        ld_error("init response: error initializing _u_map");
+        free(response->headers);
+        free(response);
+        return NULL;
+    }
+    response->body = NULL;
+    response->body_length = 0;
+
+    return response;
 }
 
 int ld_rest_free_request(struct ld_rest_request *request){
-
+    free(request);
+    return 0;
 }
 
 int ld_rest_free_response(struct ld_rest_response *response){
-
+    int ret;
+    ret = u_map_clean_full(response->headers);
+    if(ret != U_OK) {
+        ld_warning("free response: couldn't free response headers");
+        return 1;
+    }
+    free(response);
+    return 0;
 }
 
 /*
@@ -85,6 +112,7 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
 
     response->http_status = resp.status;
     response->body = strndup(resp.binary_body, resp.binary_body_length);
+    response->body_length = resp.binary_body_length;
     //todo: make request and response allocation and deallocation functions
 
     free(url);
