@@ -169,7 +169,7 @@ int _ld_get_gateway(struct ld_context *context) {
     ret = ld_rest_send_blocking_request(request, response);
 
     if(ret != 0) {
-        ld_error("ulfius: couldn't send request to /gateway/bot (%d)", ret);
+        ld_error("ulfius: couldn't send request to /gateway (%d)", ret);
         return 1;
     }
 
@@ -246,7 +246,7 @@ int _ld_get_gateway_bot(struct ld_context *context){
     if(ret != 0) {
         ld_error("couldn't send request to /gateway/bot");
     }
-    ld_debug("get gateway response: %s", response->body);
+    ld_debug("get gateway bot response: %s", response->body);
 
     json_t *object, *tmp;
     json_error_t error;

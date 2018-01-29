@@ -18,6 +18,18 @@
  */
 
 /*
+ * return values
+ */
+enum ldecode {
+    LD_EOK = 0, //everything is OK
+    LD_EULFIUS = 1, //problem doing something with ulfius
+    LD_EJSON = 2, //problem doing something with json manipulation/jansson
+    LD_ECURL = 3, //problem with something involving curl
+    LD_EMEM = 4, //problem with something involving memory allocation/deallocation
+    LD_EMISSING = 5 //missing parameters
+};
+
+/*
  * reason included with user callback
  */
 enum ld_callback_reason {

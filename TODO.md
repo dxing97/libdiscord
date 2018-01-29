@@ -5,15 +5,14 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Use ulfius for blocking REST 
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
-* make example bots comparing ulfius/frequent curl_easy_inits/frees and keeping a handle open
 * Add defines or enums for return codes
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
+* Look into Ulfius performance issues (excessive curl_easy_init and curl_easy_cleanup)
 
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)

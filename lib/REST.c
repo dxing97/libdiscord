@@ -57,7 +57,7 @@ int ld_rest_free_request(struct ld_rest_request *request){
     free(request->base_url);
     free(request->endpoint);
     free(request);
-    return 0;
+    return LD_EOK;
 }
 
 int ld_rest_free_response(struct ld_rest_response *response){
@@ -65,10 +65,10 @@ int ld_rest_free_response(struct ld_rest_response *response){
     ret = u_map_clean_full(response->headers);
     if(ret != U_OK) {
         ld_warning("free response: couldn't free response headers");
-        return 1;
+        return LD_EMEM;
     }
     free(response);
-    return 0;
+    return LD_EOK;
 }
 
 /*
@@ -85,12 +85,14 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
     struct _u_request req;
     ulfius_init_request(&req);
 
-    if(request->endpoint == NULL) {
-        ld_error("send blocking request: endpoint is NULL!");
-        return 1;
-    }
+    //if the "endpoint" is null, is that really an error?
+//    if(request->endpoint == NULL) {
+//        ld_error("send blocking request: endpoint is NULL!");
+//        return 1;
+//    }
     if(request->base_url == NULL) {
         ld_error("send blocking request: base url is NULL!");
+        return LD_EMISSING;
     }
     char *url;
     url = malloc(strlen(request->base_url) + strlen(request->endpoint) + 1);
@@ -114,18 +116,16 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
     ret = ulfius_send_http_request(&req, &resp);
     if(ret != U_OK) {
         ld_warning("ulfius: couldn't send ulfius blocking HTTP request! (%d)", ret);
-        return 1;
+        return LD_EULFIUS;
     }
 
     response->http_status = resp.status;
     response->body = strndup(resp.binary_body, resp.binary_body_length);
     response->body_length = resp.binary_body_length;
-    //todo: make request and response allocation and deallocation functions
 
     free(url);
-//    ulfius_clean_request(&req);
 
-    return 0;
+    return LD_EOK;
 }
 
 char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb) {
@@ -153,7 +153,6 @@ struct ld_rest_request *ld_get_gateway(struct ld_rest_request *req, struct ld_co
     req->endpoint = strdup("/gateway");
 
     sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
-    ld_debug("user-agent: %s", tmp);
     req->user_agent = strdup(tmp);
 
     req->verb = LD_REST_VERB_GET;
@@ -170,7 +169,6 @@ struct ld_rest_request *ld_get_gateway_bot( struct ld_rest_request *req, struct 
     req->endpoint = strdup("/gateway/bot");
 
     sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
-    ld_debug("user-agent: %s", tmp);
     req->user_agent = strdup(tmp);
 
     req->verb = LD_REST_VERB_GET;
@@ -207,7 +205,7 @@ int ld_create_message(struct ld_rest_request *req,
     body = json_pack("{ss}", "content", message_content);
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
-        return 1;
+        return LD_EJSON;
     }
 
     char *json_body;
@@ -215,7 +213,7 @@ int ld_create_message(struct ld_rest_request *req,
     json_body = json_dumps(body, 0);
     if(json_body == NULL) {
         ld_error("couldn't dump JSON string for lmao data");
-        return 1;
+        return LD_EJSON;
     }
     json_body = strdup(json_body);
 
@@ -224,5 +222,5 @@ int ld_create_message(struct ld_rest_request *req,
     req->body = json_body;
     req->body_size = strlen(req->body);
 
-    return 0;
+    return LD_EOK;
 }

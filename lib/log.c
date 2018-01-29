@@ -91,7 +91,7 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
     ret = vsprintf(msg, log_message, arg);
 
     if(ret < 0){
-        perror("couldn't create log message");
+        perror("libdiscord: couldn't create log message");
         return;
     }
 

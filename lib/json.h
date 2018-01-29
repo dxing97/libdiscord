@@ -12,4 +12,9 @@
  */
 json_t *ld_json_create_payload(json_t *op, json_t *d, json_t *t, json_t *s);
 
+/*
+ * creates a Discord message object
+ */
+json_t *ld_json_create_message();
+
 #endif //LIBDISCORD_JSON_H
