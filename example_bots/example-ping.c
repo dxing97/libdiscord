@@ -25,16 +25,20 @@
 int main(int argc, char *argv[]) {
     ld_set_logging_level(31);
 
-    struct ld_rest_request request;
-    ld_rest_init_request(&request);
+    struct ld_rest_request *request;
+    request = ld_rest_init_request();
 
-    struct ld_rest_response response;
-    ld_rest_init_response(&response);
+    struct ld_rest_response *response;
+    response = ld_rest_init_response();
 
-    request.base_url = "https://xingworks.net";
-    request.endpoint = "/";
-    request.verb = LD_REST_VERB_GET;
+    request->base_url = "https://google.com";
+    request->endpoint = "/";
+    request->verb = LD_REST_VERB_GET;
+    request->body = NULL;
+    request->body_size = 0;
 
-    ld_rest_send_blocking_request(&request, &response);
+    ld_rest_send_blocking_request(request, response);
+
+    ld_info("recieved data from %s%s, (%d) bytes long (%d):\n%.*s", request->base_url, request->endpoint, response->body_length, response->http_status, response->body_length, response->body);
     return 0;
 }

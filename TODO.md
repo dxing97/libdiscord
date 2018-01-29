@@ -5,7 +5,8 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Use ulfius for blocking REST functions
+* Use ulfius for blocking REST 
+    * write free functions for request and response
     * rewrite ld_get_gateway_bot and ld_get_gateway using
     ulfius
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
