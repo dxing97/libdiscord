@@ -40,5 +40,10 @@ int main(int argc, char *argv[]) {
     ld_rest_send_blocking_request(request, response);
 
     ld_info("recieved data from %s%s, (%d) bytes long (%d):\n%.*s", request->base_url, request->endpoint, response->body_length, response->http_status, response->body_length, response->body);
+
+//    request = ld_get_gateway();
+//    ld_rest_send_blocking_request(request, response);
+//    ld_info("recieved data from %s%s, (%d) bytes long (%d):\n%.*s", request->base_url, request->endpoint, response->body_length, response->http_status, response->body_length, response->body);
+
     return 0;
 }

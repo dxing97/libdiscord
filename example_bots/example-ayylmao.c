@@ -15,6 +15,8 @@
 static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 CURL *handle;
+int use_ulfius = 0;
+
 void int_handler(int i){
     bot_exit = 1;
 }
@@ -54,7 +56,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_warning("couldn't get message content");
                         break;
                     }
-                    if (strcmp(content, "ayy") == 0) {
+                    if (strcasecmp(content, "ayy") == 0) {
                         ayystat++;
                     }
                 }
@@ -95,41 +97,47 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     char *jsonbody = strdup(tmp);
     ld_debug("body to post: %s", jsonbody);
 
-    struct ld_rest_request *request;
-    request = ld_rest_init_request();
+    if(use_ulfius) {
+        struct ld_rest_request *request;
+        struct ld_rest_response *response;
+        request = ld_rest_init_request();
+        response = ld_rest_init_response();
+
+        ld_create_message(request, context, channelid, "lmao");
+        ld_rest_send_blocking_request(request, response);
+    } else {
+        //curl POST to that channel
+        struct curl_slist *headers = NULL;
+        char auth_header[1000];
+        sprintf(auth_header, "Authorization: Bot %s ", context->bot_token);
+        headers = curl_slist_append(headers, auth_header);
+        headers = curl_slist_append(headers, "Content-Type: application/json");
 
 
-    //curl POST to that channel
-    struct curl_slist *headers = NULL;
-    char auth_header[1000];
-    sprintf(auth_header, "Authorization: Bot %s ", context->bot_token);
-    headers = curl_slist_append(headers, auth_header);
-    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+        char url[1000];
+        sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
+
+        curl_easy_setopt(handle, CURLOPT_URL, url);
+        curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
+        curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
+        curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
+        curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
+
+        //todo: add a way to print the response
+
+        res = curl_easy_perform(handle);
+        if(res != CURLE_OK) {
+            ld_error("couldn't POST lmao");
+            return 1;
+        }
 
 
-
-    char url[1000];
-    sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
-
-    curl_easy_setopt(handle, CURLOPT_URL, url);
-    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
-    curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
-    curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
-    curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
-
-    //todo: add a way to print the response
-
-    res = curl_easy_perform(handle);
-    if(res != CURLE_OK) {
-        ld_error("couldn't POST lmao");
-        return 1;
+        curl_slist_free_all(headers);
     }
 
     free(jsonbody);
-    curl_slist_free_all(headers);
-
-
     return 0;
 }
 
@@ -159,10 +167,13 @@ int main(int argc, char *argv[]) {
                 {"bot-token", required_argument, 0, 't'},
                 {"help", no_argument, 0, 'h'},
                 {"log-level", required_argument, 0, 'l'},
+                {"use-ulfius", no_argument, 0, 'u'},
                 {0,0,0,0}
         };
+
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:u", long_options, &option_index);
+
         if(c == -1){
             break;
         }
@@ -175,6 +186,8 @@ int main(int argc, char *argv[]) {
                                "Options: \n\t"
                                "-t, --bot-token [bot_token]\n\t\t"
                                "Discord bot token. See Discord developer pages on how to obtain one\n\t"
+                               "-u, --use-ulfius\n\t\t"
+                               "If set, uses libulfius to send messages instead of curl directly.\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
@@ -183,6 +196,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'l':
                 log_level = strtoul(optarg, NULL, 10);
+                break;
+            case 'u':
+                use_ulfius = 1;
                 break;
             default:
                 abort();

@@ -2,12 +2,15 @@
 // Created by dxing97 on 1/15/18.
 //
 
-#include <curl/curl.h>
-#include <ulfius.h>
-#include "libdiscord.h"
 
 #ifndef LIBDISCORD_REST_H
 #define LIBDISCORD_REST_H
+
+#include <curl/curl.h>
+#include <ulfius.h>
+#include <libdiscord.h>
+
+struct ld_context; //anonymous declaration
 
 /*
  * functions related to the REST API
@@ -44,6 +47,7 @@ struct ld_rest_request {
     size_t body_size;
     struct _u_map *headers;
     int timeout; //ulfius default is 0
+    char *user_agent;
 };
 
 
@@ -54,6 +58,8 @@ struct ld_rest_response {
     void *body;
     size_t body_length;
 };
+
+
 
 /*
  * allocates memory
@@ -104,13 +110,19 @@ char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb);
 
 /*
  * generates ld_rest_request for GET /gateway
+ * does NOT perform the request
  */
-struct ld_rest_request *ld_get_gateway();
+struct ld_rest_request *ld_get_gateway(struct ld_rest_request *req, struct ld_context *context);
 
 /*
  * generates ld_rest_request for GET /gateway/bot
  */
-struct ld_rest_request *ld_get_gateway_bot();
-int ld_post_channel_message();
+struct ld_rest_request *ld_get_gateway_bot(struct ld_rest_request *req, struct ld_context *context);
+
+/*
+ * generates a POST request to create a message
+ * only supports basic messages (no embeds)
+ */
+int ld_create_message(struct ld_rest_request *req, struct ld_context *context, const char *channel_id, const char *message_content);
 
 #endif //LIBDISCORD_REST_H

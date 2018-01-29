@@ -7,7 +7,8 @@
 #include "libdiscord_config.h"
 #include "log.h"
 #include "json.h"
-#include "REST.h"
+
+
 
 /*
  *
@@ -336,4 +337,6 @@ int ld_gateway_queue_heartbeat(struct ld_context *context);
  * calls ld_gateway_connect to reinitialize the connection to the gateway
  */
 int ld_gateway_reconnect(struct ld_context *context);
+
+#include "REST.h"
 #endif

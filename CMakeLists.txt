@@ -11,6 +11,7 @@ set(LD_API_URL "\"https://discordapp.com/api\"")
 set(LD_REST_API_VERSION "\"/v6\"")
 set(LD_WS_API_VERSION 6)
 #set(LD_GATEWAY_API_VERSION 3 "Only version 3 of the gateway API is supported")
+set(LD_GITHUB_URL "\"https://github.com/dxing97/libdiscord\"")
 
 set(CMAKE_C_STANDARD 99)
 
@@ -39,7 +40,7 @@ include_directories(/usr/local/lib/include)
 
 set(LD_LIBS websockets jansson curl ulfius)
 
-set(LD_SOURCE lib/REST.h lib/REST.c lib/libdiscord.c lib/libdiscord.h lib/log.c lib/log.h lib/json.c lib/json.h)
+set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h)
 add_library(discord SHARED ${LD_SOURCE})
 
 target_link_libraries(discord ${LD_LIBS})

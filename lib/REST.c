@@ -16,8 +16,11 @@ struct ld_rest_request * ld_rest_init_request() {
     request->verb = LD_REST_VERB_GET;
     request->body_size = 0;
     request->body = NULL;
-    request->headers = NULL;
+    request->headers = malloc(sizeof(struct _u_map));
+    u_map_init(request->headers);
     request->timeout = 0;
+    request->user_agent = NULL;
+
     return request;
 }
 
@@ -49,6 +52,10 @@ struct ld_rest_response * ld_rest_init_response() {
 }
 
 int ld_rest_free_request(struct ld_rest_request *request){
+    free(request->body);
+    u_map_clean_full(request->headers);
+    free(request->base_url);
+    free(request->endpoint);
     free(request);
     return 0;
 }
@@ -116,7 +123,7 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
     //todo: make request and response allocation and deallocation functions
 
     free(url);
-    ulfius_clean_request(&req);
+//    ulfius_clean_request(&req);
 
     return 0;
 }
@@ -135,4 +142,87 @@ char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb) {
             return "DELETE";
     }
     return NULL;
+}
+
+struct ld_rest_request *ld_get_gateway(struct ld_rest_request *req, struct ld_context *context) {
+    char tmp[1000];
+
+    sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
+    req->base_url = strdup(tmp);
+
+    req->endpoint = strdup("/gateway");
+
+    sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
+    ld_debug("user-agent: %s", tmp);
+    req->user_agent = strdup(tmp);
+
+    req->verb = LD_REST_VERB_GET;
+
+    return req;
+}
+
+struct ld_rest_request *ld_get_gateway_bot( struct ld_rest_request *req, struct ld_context *context) {
+    char tmp[1000];
+
+    sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
+    req->base_url = strdup(tmp);
+
+    req->endpoint = strdup("/gateway/bot");
+
+    sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
+    ld_debug("user-agent: %s", tmp);
+    req->user_agent = strdup(tmp);
+
+    req->verb = LD_REST_VERB_GET;
+    sprintf(tmp, "Bot %s", context->bot_token);
+    u_map_put(req->headers, "Authorization", tmp);
+    return req;
+}
+/*
+ * message_content is the actual content of the message, not the HTTP body
+ */
+int ld_create_message(struct ld_rest_request *req,
+                      struct ld_context *context,
+                      const char *channel_id,
+                      const char *message_content){
+    char tmp[1000];
+
+    sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
+    req->base_url = strdup(tmp);
+
+    sprintf(tmp, "/channels/%s/messages", channel_id);
+    req->endpoint = strdup(tmp);
+
+    sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
+    ld_debug("user-agent: %s", tmp);
+    req->user_agent = strdup(tmp);
+
+    req->verb = LD_REST_VERB_POST;
+    sprintf(tmp, "Bot %s", context->bot_token);
+    u_map_put(req->headers, "Authorization", tmp);
+
+    //generate POST message
+    json_t *body;
+
+    body = json_pack("{ss}", "content", message_content);
+    if(body == NULL) {
+        ld_error("couldn't create JSON object for lmao data");
+        return 1;
+    }
+
+    char *json_body;
+
+    json_body = json_dumps(body, 0);
+    if(json_body == NULL) {
+        ld_error("couldn't dump JSON string for lmao data");
+        return 1;
+    }
+    json_body = strdup(json_body);
+
+    ld_debug("body to post: %s", json_body);
+
+    req->body = json_body;
+    req->body_size = strlen(req->body);
+
+    return 0;
 }

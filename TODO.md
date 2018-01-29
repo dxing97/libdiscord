@@ -6,19 +6,13 @@
 
 ## Todo
 * Use ulfius for blocking REST 
-    * write free functions for request and response
-    * rewrite ld_get_gateway_bot and ld_get_gateway using
-    ulfius
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
 * make example bots comparing ulfius/frequent curl_easy_inits/frees and keeping a handle open
 * Add defines or enums for return codes
-* start moving stuff out of libdiscord.h into their own separate functions
 * A macro that loops through all _u_map members (like jansson's foreach object function)
-* Make a distinction between different websocket connections/shards using wsi user pointers
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
-* Rethink connection states
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
 
 ## Planned

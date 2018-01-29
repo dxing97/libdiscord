@@ -151,6 +151,7 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
 /*
  * internal GET /gateway function
  * returns 0 on success
+ * returns 1 on ulfius error
  * returns 2 on curl error
  * returns 3 on jansson error
  */
@@ -160,43 +161,28 @@ int _ld_get_gateway(struct ld_context *context) {
      * examine /gateway and see if we get a valid response
      */
     int ret;
-    CURL *handle;
-    struct _ld_buffer buffer;
+    struct ld_rest_request *request = ld_rest_init_request();
+    struct ld_rest_response *response = ld_rest_init_response();
 
-    buffer.string = malloc(1);
-    buffer.size = 0;
-    buffer.context = context;
-    handle = curl_easy_init();
-    if(handle == NULL) {
-        //something went wrong trying to create the easy handle.
-        ld_error("curl: couldn't init easy handle");
-        return 2;
+    request = ld_get_gateway(request, context);
+
+    ret = ld_rest_send_blocking_request(request, response);
+
+    if(ret != 0) {
+        ld_error("ulfius: couldn't send request to /gateway/bot (%d)", ret);
+        return 1;
     }
 
-    curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway");
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _ld_curl_response_string);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&buffer);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
-
-    ret = curl_easy_perform(handle);
-
-    curl_easy_cleanup(handle);
-
-    if(ret != CURLE_OK) {
-        ld_error("curl: couldn't get gateway url from /gateway");
-        return 2;
-    }
-
-    ld_debug("received data from /gateway: \n%s", buffer.string);
+    ld_debug("get gateway response: %s", response->body);
 
     //use jansson to extract the JSON data
     json_t *object, *tmp;
     json_error_t error;
 
-    object = json_loads(buffer.string, 0, &error);
+    object = json_loads(response->body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway in ld_connext: %s", buffer.string);
+                "from /gateway in ld_connext: %s", response->body);
         return 3;
     }
 
@@ -215,6 +201,8 @@ int _ld_get_gateway(struct ld_context *context) {
     context->gateway_url = malloc(strlen(json_string_value(tmp)) + 1);
     context->gateway_url = strcpy(context->gateway_url, json_string_value(tmp));
 
+    ld_rest_free_request(request);
+    ld_rest_free_response(response);
     free(tmp);
     free(object);
     return 0;
@@ -250,51 +238,23 @@ int _ld_get_gateway_bot(struct ld_context *context){
      *  Discord is connectable at basic level
      *  Now we should check the bot token validity using /gateway/bot
      */
-
     int ret;
-    struct _ld_buffer buffer;
-    buffer.string = malloc(1);
-    buffer.size = 0;
-    buffer.context = context;
+    struct ld_rest_request *request = ld_rest_init_request();
+    struct ld_rest_response *response = ld_rest_init_response();
+    request = ld_get_gateway_bot(request, context);
+    ret = ld_rest_send_blocking_request(request, response);
+    if(ret != 0) {
+        ld_error("couldn't send request to /gateway/bot");
+    }
+    ld_debug("get gateway response: %s", response->body);
 
     json_t *object, *tmp;
     json_error_t error;
 
-    CURL *handle;
-    handle = curl_easy_init();
-
-    struct curl_slist *headers = NULL;
-    char auth_header[1024];
-    sprintf(auth_header, "Authorization: Bot %s", context->bot_token); //for some reason this works without the "Bot" prefix
-    headers = curl_slist_append(headers, auth_header);
-
-    //check the bot token's validity by trying to connect to /gateway/bot
-
-    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, _ld_curl_response_string);
-    curl_easy_setopt(handle, CURLOPT_WRITEDATA, (void *)&buffer);
-    curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
-    curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(handle, CURLOPT_URL, LD_API_URL LD_REST_API_VERSION "/gateway/bot");
-    curl_easy_setopt(handle, CURLOPT_HEADERDATA, context);
-    curl_easy_setopt(handle, CURLOPT_HEADERFUNCTION, ld_curl_header_parser);
-
-    free(buffer.string);
-    buffer.string = malloc(1);
-    buffer.size = 0;
-
-    ret = curl_easy_perform(handle);
-    if(ret != CURLE_OK) {
-        ld_error("curl: couldn't get gateway url from /gateway");
-        return 2;
-    }
-    curl_easy_cleanup(handle);
-
-    ld_debug("received data from /gateway/bot: \n%s", buffer.string);
-
-    object = json_loads(buffer.string, 0, &error);
+    object = json_loads(response->body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway/bot in ld_connect: %s", buffer.string);
+                "from /gateway/bot in ld_connect: %s", response->body);
         return 3;
     }
 
