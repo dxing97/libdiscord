@@ -155,6 +155,7 @@ int main(int argc, char *argv[]) {
      */
     int c; //bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
+    char *game = "AlienSimulator";
     unsigned long log_level = 31;
     if(argc == 1) {
         goto HELP;
@@ -168,11 +169,12 @@ int main(int argc, char *argv[]) {
                 {"help", no_argument, 0, 'h'},
                 {"log-level", required_argument, 0, 'l'},
                 {"use-ulfius", no_argument, 0, 'u'},
+                {"game", required_argument, 0, 'g'},
                 {0,0,0,0}
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:u", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:ug:", long_options, &option_index);
 
         if(c == -1){
             break;
@@ -188,6 +190,8 @@ int main(int argc, char *argv[]) {
                                "Discord bot token. See Discord developer pages on how to obtain one\n\t"
                                "-u, --use-ulfius\n\t\t"
                                "If set, uses libulfius to send messages instead of curl directly.\n\t"
+                               "-g, --game\n\t\t"
+                               "Set the \"game\" field in the bot presence.\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
@@ -199,6 +203,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'u':
                 use_ulfius = 1;
+                break;
+            case 'g':
+                game = strdup(optarg);
                 break;
             default:
                 abort();
@@ -226,7 +233,7 @@ int main(int argc, char *argv[]) {
     struct ld_presence presence;
     presence.status_type = LD_PRESENCE_ONLINE;
     presence.game_type = LD_PRESENCE_PLAYING;
-    presence.game = "SPARCbot";
+    presence.game = strdup(game);
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
@@ -243,6 +250,11 @@ int main(int argc, char *argv[]) {
         ld_error("error creating libdiscord context\n");
         return 1;
     }
+
+    free(presence.game);
+    presence.game = NULL;
+    free(game);
+    game = NULL;
     free(info);
 
     handle = curl_easy_init();

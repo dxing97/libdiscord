@@ -61,7 +61,7 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     }
 
     context->presence.game = strdup(info->init_presence.game);
-    context->presence.game_type = LD_PRESENCE_LISTENING;
+    context->presence.game_type = info->init_presence.game_type;
     context->presence.status_type = LD_PRESENCE_ONLINE;
 
     context->gateway_bot_limit = 1;
