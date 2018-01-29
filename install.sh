@@ -35,6 +35,7 @@ sudo apt install libulfius-dev
 #echo "Installing libulfius"
 #git clone https://github.com/babelouest/ulfius.git
 #cd ulfius
+#    git checkout 2.2.4
 #    git submodule update --init
 #    git checkout ${ULFIUS_VERSION}
 #    cd lib/orcania
