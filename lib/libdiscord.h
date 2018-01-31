@@ -74,9 +74,12 @@ enum ld_callback_reason {
     LD_CALLBACK_VOICE_SERVER_UPDATE = 33,
     LD_CALLBACK_WEBHOOKS_UPDATE = 34,
 
-    /* websocket specifis */
+    /* websocket specific */
     LD_CALLBACK_WS_ESTABLISHED = 35, //websocket connection established and ready to rx/tx
-    LD_CALLBACK_WS_CONNECTION_ERROR = 36 //error connecting to the gateway:
+    LD_CALLBACK_WS_CONNECTION_ERROR = 36, //error while trying to connect to the gateway
+    LD_CALLBACK_WS_PEER_CLOSE = 37
+    // the gateway closed the connection. len contains the close code,
+    // and data may or may not contain a string with context data
 
 };
 
@@ -167,9 +170,7 @@ struct ld_context {
     struct lws_context *lws_context;
     struct lws *lws_wsi;
     int (*user_callback)
-            (struct ld_context *context,
-             enum ld_callback_reason reason,
-             void *data);
+            (struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
     unsigned int heartbeat_interval; //always in ms
     int last_seq; //last sequence number received in the gateway
     unsigned long last_hb;
@@ -216,7 +217,7 @@ struct ld_gi {
 struct ld_context_info {
     char *bot_token;
     unsigned long log_level;  //DEPRECIATED, use new functions in log.h
-    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data);
+    int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
     size_t gateway_ringbuffer_size;
     struct ld_presence init_presence;
 };

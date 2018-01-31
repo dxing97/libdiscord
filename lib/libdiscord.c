@@ -346,6 +346,12 @@ int ld_connect(struct ld_context *context) {
 int ld_service(struct ld_context *context, int timeout) {
     int ret = 0;
 
+    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
+        //we are unconnected, let's check if there was a close code
+        //we are trying to service a closed connection, so we should try opening that connection
+        ld_connect(context);
+        return 0;
+    }
     //check heartbeat timer
     if((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) {
         //put heartbeat payload in gateway_queue
@@ -445,11 +451,12 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
     int i;
     char *payload = (char *) user;
     struct ld_gateway_payload *gateway_payload;
+    char *close_message = NULL;
 
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
             ld_error("lws: error connecting to gateway: %.*s(%d)", in, len, len);
-            context->user_callback(context, LD_CALLBACK_WS_CONNECTION_ERROR, NULL);
+            context->user_callback(context, LD_CALLBACK_WS_CONNECTION_ERROR, NULL, 0);
             return 0;
         case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH:
             ld_info("lws: received handshake from Discord gateway");
@@ -457,9 +464,9 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
             ld_info("established websocket connection to gateway");
-            return context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL);
+            i = context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL, 0);
             context->gateway_state = LD_GATEWAY_CONNECTED;
-            break;
+            return i;
 
         case LWS_CALLBACK_GET_THREAD_ID:
             return 0;
@@ -562,10 +569,20 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_WS_PEER_INITIATED_CLOSE:
             ld_info("lws: gateway initiated close of websocket: "
-                             "close code: %u\nCONTEXT:\n%s",
-                     (unsigned int) ((unsigned char *) in)[0] << 8 | ((unsigned char *) in)[1], in + 2);
+                             "close code: %u\nCONTEXT (%d):\n%.*s",
+                     (unsigned int) ((unsigned char *) in)[0] << 8 | ((unsigned char *) in)[1], len, len, in + 2);
             context->close_code = (unsigned int) (( unsigned char *)in)[0] << 8 | (( unsigned char *)in)[1];
-            break;
+            context->gateway_state = LD_GATEWAY_UNCONNECTED;
+            if(len != 0) {
+                close_message = strndup(in + 1, len);
+            }
+
+            i = context->user_callback(context, LD_CALLBACK_WS_PEER_CLOSE, close_message, context->close_code);
+
+            if(len != 0) {
+                free(close_message);
+            }
+            return i;
         case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
         case LWS_CALLBACK_LOCK_POLL:
         case LWS_CALLBACK_UNLOCK_POLL:
@@ -845,7 +862,7 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
                 ret = dispatch_dict[i].dispatch_callback(context, data);
                 return ret;
             }
-            i = context->user_callback(context, dispatch_dict[i].cbk_reason, data);
+            i = context->user_callback(context, dispatch_dict[i].cbk_reason, data, 0);
             return i;
         }
     }

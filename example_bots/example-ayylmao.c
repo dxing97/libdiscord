@@ -29,7 +29,7 @@ void int_handler(int i){
  * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
-int callback(struct ld_context *context, enum ld_callback_reason reason, void *data) {
+int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     /*
      * depending on the reason, do stuff
      */
@@ -218,8 +218,6 @@ int main(int argc, char *argv[]) {
         printf("Bot token not set!");
         return 1;
     }
-
-    printf("Bot token set");
     printf("Initializing libdiscord with log level %lu\n", log_level);
 
     ld_set_logging_level(log_level);
