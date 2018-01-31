@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
      */
     int c; //bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
-    char *game = "AlienSimulator";
+    char *game = NULL;
     unsigned long log_level = 31;
     if(argc == 1) {
         goto HELP;
@@ -233,7 +233,11 @@ int main(int argc, char *argv[]) {
     struct ld_presence presence;
     presence.status_type = LD_PRESENCE_ONLINE;
     presence.game_type = LD_PRESENCE_PLAYING;
-    presence.game = strdup(game);
+    if(game != NULL) {
+        presence.game = strdup(game);
+    } else {
+        presence.game = strdup("AlienSimulator");
+    }
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
@@ -270,7 +274,7 @@ int main(int argc, char *argv[]) {
             ret = ld_connect(context);
             if(ret != 0) {
                 ld_warning("error connecting to discord: error code %d", ret);
-                bot_exit = 1;
+                goto exit;
             }
             bot_state = 1;
         }
@@ -281,6 +285,7 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
+    exit:
     //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
