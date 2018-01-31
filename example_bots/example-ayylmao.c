@@ -56,7 +56,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_warning("couldn't get message content");
                         break;
                     }
-                    if (strcasecmp(content, "alex") == 0) {
+                    if (strcasecmp(content, "ayy") == 0) {
                         ayystat++;
                     }
                 }
