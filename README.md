@@ -36,3 +36,13 @@ Under consideration. Will try to roughly measure latencies and response times of
 * Response time of REST-gateway event pairs (POST [message] | recieved gateway dispatch for message event, etc)
 * Response time to (user defined) third party servers (like a CLI ping tool)
 
+### example-kraken
+This is what the real kraken should look like:
+![The Real Kraken](https://assets.wired.com/photos/w_660/wp-content/uploads/2014/09/142-143-thekraken.jpg)
+
+### references
+For reference please see the following graphs:
+
+![The Real Kraken](http://coveredtruths.com/wp-content/uploads/2017/03/top-10-real-aliens-caught-on-tape-2017-area-51-alien-footage-aliens-video.jpg)
+
+![The Real Kraken](http://image.b4in.net/resources/2013/09/19/1379553235-GREY+ALIEN+IN+TUBE.jpg)
