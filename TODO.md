@@ -5,8 +5,8 @@
 * Discord developer ToS compliant
 
 ## Todo
+* Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
-* Add defines or enums for return codes
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot
@@ -16,7 +16,6 @@
 
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)
-* Add REST API functions
 * make example-ayylmao not respond to other bots
 * zlib compression support in gateway payloads (check other compression methods in gateway connections)
 * See if jansson increment/decrement needs to be used
