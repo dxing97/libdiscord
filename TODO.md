@@ -12,7 +12,7 @@
 * parse HTTP headers for ratelimit info in /gateway/bot
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
-* Look into Ulfius performance issues (excessive curl_easy_init and curl_easy_cleanup)
+* Look into Ulfius performance issues (excessive ``curl_easy_init`` and ``curl_easy_cleanup``)
 
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)
@@ -26,9 +26,10 @@
 
 ## Far Future
 * Rich presence integration for IoT
-* OAuth support (write a OAuth2 library for C)
-* A command line application for scripting
+* OAuth support (write/find a OAuth2 library for C)
+* A command line application for scripting with bash
 * Support for voice channels (UDP connections)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation (Allegro 5 bitmaps? MagickWand?)
+* Support for userbots
 * Example tool for a basic Discord CLI client.
