@@ -68,7 +68,9 @@ cd libdiscord
         make
 #    cd ..
 #cd ..
-
+sudo apt-get install -y caca-utils
+wget https://media.boingboing.net/wp-content/uploads/2014/07/SCH.jpg
+cacaview SCH.jpg
 
 
 
