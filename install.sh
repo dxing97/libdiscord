@@ -68,7 +68,9 @@ cd libdiscord
         make
 #    cd ..
 #cd ..
-
+sudo apt-get install -y caca-utils
+wget https://geekreply.com/wp-content/uploads/2017/12/discord-logo-685bbc5f-8221-4a45-b809-4dc5e38c22fc.png
+cacaview discord-logo-685bbc5f-8221-4a45-b809-4dc5e38c22fc.png
 
 
 
