@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
             ret = ld_connect(context);
             if(ret != 0) {
                 ld_warning("error connecting to discord: error code %d", ret);
-                goto exit;
+                break;
             }
             bot_state = 1;
         }
@@ -283,7 +283,6 @@ int main(int argc, char *argv[]) {
             break;
         }
     }
-    exit:
     //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
