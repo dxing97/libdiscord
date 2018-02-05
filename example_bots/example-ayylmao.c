@@ -84,7 +84,12 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     }
     //generate POST message
     json_t *body;
-    body = json_pack("{ss}", "content", (response ? response : "lmao"));
+    if(response == NULL) {
+        body = json_pack("{ss}", "content", "lmao");
+    } else {
+        body = json_pack("{ss}", "content", response);
+    }
+
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
         return 0;
