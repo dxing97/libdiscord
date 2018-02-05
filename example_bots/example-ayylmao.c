@@ -84,12 +84,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     }
     //generate POST message
     json_t *body;
-    if(response == NULL) {
-        body = json_pack("{ss}", "content", "lmao");
-    } else {
-        body = json_pack("{ss}", "content", response);
-    }
-
+    body = json_pack("{ss}", "content", (response ? response : "lmao"));
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
         return 0;
@@ -105,12 +100,12 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     if(use_ulfius) {
         struct ld_rest_request *request;
-        struct ld_rest_response *response;
+        struct ld_rest_response *resp;
         request = ld_rest_init_request();
-        response = ld_rest_init_response();
+        resp = ld_rest_init_response();
 
         ld_create_message(request, context, channelid, (response ? response : "lmao"));
-        ld_rest_send_blocking_request(request, response);
+        ld_rest_send_blocking_request(request, resp);
     } else {
         //curl POST to that channel
         struct curl_slist *headers = NULL;
