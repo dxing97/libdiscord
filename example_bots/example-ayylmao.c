@@ -16,6 +16,7 @@ static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 CURL *handle;
 int use_ulfius = 0;
+char *trigger = NULL, *response = NULL;
 
 void int_handler(int i){
     bot_exit = 1;
@@ -56,8 +57,8 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_warning("couldn't get message content");
                         break;
                     }
-                    if (strcasecmp(content, "ayy") == 0) {
-                        ayystat++;
+                    if(strcasecmp(content, (trigger ? trigger : "ayy")) == 0 ) {
+                            ayystat++;
                     }
                 }
 
@@ -83,7 +84,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     }
     //generate POST message
     json_t *body;
-    body = json_pack("{ss}", "content", "lmao");
+    body = json_pack("{ss}", "content", (response ? response : "lmao"));
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
         return 0;
@@ -103,7 +104,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         request = ld_rest_init_request();
         response = ld_rest_init_response();
 
-        ld_create_message(request, context, channelid, "lmao");
+        ld_create_message(request, context, channelid, (response ? response : "lmao"));
         ld_rest_send_blocking_request(request, response);
     } else {
         //curl POST to that channel
@@ -170,11 +171,13 @@ int main(int argc, char *argv[]) {
                 {"log-level", required_argument, 0, 'l'},
                 {"use-ulfius", no_argument, 0, 'u'},
                 {"game", required_argument, 0, 'g'},
+                {"trigger", required_argument, 0, 'r'},
+                {"response", required_argument, 0, 'R'},
                 {0,0,0,0}
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:ug:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:ug:r:R:", long_options, &option_index);
 
         if(c == -1){
             break;
@@ -191,7 +194,7 @@ int main(int argc, char *argv[]) {
                                "-u, --use-ulfius\n\t\t"
                                "If set, uses libulfius to send messages instead of curl directly.\n\t"
                                "-g, --game\n\t\t"
-                               "Set the \"game\" field in the bot presence.\n\t"
+                               "Sets the initial value of the \"game\" field in the bot presence.\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
@@ -207,6 +210,12 @@ int main(int argc, char *argv[]) {
             case 'g':
                 game = strdup(optarg);
                 break;
+            case 'r':
+                trigger = strdup(optarg);
+                break;
+            case 'R':
+                response = strdup(optarg);
+                break;
             default:
                 abort();
         }
@@ -215,7 +224,7 @@ int main(int argc, char *argv[]) {
     printf("Example bot 1 \"ayylmao\" starting up using libdiscord v%s\n", LD_VERSION);
 
     if(bot_token == NULL){
-        printf("Bot token not set!");
+        printf("Bot token not set! See example-ayylmao -h for details.");
         return 1;
     }
     printf("Initializing libdiscord with log level %lu\n", log_level);
@@ -279,7 +288,7 @@ int main(int argc, char *argv[]) {
 
         ret = ld_service(context, 20); //service the connection
         if(ret != 0) {
-            ld_debug("ld_service returned non-0");
+            ld_error("ld_service returned non-0");
             break;
         }
     }
