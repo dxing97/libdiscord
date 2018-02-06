@@ -358,6 +358,7 @@ int ld_service(struct ld_context *context, int timeout) {
         context->hb_count++;
         if(context->hb_count > 1){
             //didn't receive HB_ACK
+            ld_warning("ld_service: didn't recieve a HB_ACK");
             return LD_HB_ACKMISS;
         }
         ret = ld_gateway_queue_heartbeat(context);

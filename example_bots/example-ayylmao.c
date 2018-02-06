@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 
         ret = ld_service(context, 20); //service the connection
         if(ret != 0) {
-            ld_error("ld_service returned non-0");
+            ld_error("ld_service returned non-0 (%d)", ret);
             break;
         }
     }
