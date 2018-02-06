@@ -26,7 +26,8 @@ enum ldecode {
     LD_EJSON = 2, //problem doing something with json manipulation/jansson
     LD_ECURL = 3, //problem with something involving curl
     LD_EMEM = 4, //problem with something involving memory allocation/deallocation
-    LD_EMISSING = 5 //missing parameters
+    LD_EMISSING = 5, //missing parameters
+    LD_HB_ACKMISS = 6 //didn't recieve an ACK from gateway
 };
 
 /*
