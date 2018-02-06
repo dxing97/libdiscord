@@ -40,7 +40,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         //add that context to the send queue
     CURLcode res;
     const char *key, *content, *channelid;
-    int ayystat = 0;
+    int ayystat = 0, ret = 0;
 
     switch(reason){
         case LD_CALLBACK_MESSAGE_CREATE: {
@@ -125,6 +125,18 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
         curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
         curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
+        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPALIVE, 1L);
+        if(ret != CURLE_OK) {
+            ld_debug("TCP keepalive unavailable");
+        }
+        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPIDLE, 120L);
+        if(ret != CURLE_OK) {
+            ld_debug("TCP keepalive idle unavailable");
+        }
+        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPINTVL, 60L);
+        if(ret != CURLE_OK) {
+            ld_debug("TCP keepalive interval unavailable");
+        }
 
         //todo: add a way to print the response
 
@@ -195,6 +207,10 @@ int main(int argc, char *argv[]) {
                                "If set, uses libulfius to send messages instead of curl directly.\n\t"
                                "-g, --game\n\t\t"
                                "Sets the initial value of the \"game\" field in the bot presence.\n\t"
+                               "-r, --trigger\n\t\t"
+                               "Sets string that will trigger a response from the bot. Default is \"ayy\".\n\t"
+                               "-R, --response\n\t\t"
+                               "Sets response that will be sent when the trigger is read. Default is \"lmao\".\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
