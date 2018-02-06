@@ -101,7 +101,7 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
 //    fprintf(stderr, "%s\n", message);
 //
 //    free(time_string);
-    message = _ld_log_generate_string(ll, log_message, arg);
+    message = ld_log_generate_string(ll, log_message, arg);
     if(message == NULL) {
         perror("libdiscord counldn't print an error message");
         return;
@@ -115,7 +115,7 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
  * string memory is allocated by this function, it must be freed afterward
  * todo: make it read-only (and avoid the free)
  */
-char *_ld_log_generate_string(unsigned long ll, const char *log_message, va_list arg) {
+char *ld_log_generate_string(unsigned long ll, const char *log_message, va_list arg) {
     time_t raw_time;
     struct tm *current_time;
     char *message, *time_string;
