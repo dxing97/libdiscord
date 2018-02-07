@@ -645,7 +645,9 @@ json_t *_ld_generate_identify(struct ld_context *context) {
                       "s{ss si}" //game {name, type, url?}
                       "ss" //status
                       "so?" //since
-                      "sb}}", //afk
+                      "sb}" //afk
+    "}"
+            ,
     "token", context->bot_token,
     "large_threshold", 250,
     "compress", 0,
@@ -653,7 +655,8 @@ json_t *_ld_generate_identify(struct ld_context *context) {
     "properties",
               "$os", "Linux",
               "$browser", "libdiscord",
-              "$device", "libdiscord",
+              "$device", "libdiscord"
+            ,
     "presence",
         "game",
             "name", context->presence.game,
@@ -760,6 +763,12 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             t = NULL;
             s = NULL;
             d = _ld_generate_identify(context);
+
+            if(d == NULL) {
+                ld_error("couldn't generate identify payload, closing gateway connection");
+                return 1;
+            }
+
             payload = ld_json_create_payload(op, d, t, s);
 
             struct ld_gateway_payload *toinsert;

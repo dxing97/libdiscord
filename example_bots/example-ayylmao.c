@@ -253,13 +253,13 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
-    struct ld_presence presence;
-    presence.status_type = LD_PRESENCE_ONLINE;
-    presence.game_type = LD_PRESENCE_PLAYING;
+    struct ld_presence presence; //todo: presence currently cannot be null, fix this
+    presence.status_type = LD_PRESENCE_DND;
+    presence.game_type = LD_PRESENCE_STREAMING;
     if(game != NULL) {
         presence.game = strdup(game);
     } else {
-        presence.game = strdup("AlienSimulator");
+        presence.game = strdup("AlienSimulater");
     }
 
     info->init_presence = presence;
