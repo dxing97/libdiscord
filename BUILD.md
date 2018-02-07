@@ -1,22 +1,26 @@
 # Building libdiscord
 
-libdiscord uses CMake, so building and installing should be fairly straightforward.
+libdiscord uses the CMake build system, so building and installing should be fairly straightforward and relatively 
+portable.
 
-## Dependencies
-* libwebsockets (minimum v2.4.1, the package available 
-with Ubuntu 17.10 is v2.0.3 and doesn't work so you will likely need to compile yourself)
-* jansson (tested to work with v2.10, package available for Ubuntu 17.10)
-* libcurl (package available for ubuntu, use libcurl4-gnutls-dev)
-* gcc, make, cmake, git (compiler and build tools, git to pull a copy of the source files)
-* ulfius (available through your favorite package manager for most debian related distros, otherwise compile from source)
+Dependencies: 
+* libwebsockets 
+    * minimum required version is v2.4, anything below that will not work, compiled from source)
+* jansson (used package bundled with ubuntu, any recent version should work 17.10)
+* libcurl (used package bundled with ubuntu 17.10, any recent version should work)
+* ulfius (for simple REST requests, any recent version should work)
 
-Tested to buuld and work on Raspberry Pi 3 running Raspbian (stretch), 
-but if you want to install libwebsockets with checkinstall, 
-then you will have to compile checkinstall yourself.
+Note that each package has their own dependencies, including 
+
+Tested to buuld and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
+but note that if you want to install libwebsockets with checkinstall on Raspbian, 
+then you will have to compile checkinstall yourself. Otherwise, install with ``sudo make install``
 
 Works on sparc64 debian 4.13.4-1 with no issues currently.
 
 ### Quick build instructions for libwebsockets
+
+Make sure you have the dependencies for libwebsockets installed.
 
 Get a copy of libwebsockets source from github.
 ```bash

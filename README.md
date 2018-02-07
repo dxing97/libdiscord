@@ -1,4 +1,4 @@
-#libdiscord
+# libdiscord
 A Discord library written in C, currently in development.
 
 Discord server: https://discord.gg/BGgcQQh
@@ -8,18 +8,10 @@ The goal of this library currently is:
 
 ## Building
 See [BUILD.md](building)
-Currently only tested against Ubuntu 17.10 Raspbian stretch, and the unofficial sparc64 port for Debian.
 
-[//]: # (See [install.sh](install.sh) for a quick rundown of the commands you may have to run)
+Currently only tested against Ubuntu 17.10, Raspbian stretch, and the unofficial sparc64 port for Debian.
 
-Dependencies: 
-* libwebsockets (tested to work with v2.4.1, compiled from source)
-* jansson-dev (used package bundled with ubuntu 17.10)
-* libcurl (used package bundled with ubuntu 17.10)
-* getopt (required for ayylmao example bot, should be included with your *nix distribution)
-* ulfius (for simple REST requests)
-
-Tested to work on Raspberry Pi 3/Raspbian (stretch), but have to compile checkinstall for libwebsockets to be compiled. 
+Tested to work on Raspberry Pi 3/Raspbian (stretch).
 
 ## Example Bots
 ### example-ayylmao
@@ -27,7 +19,8 @@ Currently this is the only example bot under development.
 This is the first working bot using libdiscord, and 
 is currently under development.
 
-Responds to every "ayy" with "lmao" in the same channel the "ayy" was sent in.
+Responds to every "ayy" with "lmao" in the same channel the "ayy" was sent in. Trigger and response can be set to other 
+values by passing command line options.
 
 ### example-ping
 Under consideration. Will try to roughly measure latencies and response times of various API endpoints, which may include:
