@@ -5,14 +5,24 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
 * A macro that loops through all _u_map members (like jansson's foreach object function)
-* Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
-* parse HTTP headers for ratelimit info in /gateway/bot
+
+### Websocket
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
+
+
+### REST
+* Add way of logging bot actions through a Discord channels (use Discord channel for logging)
+* Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
+* parse HTTP headers for ratelimit info in /gateway/bot
 * Look into Ulfius performance issues (excessive ``curl_easy_init`` and ``curl_easy_cleanup``)
+
+### JSON
+* JSON manipulation/creation functions
+* Figure out how to use structs with json_t
+* Consider adding a snowflake type
 
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)
@@ -22,7 +32,6 @@
 * CMake OS detection for IDENTIFY payload
 * Better documentation (comments in the source code is NOT good documentation)
 * latency bot
-
 
 ## Far Future
 * Rich presence integration for IoT

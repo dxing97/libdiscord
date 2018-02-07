@@ -253,13 +253,14 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
-    struct ld_presence presence; //todo: presence currently cannot be null, fix this
-    presence.status_type = LD_PRESENCE_DND;
-    presence.game_type = LD_PRESENCE_STREAMING;
+    struct ld_json_presence *presence; //todo: presence currently cannot be null, fix this
+    presence = malloc(sizeof(struct ld_json_presence));
+    presence->status_type = LD_PRESENCE_DND;
+    presence->game_type = LD_PRESENCE_STREAMING;
     if(game != NULL) {
-        presence.game = strdup(game);
+        presence->game = strdup(game);
     } else {
-        presence.game = strdup("AlienSimulater");
+        presence->game = strdup("AlienSimulater");
     }
 
     info->init_presence = presence;
@@ -278,11 +279,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    free(presence.game);
-    presence.game = NULL;
+    free(presence->game);
+    presence->game = NULL;
     free(game);
     game = NULL;
     free(info);
+    free(presence);
 
     handle = curl_easy_init();
 
