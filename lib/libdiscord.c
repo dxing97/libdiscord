@@ -60,7 +60,7 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
         return NULL;
     }
 
-    context->presence = malloc(sizeof(struct ld_json_presence));
+    context->presence = malloc(sizeof(struct _ld_json_presence));
     if(context->presence == NULL) {
         ld_error("couldn't allocate presence");
         return NULL;

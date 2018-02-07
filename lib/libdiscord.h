@@ -134,7 +134,7 @@ enum ld_presence_status_type {
     LD_PRESENCE_OFFLINE = 3
 };
 
-//struct ld_json_presence;
+//struct _ld_json_presence;
 
 /*
  * gateway ringbuffer elements
@@ -178,7 +178,7 @@ struct ld_context {
     unsigned int close_code;
     char *gateway_rx_buffer;
     size_t gateway_rx_buffer_len;
-    struct ld_json_presence *presence;
+    struct _ld_json_presence *presence;
     char *gateway_session_id;
     int gateway_bot_limit; //ratelimit reset amount
     int gateway_bot_remaining; //last ratelimit remaining value
@@ -218,7 +218,7 @@ struct ld_context_info {
     unsigned long log_level;  //DEPRECIATED, use new functions in log.h
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
     size_t gateway_ringbuffer_size;
-    struct ld_json_presence *init_presence;
+    struct _ld_json_presence *init_presence;
 };
 
 struct ld_dispatch {

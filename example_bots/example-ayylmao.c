@@ -253,8 +253,8 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
-    struct ld_json_presence *presence; //todo: presence currently cannot be null, fix this
-    presence = malloc(sizeof(struct ld_json_presence));
+    struct _ld_json_presence *presence; //todo: presence currently cannot be null, fix this
+    presence = malloc(sizeof(struct _ld_json_presence));
     presence->status_type = LD_PRESENCE_DND;
     presence->game_type = LD_PRESENCE_STREAMING;
     if(game != NULL) {

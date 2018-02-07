@@ -19,13 +19,9 @@
 typedef uint64_t LD_SNOWFLAKE;
 
 /*
- * presence json object
+ * timestamp types are strings formatted in the ISO8601 format
  */
-struct ld_json_presence {
-    char *game;
-    enum ld_presence_game_type game_type;
-    enum ld_presence_status_type status_type;
-};
+typedef char * TIMESTAMP;
 
 /*
  * connection properties json object
@@ -127,23 +123,34 @@ struct ld_json_embed_image {
 };
 
 struct ld_json_embed_thumbnail {
-
+    char *url;
+    char *proxy_url;
+    int height;
+    int width;
 };
 
 struct ld_json_embed_video {
-
+    char *url;
+    int height;
+    int width;
 };
 
 struct ld_json_embed_provider {
-
+    char *name;
+    char *url;
 };
 
 struct ld_json_embed_author {
-
+    char *name;
+    char *url;
+    char *icon_url;
+    char *proxy_icon_url;
 };
 
 struct ld_json_embed_field {
-
+    char *name;
+    char *value;
+    int _inline; //bool
 };
 
 struct ld_json_embed {
@@ -162,16 +169,33 @@ struct ld_json_embed {
     struct ld_json_embed_field *fields[];
 };
 
-struct ld_json_reaction {
+struct ld_json_emoji {
+    LD_SNOWFLAKE id;
+    char *name;
+    struct ld_json_role **roles; //pointer to array of pointers
+    struct ld_json_user *user;
+    int require_colons;
+    int managed;
+    int animated;
+};
 
+struct ld_json_reaction {
+    int count;
+    int me; //boolean
+    struct ld_json_emoji *emoji; //from the documentation: "partion emoji object type"
 };
 
 struct ld_json_message_activity {
-
+    int type;
+    char *party_id;
 };
 
 struct ld_json_message_application {
-
+    LD_SNOWFLAKE id;
+    char *cover_image;
+    char *description;
+    char *icon;
+    char *name;
 };
 
 struct ld_json_message {
@@ -183,15 +207,148 @@ struct ld_json_message {
     char *edited_timestamp;
     int tts; //boolean
     int mention_everyone; //boolean
-    struct ld_json_user *mentions[]; //array of user objects. NOTE: last pointer in array is a null pointer
-    struct ld_json_role *mention_roles[];
-    struct ld_json_attachemnt *attachments[];
-    struct ld_json_embed *embeds[];
-    struct ld_json_reaction *reactions[];
+    struct ld_json_user **mentions; //array of user objects. NOTE: last pointer in array is a null pointer
+    struct ld_json_role **mention_roles;
+    struct ld_json_attachemnt **attachments;
+    struct ld_json_embed **embeds;
+    struct ld_json_reaction **reactions;
     LD_SNOWFLAKE webhook_id;
     int type;
     struct ld_json_message_activity *activity;
     struct ld_json_message_application *application;
+};
+
+struct ld_json_overwrite {
+    LD_SNOWFLAKE id;
+    char *type;
+    int allow;
+    int deny;
+};
+
+struct ld_json_attachment {
+    LD_SNOWFLAKE id;
+    char *filename;
+    int size;
+    char *url;
+    char *proxy_url;
+    int height;
+    int width;
+};
+
+struct ld_json_channel {
+    LD_SNOWFLAKE id;
+    int type;
+    LD_SNOWFLAKE guild_id;
+    int position;
+    struct ld_json_overwrite **permission_overwrites;
+    char *name;
+    char *topic;
+    int nsfw; //boolean
+    LD_SNOWFLAKE last_message_id;
+    int bitrate;
+    int user_limit;
+    struct ld_json_user **recipients;
+    char *icon;
+    LD_SNOWFLAKE owner_id;
+    LD_SNOWFLAKE application_id;
+    LD_SNOWFLAKE parent_id;
+    char *last_pin_timestamp; //ISO8601 formatted string
+};
+
+struct ld_json_voice_state {
+    LD_SNOWFLAKE guild_id;
+    LD_SNOWFLAKE channel_id;
+    LD_SNOWFLAKE user_id;
+    char *session_id; //documentation lists as string type
+    int deaf; //boolean
+    int mute; //boolean
+    int self_deaf; //boolean
+    int self_mute; //boolean
+    int supress; //boolean
+};
+
+struct ld_json_guild_member {
+    struct ld_json_user *user;
+    char *nick;
+    LD_SNOWFLAKE *roles; //array of ints
+    char *joined_at; //ISO8601 formatted timestamp;
+    int deaf; //boolean
+    int mute; //boolean
+};
+
+/*
+ * Depreciated: DO NOT USE
+ */
+struct _ld_json_presence {
+    char *game;
+    enum ld_presence_game_type game_type;
+    enum ld_presence_status_type status_type;
+};
+
+struct ld_json_presence_update {
+    struct ld_json_user *user;
+    LD_SNOWFLAKE *roles; //array of snowflakes
+    struct ld_json_activity *game;
+    LD_SNOWFLAKE guild_id;
+    char *status;
+};
+
+struct ld_json_guild {
+    LD_SNOWFLAKE id;
+    char *name;
+    char *icon;
+    char *splash;
+    int owner;
+    LD_SNOWFLAKE owner_id;
+    int permissions;
+    char *region;
+    LD_SNOWFLAKE afk_channel_id;
+    int afk_timeout;
+    int embed_enabled; //bool
+    LD_SNOWFLAKE embed_channel_id;
+    int verification_level;
+    int default_message_notifications;
+    int explicit_content_filter;
+    struct ld_json_role **roles;
+    struct ld_json_emoji **emojis;
+    char **features; //array of strings
+    int mfa_level;
+    LD_SNOWFLAKE application_id;
+    int widget_enabled; //boolean
+    LD_SNOWFLAKE widget_channel_id;
+    LD_SNOWFLAKE system_channel_id;
+    char *joined_at; //ISO8601 timestamp formatted string
+    int large; //boolean
+    int unavailable; //boolean
+    int member_count;
+    struct ld_json_voice_state **voice_states;
+    struct ld_json_guild_member **members;
+    struct ld_json_channel **channels;
+    struct ld_json_presence_update **presences;
+};
+
+struct ld_json_account {
+    LD_SNOWFLAKE id; //discord API documentation lists this as a string type
+    char *name;
+};
+
+struct ld_json_ban {
+    char *reason;
+    struct ld_json_user *user;
+};
+
+struct ld_json_integration {
+    LD_SNOWFLAKE id;
+    char *name;
+    char *type;
+    int enabled; //boolean
+    int syncing; //boolean
+    LD_SNOWFLAKE role_id;
+    int expire_behavior;
+    int expire_grace_period;
+    struct ld_json_user *user;
+    struct ld_json_account *account;
+    char *synced_at;
 };
 
 /*
