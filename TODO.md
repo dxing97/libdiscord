@@ -34,4 +34,5 @@
 * Example bot with image generation (Allegro 5 bitmaps? MagickWand?)
 * Support for userbots
 * Example tool for a basic Discord CLI client.
+* Figure out what Spotify is
 * Make/autogenerate wrapper for other languages, including Python
