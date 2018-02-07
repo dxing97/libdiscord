@@ -63,3 +63,7 @@ request = ld_create_message(char *channel_id, message_t *message);
 ld_queue_request(request);
 ld_rest_simple_perform(request, response)
 ```
+
+## JSON 
+Some JSON objects/payloads are arrays of objects of some length. libdiscord will treat them as arrays of pointers to 
+their respective struct type, and sets the last pointer to be a null pointer.

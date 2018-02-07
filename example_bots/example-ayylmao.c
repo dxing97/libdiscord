@@ -291,9 +291,6 @@ int main(int argc, char *argv[]) {
     int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
-        //if the bot isn't connected to discord, connect to discord
-        //maybe the user shouldn't worry about whether or not we've connected here in the user code
-        //move state stuff to reasons in the user callback
         if(bot_state == 0) {
             //bot isn't connected, so we should try connecting
             ret = ld_connect(context);
