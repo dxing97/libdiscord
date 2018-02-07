@@ -26,6 +26,7 @@
 
 ## Far Future
 * Rich presence integration for IoT
+* Make ulfius optional, i.e. only use libcurl
 * OAuth support (write/find a OAuth2 library for C)
 * A command line application for scripting with bash
 * Support for voice channels (UDP connections)
