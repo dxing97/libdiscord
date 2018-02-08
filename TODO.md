@@ -9,9 +9,9 @@
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 
 ### Websocket
+* Detect gateway disconnection in ld_service and reconnect
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
-
 
 ### REST
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)
