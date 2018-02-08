@@ -5,6 +5,7 @@
 * Discord developer ToS compliant
 
 ## Todo
+* Try running a test bot on a high-end Intel server instead of Raspberry Pis. 
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 
@@ -14,6 +15,7 @@
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
 
 ### REST
+* Try using OpenSSL to see if our "unexpected TLS packet" error goes away
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 * Implement ratelimiting on REST API in conjunction with curl-multi (is this feasible?)
 * parse HTTP headers for ratelimit info in /gateway/bot
