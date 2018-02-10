@@ -203,8 +203,8 @@ struct ld_json_message {
     LD_SNOWFLAKE channel_id;
     struct ld_json_user *author;
     char *content;
-    char *timestamp; //ISO 8601 formatted string
-    char *edited_timestamp;
+    TIMESTAMP timestamp; //ISO 8601 formatted string
+    TIMESTAMP edited_timestamp; //ISO 8601 formatted string
     int tts; //boolean
     int mention_everyone; //boolean
     struct ld_json_user **mentions; //array of user objects. NOTE: last pointer in array is a null pointer
@@ -252,7 +252,7 @@ struct ld_json_channel {
     LD_SNOWFLAKE owner_id;
     LD_SNOWFLAKE application_id;
     LD_SNOWFLAKE parent_id;
-    char *last_pin_timestamp; //ISO8601 formatted string
+    TIMESTAMP last_pin_timestamp; //ISO8601 formatted string
 };
 
 struct ld_json_voice_state {
@@ -271,7 +271,7 @@ struct ld_json_guild_member {
     struct ld_json_user *user;
     char *nick;
     LD_SNOWFLAKE *roles; //array of ints
-    char *joined_at; //ISO8601 formatted timestamp;
+    TIMESTAMP joined_at; //ISO8601 formatted timestamp;
     int deaf; //boolean
     int mute; //boolean
 };
@@ -317,7 +317,7 @@ struct ld_json_guild {
     int widget_enabled; //boolean
     LD_SNOWFLAKE widget_channel_id;
     LD_SNOWFLAKE system_channel_id;
-    char *joined_at; //ISO8601 timestamp formatted string
+    TIMESTAMP joined_at; //ISO8601 timestamp formatted string
     int large; //boolean
     int unavailable; //boolean
     int member_count;

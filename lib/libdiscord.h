@@ -31,7 +31,7 @@ enum ldecode {
 };
 
 /*
- * reason included with user callback
+ * reasons included with user callback
  */
 enum ld_callback_reason {
     LD_CALLBACK_UNKNOWN = -1, //placeholder
@@ -95,8 +95,11 @@ enum ld_gateway_state {
     LD_GATEWAY_CONNECTED = 3
 };
 
+/*
+ * enum for opcodes that can we recieved from the gateway. 
+ */
 enum ld_gateway_opcode {
-    LD_GATEWAY_OPCODE_UNKNOWN = -1,
+    LD_GATEWAY_OPCODE_UNKNOWN = -1, 
     LD_GATEWAY_OPCODE_DISPATCH = 0,
     LD_GATEWAY_OPCODE_HEARTBEAT = 1,
     LD_GATEWAY_OPCODE_IDENTIFY = 2,
@@ -112,6 +115,9 @@ enum ld_gateway_opcode {
     LD_GATEWAY_OPCODE_GUILD_SYNC = 12
 };
 
+/*
+ * enums for the four possible fields inside the discord gateway
+ */
 enum ld_gateway_payloadtype {
     LD_GATEWAY_OP = 0,
     LD_GATEWAY_D = 1,
@@ -120,6 +126,9 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_UNKNOWN = 100
 };
 
+/*
+ * enums for the game types that can be set in the presence.
+ */
 enum ld_presence_game_type {
     LD_PRESENCE_PLAYING = 0,
     LD_PRESENCE_STREAMING = 1,
@@ -242,7 +251,7 @@ struct ld_dispatch {
 //void _ld_dbug(struct ld_context *context, const char *message, ...);
 
 /*
- * create a context from user info
+ * creates a context from user info
  * returns NULL if the info struct was malformed or missing things
  * allocates memory for the struct and internal components
  */
@@ -256,7 +265,7 @@ void ld_destroy_context(struct ld_context *context);
 
 /*
  * private function, makes a GET request to /gateway/bot and retrieves shard number and gateway URL/determines bot token
- * is invalid
+ * is invalid. Uses the ulfius blocking REST interface.
  */
 int _ld_get_gateway_bot(struct ld_context *context);
 

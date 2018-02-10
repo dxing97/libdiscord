@@ -5,7 +5,11 @@
 #include "libdiscord.h"
 
 
-
+/*
+ * libwebsockets protocols struct, parameters set here are used to set the behavior of 
+ * the websocket interface, and while negotiating a websocket connection to 
+ * Discord's gateway. Of particular importance is the callback function.
+ */
 static struct lws_protocols protocols[] = {
         {
                 "DiscordBot",
