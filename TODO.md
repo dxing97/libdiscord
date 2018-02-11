@@ -47,3 +47,6 @@
 * Example tool for a basic Discord CLI client.
 * Figure out what Spotify is
 * Make/autogenerate wrapper for other languages, including Python
+
+## Far Far Future
+* Discord as a Filesystem (DaaFS)
