@@ -155,7 +155,7 @@ struct ld_gateway_payload {
 
 };
 
-
+struct ld_gi;
 
 /*
  * context for each bot
@@ -192,6 +192,8 @@ struct ld_context {
     int gateway_bot_limit; //ratelimit reset amount
     int gateway_bot_remaining; //last ratelimit remaining value
     unsigned long gateway_bot_reset; //unix time for reset
+    struct ld_gi **gi;
+    int gi_count;
 };
 
 /*
@@ -213,6 +215,7 @@ struct ld_gi {
     int hb_count; //starts at 0, increment
     struct lws_ring *tx_ringbuffer; //lws ringbuffer used to queue payloads to be sent;
     unsigned int close_code;
+    int session_valid; //0 - no resume, non-0 - resume
 };
 
 /*

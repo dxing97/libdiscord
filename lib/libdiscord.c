@@ -76,6 +76,8 @@ struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
     context->gateway_bot_limit = 1;
     context->gateway_bot_remaining = 1;
     context->gateway_bot_reset = lws_now_secs();
+
+    context->gi_count = 0;
     return context;
 }
 
@@ -301,6 +303,30 @@ int _ld_get_gateway_bot(struct ld_context *context){
     return 0;
 }
 
+struct ld_gi *_ld_init_gi(struct ld_context *context) {
+    //initialize the gateway interface
+    context->gi = malloc(sizeof(struct ld_gi));
+    if(context->gi == NULL) {
+        ld_error("couldn't allocate memory for gateway interface struct");
+        return NULL;
+    }
+
+    struct ld_gi *gi = context->gi[0];
+
+    gi->parent_context = context;
+    gi->state = LD_GATEWAY_UNCONNECTED;
+    gi->shardnum = -1;
+    gi->lws_wsi = NULL;
+    gi->hb_interval = 41500; //will be overwritten later
+    gi->last_seq = 0;
+    gi->hb_count = 0;
+    gi->tx_ringbuffer = NULL;
+    gi->close_code = 0;
+    gi->session_valid = 0;
+
+    return gi;
+}
+
 int ld_connect(struct ld_context *context) {
     int ret;
     /*
@@ -319,6 +345,9 @@ int ld_connect(struct ld_context *context) {
             return ret;
         }
     }
+
+    //todo: add init for context.gi here
+    //init the gateway interface
 
     switch(context->gateway_state) {
         case LD_GATEWAY_UNCONNECTED:
@@ -592,7 +621,13 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             if(len != 0) {
                 free(close_message);
             }
-            return i;
+
+            // set context.gi.resume here
+            if((context->close_code == 1000) || (context->close_code == 4006)) {
+                //opcode 9 must have been received by now (websocket is already closing)
+                context->gi[0]->session_valid = 0; //todo: WHICH GI DOES THIS WSI CORRESPOND TO???
+            }
+            return 0;
         case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
         case LWS_CALLBACK_LOCK_POLL:
         case LWS_CALLBACK_UNLOCK_POLL:
@@ -746,7 +781,10 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
         case LD_GATEWAY_OPCODE_RESUME:break;
         case LD_GATEWAY_OPCODE_RECONNECT:break;
         case LD_GATEWAY_OPCODE_REQUEST_MEMBERS:break;
-        case LD_GATEWAY_OPCODE_INVALIDATE_SESSION:break;
+        case LD_GATEWAY_OPCODE_INVALIDATE_SESSION:
+            ld_info("gateway session invalidated");
+            context->gi[0]->session_valid = 0; //todo: WHICH WSI DOES THIS GI CORRESPOND TO??
+            break;
         case LD_GATEWAY_OPCODE_HELLO:
             //save heartbeat interval
 
