@@ -390,6 +390,7 @@ int ld_service(struct ld_context *context, int timeout) {
         ld_connect(context);
         return 0;
     }
+
     //check heartbeat timer
     if((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) {
         //put heartbeat payload in gateway_queue
@@ -407,6 +408,11 @@ int ld_service(struct ld_context *context, int timeout) {
         }
 
         context->last_hb = lws_now_secs();
+    }
+
+    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
+        //something happened and we were disconnected from the gateway, or we were never connected in the first place
+        ld_warning("we were disconnected from the gateway!");
     }
 
     //call writable if there's things that need to be sent
