@@ -143,7 +143,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         res = curl_easy_perform(handle);
         if(res != CURLE_OK) {
             ld_error("couldn't POST lmao");
-            return 1;
+            return 0; //todo: possibly retry the POST if it fails
         }
 
 
