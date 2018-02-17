@@ -365,4 +365,10 @@ json_t *ld_json_create_message();
 uint64_t ld_snowflake_str2num();
 char *ld_snowflake_num2str();
 
+json_t *ld_json_dump_presence(struct ld_json_presence *presence);
+
+json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_connection_properties *properties);
+
+json_t *ld_json_dump_identify(struct ld_json_identify *identify);
+
 #endif //LIBDISCORD_JSON_H

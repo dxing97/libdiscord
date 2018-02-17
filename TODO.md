@@ -5,12 +5,13 @@
 * Discord developer ToS compliant
 
 ## Todo
-* Try running a test bot on a high-end Intel server instead of Raspberry Pis. 
+* Try running a test bot on a high-end Intel server instead of Raspberry Pis and see if using ulfius incurs a noticible 
+performance difference. 
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
 * A macro that loops through all _u_map members (like jansson's foreach object function)
 
 ### Websocket
-* Detect gateway disconnection in ld_service and reconnect
+* Detect gateway disconnection in ld_service and reconnect and be able to recover
 * Implement websocket close code parsing (websocket standard codes like 1000 and 1001)
 * user callbacks for both tx and rx payloads (specify difference between rx heartbeat and tx HB)
 
@@ -44,7 +45,7 @@
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation (Allegro 5 bitmaps? MagickWand?)
 * Support for userbots
-* Example tool for a basic Discord CLI client.
+* A Discord CLI client (not necessarily as an example app - may be a separate app)
 * Figure out what Spotify is
 * Make/autogenerate wrapper for other languages, including Python
 
