@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
     if(game != NULL) {
         presence->game = strdup(game);
     } else {
-        presence->game = strdup("AlienSimulater");
+        presence->game = strdup("AlienSimulator");
     }
 
     info->init_presence = presence;
