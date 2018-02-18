@@ -5,6 +5,7 @@
 * Discord developer ToS compliant
 
 ## Todo
+* latency bot
 * Try running a test bot on a high-end Intel server instead of Raspberry Pis and see if using ulfius incurs a noticible 
 performance difference. 
 * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
@@ -32,9 +33,8 @@ performance difference.
 * make example-ayylmao not respond to other bots
 * zlib compression support in gateway payloads (check other compression methods in gateway connections)
 * See if jansson increment/decrement needs to be used
-* CMake OS detection for IDENTIFY payload
+* More elaborate CMake setup for OS detection, dependency checks
 * Better documentation (comments in the source code is NOT good documentation)
-* latency bot
 
 ## Far Future
 * Rich presence integration for IoT
