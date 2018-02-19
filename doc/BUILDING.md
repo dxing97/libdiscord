@@ -9,9 +9,9 @@ Dependencies:
 * jansson (used package bundled with ubuntu, version 2.9 or later should work, v2.7 has been confirmed to NOT work
 (json_pack changed behavior))
 * libcurl (used package bundled with ubuntu 17.10, any recent version should work)
-* ulfius (for simple REST requests, any recent version should work)
+* ulfius (any recent version should work)
 
-Note that each package has their own dependencies, including 
+Note that each dependency has their own dependencies, except for jansson. 
 
 Tested to buuld and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
 but note that if you want to install libwebsockets with checkinstall on Raspbian, 
