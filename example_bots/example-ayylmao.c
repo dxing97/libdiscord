@@ -198,7 +198,7 @@ int main(int argc, char *argv[]) {
         switch(c) {
             case 'h':
             HELP:
-                printf("libdiscord example bot: ayylmao\n"
+                printf("libdiscord example bot: ayylmao - basic call and response bot\n"
                                "%s [-t bot_token]\n\n"
                                "Options: \n\t"
                                "-t, --bot-token [bot_token]\n\t\t"
@@ -273,9 +273,9 @@ int main(int argc, char *argv[]) {
 
     //initialize context with context info
     struct ld_context *context;
-    context = ld_create_context_via_info(info); //garbage in, garbage out
+    context = ld_create_context(info); //garbage in, garbage out
     if(context == NULL) {
-        ld_error("error creating libdiscord context\n");
+        ld_error("error creating libdiscord context");
         return 1;
     }
 

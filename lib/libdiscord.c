@@ -31,12 +31,12 @@ static const struct lws_extension exts[] = { //default lws extension, code from 
         { NULL, NULL, NULL /* terminator */ }
 };
 
-struct ld_context *ld_create_context_via_info(struct ld_context_info *info) {
+struct ld_context *ld_create_context(struct ld_context_info *info) {
     //assuming the values passed in are good
     struct ld_context *context;
     context = malloc(sizeof(struct ld_context));
 
-    context->log_level = info->log_level;
+    context->log_level = info->log_level; //todo: remove this: use ld_set_logging_level instead
 
     context->gateway_state = LD_GATEWAY_UNCONNECTED;
 

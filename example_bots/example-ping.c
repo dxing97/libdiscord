@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
         switch(c) {
             case 'h':
             HELP:
-                printf("libdiscord example bot: ayylmao\n"
+                printf("libdiscord example bot: ping - comprehensive latency measurement tool\n"
                                "%s [-t bot_token]\n\n"
                                "Options: \n\t"
                                "-t, --bot-token [bot_token]\n\t\t"
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("Example bot 2 \pinger\" starting up using libdiscord v%s\n", LD_VERSION);
+    printf("Example bot 2 \"ping\" starting up using libdiscord v%s\n", LD_VERSION);
 
     if(bot_token == NULL){
         printf("Bot token not set! See example-ayylmao -h for details.");
@@ -106,10 +106,44 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    # create context info struct
-    # init context
-    # start loop
-        # connect
+    info->bot_token = bot_token;
+    free(bot_token);
+    info->log_level = log_level;
+    info->user_callback = callback;
+    info->gateway_ringbuffer_size = 8;
+
+    struct ld_context *context;
+    context = ld_create_context(info);
+    if(context == NULL) {
+        ld_error("error creating libdiscord context");
+        return 1;
+    }
+
+    free(info);
+
+    // create context info struct
+    // init context
+    // start loop
+    int bot_state = 0, ret;
+    while(!bot_exit) {
+        if(bot_state == 0) {
+            ret = ld_connect(context);
+            if(ret != 0) {
+                ld_warning("error connecting to discord: error code %d");
+                break;
+            }
+            bot_state = 1;
+        }
+
+        ret = ld_service(context, 20);
+        if(ret != 0) {
+            ld_error("ld_service returned nonzero {%d}", ret);
+            break;
+        }
+    }
+
+    ld_info("closing connections and exiting");
+    ld_destroy_context(context);
         
     
     return 0;

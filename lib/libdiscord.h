@@ -258,7 +258,7 @@ struct ld_dispatch {
  * returns NULL if the info struct was malformed or missing things
  * allocates memory for the struct and internal components
  */
-struct ld_context* ld_create_context_via_info(struct ld_context_info *info);
+struct ld_context* ld_create_context(struct ld_context_info *info);
 
 /*
  * destroys context
