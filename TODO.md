@@ -8,7 +8,8 @@ some convenience functions to make this easier
 ## Todo
 Ordered roughly in terms of priority.
 
-### Housekeeping
+### Library
+* libuv support for event loop
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket

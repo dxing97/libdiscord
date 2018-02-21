@@ -33,6 +33,8 @@ void int_handler(int i){
     bot_exit = 1;
 }
 
+int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
+
 int main(int argc, char *argv[]) {
     ld_set_logging_level(31);
 
@@ -104,6 +106,16 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    # create context info struct
+    # init context
+    # start loop
+        # connect
+        
+    
+    return 0;
+}
 
+int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
+    
     return 0;
 }
