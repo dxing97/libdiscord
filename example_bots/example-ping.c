@@ -27,7 +27,7 @@
 #include <libdiscord.h>
 #include <getopt.h>
 
-int bot_exit = 0;
+static int bot_exit = 0;
 
 void int_handler(int i){
     bot_exit = 1;

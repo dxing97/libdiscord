@@ -13,6 +13,7 @@ Ordered roughly in terms of priority.
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket
+* Race condition: sending a HB_ACK before gateway identify
 * Recover from websocket disconnections (currently the main cause of halts)
 * More callbacks
 * Sharding

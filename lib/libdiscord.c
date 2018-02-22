@@ -64,14 +64,19 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
         return NULL;
     }
 
-    context->presence = malloc(sizeof(struct _ld_json_presence));
-    if(context->presence == NULL) {
-        ld_error("couldn't allocate presence");
-        return NULL;
+    if(info->init_presence != NULL) {
+        context->presence = malloc(sizeof(struct _ld_json_presence));
+        if(context->presence == NULL) {
+            ld_error("couldn't allocate presence");
+            return NULL;
+        }
+        context->presence->game = strdup(info->init_presence->game);
+        context->presence->game_type = info->init_presence->game_type;
+        context->presence->status_type = LD_PRESENCE_ONLINE;
+    } else {
+        context->presence = NULL;
     }
-    context->presence->game = strdup(info->init_presence->game);
-    context->presence->game_type = info->init_presence->game_type;
-    context->presence->status_type = LD_PRESENCE_ONLINE;
+
 
     context->gateway_bot_limit = 1;
     context->gateway_bot_remaining = 1;
@@ -82,7 +87,9 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
 }
 
 void ld_destroy_context(struct ld_context *context) {
-    free(context->presence->game);
+    if(context->presence != NULL) {
+        free(context->presence->game);
+    }
     free(context->gateway_session_id);
     curl_multi_cleanup(context->curl_multi_handle);
     curl_global_cleanup();
