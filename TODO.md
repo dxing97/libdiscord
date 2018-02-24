@@ -48,7 +48,7 @@ Ordered roughly in terms of priority.
 
 #### dbotc - A Bot for the Masses
 * Look into YAML formatting
-* YAML -> JSON converter?
+* YAML -> JSON converter? Support multiple config types
 
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)
