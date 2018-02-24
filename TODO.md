@@ -46,6 +46,10 @@ Ordered roughly in terms of priority.
 #### ping - A Comprehensive Latency Tool
 * Measure latency between libcurl and ulfius
 
+#### dbotc - A Bot for the Masses
+* Look into YAML formatting
+* YAML -> JSON converter?
+
 ## Planned
 * Git submodules to statically link some dependencies (cygwin)
 * zlib compression support in gateway payloads (check other compression methods in gateway connections)
