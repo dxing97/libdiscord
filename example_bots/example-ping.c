@@ -23,6 +23,9 @@
  *      latency between a sent gateway payload and a response from the gateway
  *          G TX STATUS_UPDATE -> G RX DISPATCH new [status]
  *          G TX HEARTBEAT -> G RX HEARTBEAT_ACK
+ *
+ *      will only check latencies when requested to do so by a user
+ *          this means it won't check the latency for intial websocket connections (for now)
  */
 #include <libdiscord.h>
 #include <getopt.h>
