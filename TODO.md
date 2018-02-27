@@ -40,6 +40,7 @@ Ordered roughly in terms of priority.
     
 ### Example Bots
 #### ayylmao - A Basic Call and Response Bot
+* Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
 * Ignore calls from other bots
 
