@@ -83,6 +83,8 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
     context->gateway_bot_reset = lws_now_secs();
 
     context->gi_count = 0;
+
+    context->heartbeat_interval = 0;
     return context;
 }
 
@@ -399,7 +401,8 @@ int ld_service(struct ld_context *context, int timeout) {
     }
 
     //check heartbeat timer
-    if((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) {
+    if(((lws_now_secs() - context->last_hb) > (context->heartbeat_interval/1000)) &&
+            context->heartbeat_interval != 0) {
         //put heartbeat payload in gateway_queue
         context->hb_count++;
         if(context->hb_count > 1){
