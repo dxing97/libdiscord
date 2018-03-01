@@ -6,10 +6,10 @@ Discord server: https://discord.gg/BGgcQQh
 The goal of this library currently is:
 * be easy to use
 
-See [TODO.md](the todo list) for a list of features that will be implemented at some point.
+See [the todo list](TODO.md) for a list of features that will be implemented at some point.
 
 ## Building
-See [doc/BUILDING.md](building)
+See [building](doc/BUILDING.md)
 
 Currently only tested against Ubuntu 17.10, Raspbian stretch, and the unofficial sparc64 port for Debian.
 
