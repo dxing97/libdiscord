@@ -29,6 +29,7 @@
  */
 #include <libdiscord.h>
 #include <getopt.h>
+#include <signal.h>
 
 static int bot_exit = 0;
 
