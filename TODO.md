@@ -9,7 +9,7 @@ some convenience functions to make this easier
 Ordered roughly in terms of priority.
 
 ### Library
-* libuv support for event loop
+* libuv event loop for libdiscord and libwebsockets and maybe libcurl
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket

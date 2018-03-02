@@ -345,7 +345,8 @@ int ld_connect(struct ld_context *context) {
      * is valid.
      * Then it checks the context state and determines what should be done next.
      * If we're unconnected, it'll call ld_connect
-     * If we're disconnected, it'll call gateway_resume
+     
+     todo: this should also handle resuming
      */
     if(context->gateway_url == NULL) {
         ret = _ld_get_gateway(context);

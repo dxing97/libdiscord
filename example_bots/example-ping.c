@@ -27,6 +27,7 @@
  *      will only check latencies when requested to do so by a user
  *          this means it won't check the latency for intial websocket connections (for now)
  */
+ 
 #include <libdiscord.h>
 #include <getopt.h>
 #include <signal.h>
@@ -84,7 +85,6 @@ int main(int argc, char *argv[]) {
                 break;
             case 'l':
                 log_level = strtoul(optarg, NULL, 10);
-                break;
                 break;
             default:
                 abort();
@@ -148,7 +148,6 @@ int main(int argc, char *argv[]) {
 
     ld_info("closing connections and exiting");
     ld_destroy_context(context);
-        
     
     return 0;
 }
