@@ -42,6 +42,7 @@ Ordered roughly in terms of priority.
 #### ayylmao - A Basic Call and Response Bot
 * Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
+  * add wew-lad
 * Ignore calls from other bots
 
 #### ping - A Comprehensive Latency Tool
