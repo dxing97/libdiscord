@@ -494,6 +494,7 @@ int ld_gateway_connect(struct ld_context *context) {
     return 0;
 }
 
+//todo: integrate resuming into connecting
 int ld_gateway_resume(struct ld_context *context) {
     //doesn't do anything yet
     return 0;
@@ -696,6 +697,7 @@ json_t *_ld_generate_identify(struct ld_context *context) {
     json_t *ident;
     json_error_t error;
     //token:string, token
+    //todo: use struct to json functions
     ident = json_pack_ex(&error, 0, "{"
                     "ss" //token
                     "si" //large_threshold
@@ -943,6 +945,9 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
     return 0;
 }
 
+/* 
+ * Queues a heartbeat payload into the websocket tx ringbuffer
+ */
 int ld_gateway_queue_heartbeat(struct ld_context *context) {
     size_t ret;
     struct ld_gateway_payload *tmp;
@@ -972,6 +977,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
  * calls lws_context_destroy to close the ws connection
  * sets the gateway state to unconnected
  * sets reconnection context
+ * todo: integrate into ld_gateway_connect
  */
 int ld_gateway_reconnect(struct ld_context *context) {
     lws_close_reason(context->lws_wsi, LWS_CLOSE_STATUS_POLICY_VIOLATION, NULL, 0);
