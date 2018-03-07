@@ -231,6 +231,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'R':
                 response = strdup(optarg);
+                ld_debug("set response to %s", response);
                 break;
             default:
                 abort();
