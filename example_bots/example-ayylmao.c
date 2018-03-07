@@ -231,7 +231,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'R':
                 response = strdup(optarg);
-                ld_debug("set response to %s", response);
+
                 break;
             default:
                 abort();
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
     ld_set_logging_level(log_level);
 
     signal(SIGINT, int_handler);
-
+    ld_debug("set response to %s", response);
     //define context info, including bot token
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
