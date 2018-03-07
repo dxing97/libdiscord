@@ -16,7 +16,7 @@ static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 CURL *handle;
 int use_ulfius = 0;
-char *trigger = NULL, *response = NULL;
+char *trigger = "ayy", *response = "lmao";
 
 void int_handler(int i){
     bot_exit = 1;
@@ -57,7 +57,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
                         ld_warning("couldn't get message content");
                         break;
                     }
-                    if(strcasecmp(content, (trigger ? trigger : "ayy")) == 0 ) {
+                    if(strcasecmp(content, trigger) == 0 ) {
                             ayystat++;
                     }
                 }
@@ -84,7 +84,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     }
     //generate POST message
     json_t *body;
-    body = json_pack("{ss}", "content", (response ? response : "lmao"));
+    body = json_pack("{ss}", "content", response);
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
         return 0;
@@ -104,7 +104,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         request = ld_rest_init_request();
         resp = ld_rest_init_response();
 
-        ld_create_message(request, context, channelid, (response ? response : "lmao"));
+        ld_create_message(request, context, channelid, response);
         ld_rest_send_blocking_request(request, resp);
     } else {
         //curl POST to that channel
