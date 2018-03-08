@@ -6,7 +6,6 @@
 #include <jansson.h>
 #include "libdiscord_config.h"
 #include "log.h"
-//#include "json.h"
 
 
 
@@ -117,6 +116,7 @@ enum ld_gateway_opcode {
 
 /*
  * enums for the four possible fields inside the discord gateway
+ * todo: refactor GATEWAY to PAYLOAD
  */
 enum ld_gateway_payloadtype {
     LD_GATEWAY_OP = 0,
@@ -128,6 +128,7 @@ enum ld_gateway_payloadtype {
 
 /*
  * enums for the game types that can be set in the presence.
+ * todo: move to json.h
  */
 enum ld_presence_game_type {
     LD_PRESENCE_PLAYING = 0,

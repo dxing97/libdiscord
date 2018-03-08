@@ -111,7 +111,6 @@ int main(int argc, char *argv[]) {
     }
 
     info->bot_token = bot_token;
-    free(bot_token);
     info->log_level = log_level;
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
@@ -122,9 +121,9 @@ int main(int argc, char *argv[]) {
         ld_error("error creating libdiscord context");
         return 1;
     }
-
+    free(bot_token);
     free(info);
-
+    
     // create context info struct
     // init context
     // start loop

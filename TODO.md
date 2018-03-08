@@ -46,7 +46,6 @@ Ordered roughly in terms of priority.
 * Ignore calls from other bots
 
 #### ping - A Comprehensive Latency Tool
-* Token error: returning 401 unauthorized
 * Measure latency between libcurl and ulfius
 
 #### A Discord CLI Tool
