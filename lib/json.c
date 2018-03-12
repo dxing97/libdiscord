@@ -4,6 +4,14 @@
 //#include <jansson.h>
 #include "json.h"
 #include "log.h"
+#include <stdio.h>
+
+char *ld_snowflake_num2str(LD_SNOWFLAKE flake) {
+    char *tmp;
+    tmp = malloc(sizeof(char)*128);
+    snprintf(tmp, 127, "%lu", (uint64_t) flake);
+    return tmp;
+}
 
 json_t *ld_json_create_payload(json_t *op, json_t *d, json_t *t, json_t *s) {
     json_t *payload;
@@ -41,12 +49,72 @@ json_t *ld_json_create_payload(json_t *op, json_t *d, json_t *t, json_t *s) {
     return payload;
 }
 
-json_t *ld_json_dump_presence(struct ld_json_presence *presence) {
+json_t *ld_json_dump_activity(struct ld_json_activity *activity) {
     return NULL;
 }
 
-json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_connection_properties *properties) {
+json_t *ld_json_dump_user(struct ld_json_user *user) {
+
     return NULL;
+}
+
+json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) {
+    json_t *su = NULL;
+    su = json_object();
+    int i;
+
+    char tmp[128];
+    snprintf(tmp, 127, "%lu", (uint64_t) status_update->guild_id);
+
+    json_object_set(su, "user", json_string(ld_snowflake_num2str(status_update->guild_id)));
+
+    json_t *roles = json_array();
+
+    for(i = 0; i < strlen((char *) status_update->roles); i++) {
+        json_array_append_new(roles, json_string(ld_snowflake_num2str(status_update->roles[i])));
+    }
+    json_object_set(su, "roles", roles);
+
+    if(status_update->game != NULL) {
+        json_object_set(su, "game", ld_json_dump_activity(status_update->game));
+    }
+
+    if(status_update->status != NULL) {
+        json_object_set(su, "status", json_string(status_update->status));
+    }
+
+    return su;
+}
+
+json_t *ld_json_dump_identify_connection_properties(
+        struct ld_json_identify_connection_properties *properties) {
+    json_t *p = NULL;
+    p = json_object();
+
+    if(p == NULL){
+        ld_error("couldn't allocte json object for identify connection properties");
+        return NULL;
+    }
+
+    if(properties->os == NULL) {
+        json_object_set(p, "$os", json_string("unknown"));
+    } else {
+        json_object_set(p, "$os", json_string(properties->os));
+    }
+
+    if(properties->device == NULL) {
+        json_object_set(p, "$device", json_string(LD_LIBNAME));
+    } else {
+        json_object_set(p, "$device", json_string(properties->device));
+    }
+
+    if(properties->browser == NULL) {
+        json_object_set(p, "$browser", json_string(LD_LIBNAME));
+    } else {
+        json_object_set(p, "$browser", json_string(properties->browser));
+    }
+
+    return p;
 }
 
 json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
@@ -76,10 +144,26 @@ json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
 
     json_object_set(ident, "shard", json_integer(identify->shard)); //todo: this is wrong, should be json array
 
-    if(identify->presence != NULL) {
+    if(identify->status_update != NULL) {
         //presence is optional
-        json_object_set(ident, "presence", ld_json_dump_presence(identify->presence));
+        json_object_set(ident, "presence", ld_json_dump_status_update(identify->status_update));
     }
 
     return ident;
 }
+
+const char *ld_json_status2str(enum ld_json_status_type type) {
+    switch(type) {
+        case LD_PRESENCE_IDLE:
+            return "idle";
+        case LD_PRESENCE_DND:
+            return "dnd";
+        case LD_PRESENCE_ONLINE:
+            return "online";
+        case LD_PRESENCE_OFFLINE:
+            return "offline";
+    }
+    return NULL;
+}
+
+

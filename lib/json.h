@@ -23,6 +23,21 @@ typedef uint64_t LD_SNOWFLAKE;
  */
 typedef char * TIMESTAMP;
 
+enum ld_json_status_type {
+    LD_PRESENCE_IDLE = 0,
+    LD_PRESENCE_DND = 1,
+    LD_PRESENCE_ONLINE = 2,
+    LD_PRESENCE_OFFLINE = 3
+};
+
+struct ld_json_status_update {
+//    struct ld_json_user *user; // no longer in the discord API documentation???
+    LD_SNOWFLAKE *roles; //array of snowflakes
+    struct ld_json_activity *game;
+    LD_SNOWFLAKE guild_id;
+    char *status;
+};
+
 /*
  * connection properties json object
  */
@@ -43,7 +58,7 @@ struct ld_json_identify {
     int compress;
     int large_threshold;
     int shard;
-    struct ld_json_presence *presence;
+    struct ld_json_status_update *status_update;
 };
 
 struct ld_json_party {
@@ -282,16 +297,10 @@ struct ld_json_guild_member {
 struct _ld_json_presence {
     char *game;
     enum ld_presence_game_type game_type;
-    enum ld_presence_status_type status_type;
+    enum ld_json_status_type status_type;
 };
 
-struct ld_json_presence_update {
-    struct ld_json_user *user;
-    LD_SNOWFLAKE *roles; //array of snowflakes
-    struct ld_json_activity *game;
-    LD_SNOWFLAKE guild_id;
-    char *status;
-};
+
 
 struct ld_json_guild {
     LD_SNOWFLAKE id;
@@ -363,12 +372,18 @@ json_t *ld_json_create_message();
 
 //todo: snowflake conversion functions
 uint64_t ld_snowflake_str2num();
-char *ld_snowflake_num2str();
+char *ld_snowflake_num2str(LD_SNOWFLAKE flake);
 
-json_t *ld_json_dump_presence(struct ld_json_presence *presence);
+json_t *ld_json_dump_activity(struct ld_json_activity *activity);
+
+json_t *ld_json_dump_user(struct ld_json_user *user);
+
+json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update);
 
 json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_connection_properties *properties);
 
 json_t *ld_json_dump_identify(struct ld_json_identify *identify);
+
+const char *ld_json_status2str(enum ld_json_status_type type);
 
 #endif //LIBDISCORD_JSON_H

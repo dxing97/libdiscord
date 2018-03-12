@@ -137,13 +137,6 @@ enum ld_presence_game_type {
     LD_PRESENCE_WATCHING = 3
 };
 
-enum ld_presence_status_type {
-    LD_PRESENCE_IDLE = 0,
-    LD_PRESENCE_DND = 1,
-    LD_PRESENCE_ONLINE = 2,
-    LD_PRESENCE_OFFLINE = 3
-};
-
 //struct _ld_json_presence;
 
 /*
@@ -362,6 +355,8 @@ int ld_gateway_queue_heartbeat(struct ld_context *context);
  * calls ld_gateway_connect to reinitialize the connection to the gateway
  */
 int ld_gateway_reconnect(struct ld_context *context);
+
+char *ld_get_os_name();
 
 #include "REST.h"
 #include "json.h"

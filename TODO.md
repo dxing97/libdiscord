@@ -9,6 +9,7 @@ some convenience functions to make this easier
 Ordered roughly in terms of priority.
 
 ### Library
+* remove old presence system, use new json-based system
 * libuv event loop for libdiscord and libwebsockets and maybe libcurl
 * Better documentation (comments in the source code is NOT good documentation)
 
@@ -33,8 +34,8 @@ Ordered roughly in terms of priority.
 
 ### JSON
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
-* Consider adding a snowflake type
-* Snowflake manipulation functions
+* Consider changing the snowflake type to uint64_t
+* string to snowflake function
 * Timestamp manipulation functions
     * Make/find functions that will encode/decode ISO8601-formatted strings. Will GNU save us?
     

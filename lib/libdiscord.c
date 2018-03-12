@@ -85,6 +85,9 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
     context->gi_count = 0;
 
     context->heartbeat_interval = 0;
+
+    context->gateway_rx_buffer_len = 0;
+    context->gateway_rx_buffer = NULL;
     return context;
 }
 
@@ -533,9 +536,10 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_CLIENT_RECEIVE:
             //check to see if we've received a new fragment
+            ld_debug("gateway rx buf len: %d", context->gateway_rx_buffer_len);
             ld_debug("first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
-            if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {//first fragment is also the last fragment
-                //we're
+            if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {
+                //first fragment is also the last fragment
                 ld_notice("first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
@@ -554,16 +558,19 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
                 return 0;
             }
-            if(lws_is_final_fragment(wsi)) { //last fragment of multi-fragment payload
-                /*
-                 * append fragment to previous fragment
-                 */
+            if(lws_is_final_fragment(wsi) && context->gateway_rx_buffer != NULL) {
+                //last fragment of multi-fragment payload, append fragment to previous fragment
+
                 context->gateway_rx_buffer = realloc(context->gateway_rx_buffer,
                                                      context->gateway_rx_buffer_len + len + 2);
+
                 strncpy(context->gateway_rx_buffer + context->gateway_rx_buffer_len, in, len);
+
                 context->gateway_rx_buffer_len += len;
+
                 context->gateway_rx_buffer[context->gateway_rx_buffer_len] = '\0';
-                if(context->gateway_rx_buffer_len > 8000) {
+
+                if(context->gateway_rx_buffer_len > 2000) {
                     ld_notice("multi RX: %.*s...", 2000, context->gateway_rx_buffer);
                 } else {
                     ld_notice("multi RX: %s", context->gateway_rx_buffer);
@@ -679,19 +686,19 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
     return LD_GATEWAY_UNKNOWN;
 }
 
-const char *ld_presence_status_to_str(enum ld_presence_status_type type){
-    switch(type) {
-        case LD_PRESENCE_IDLE:
-            return "idle";
-        case LD_PRESENCE_DND:
-            return "dnd";
-        case LD_PRESENCE_ONLINE:
-            return "online";
-        case LD_PRESENCE_OFFLINE:
-            return "offline";
-    }
-    return NULL;
-}
+//const char *ld_json_status2str(enum ld_json_status_type type){
+//    switch(type) {
+//        case LD_PRESENCE_IDLE:
+//            return "idle";
+//        case LD_PRESENCE_DND:
+//            return "dnd";
+//        case LD_PRESENCE_ONLINE:
+//            return "online";
+//        case LD_PRESENCE_OFFLINE:
+//            return "offline";
+//    }
+//    return NULL;
+//}
 
 json_t *_ld_generate_identify(struct ld_context *context) {
     json_t *ident;
@@ -725,7 +732,7 @@ json_t *_ld_generate_identify(struct ld_context *context) {
             "name", context->presence->game,
             "type", context->presence->game_type,
             //NULL, NULL,
-        "status", ld_presence_status_to_str(context->presence->status_type),
+        "status", ld_json_status2str(context->presence->status_type),
         "since", NULL,
         "afk", 0
     );
@@ -810,6 +817,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             if(d == NULL) {
                 ld_warning("couldn't get d field in hello payload");
             }
+
             tmp = json_object_get(d, "heartbeat_interval");
             if(tmp != NULL) {
                 if(json_integer_value(tmp) != 0) {
@@ -821,8 +829,35 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             } else {
                 ld_warning("couldn't find heartbeat interval in hello payload");
             }
+
             ld_debug("heartbeat interval is %d", hbi);
             context->heartbeat_interval = hbi;
+
+            //prepare identify struct
+            struct ld_json_identify ident;
+            struct ld_json_identify_connection_properties properties;
+            struct ld_json_status_update status;
+            struct ld_json_activity game;
+
+            memset(&properties, 0, sizeof(struct ld_json_identify_connection_properties));
+            properties.browser = LD_LIBNAME;
+            properties.device = LD_LIBNAME;
+            properties.os = ld_get_os_name();
+
+            memset(&game, 0, sizeof(struct ld_json_activity));
+
+            memset(&status, 0, sizeof(struct ld_json_gateway_update_status));
+            if(context->presence != NULL)
+                status.status = strdup(ld_json_status2str(context->presence->status_type)); //todo: remove old presence system
+            status.game = &game;
+
+            memset(&ident, 0, sizeof(struct ld_json_identify));
+            ident.token = context->bot_token;
+            ident.compress = 0; // zlib compression not yet implemented
+            ident.large_threshold = 300; //valid between 50 and 250, libdiscord will emit warning of outside range
+            ident.shard = 0; //sharding not yet implemented
+            ident.properties = &properties;
+            ident.status_update =&status;
 
             //prepare IDENTIFY payload
             op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
@@ -850,6 +885,8 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
 
             //set heartbeat timer here
             context->last_hb = lws_now_secs(); //seconds since 1970-1-1
+
+            free(status.status);
             break;
         case LD_GATEWAY_OPCODE_HEARTBEAT_ACK:
             context->hb_count--;
@@ -984,4 +1021,28 @@ int ld_gateway_reconnect(struct ld_context *context) {
     lws_context_destroy(context->lws_context);
 
     return 0;
+}
+
+/*
+ * gets the name of the operating system (checks uname -o)
+ */
+char *ld_get_os_name() {
+    FILE *fd = popen("uname -o", "r");
+    char *os_name, rxbuf[100], *ret;
+    if(fd == NULL) {
+        // if we're not on a POSIX system, this aint gonna work
+        return strdup("unknown");
+    }
+    ret = fgets(rxbuf, 99, fd);
+    if(ret != rxbuf) {
+        // uname -o didn't return anything?
+        return strdup("unknown");
+    }
+
+    pclose(fd);
+
+    ld_debug("os name: %s", rxbuf);
+    os_name = strdup(rxbuf);
+    return os_name;
+
 }
