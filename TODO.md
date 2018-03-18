@@ -10,7 +10,8 @@ Ordered roughly in terms of priority.
 
 ### Library
 * remove old presence system, use new json-based system
-* libuv event loop for libdiscord and libwebsockets and maybe libcurl
+* libuv event loop for libdiscord, libwebsockets and libcurl
+  * figure out how libuv works
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket
@@ -71,6 +72,8 @@ Ordered roughly in terms of priority.
 * Example bot with image generation integration (Allegro 5 bitmaps? MagickWand? SDL?)
 * Support for userbots
 * A Discord CLI client (not necessarily as an example app - may be a separate app)
+* Port to ESP32
+* Support for MinGW, Cygwin
 * Figure out what Spotify is
 * Make/autogenerate wrapper for other languages, including Python, C++, Rust, and Go.
 

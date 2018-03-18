@@ -113,7 +113,7 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
 /*
  * generates a log string
  * string memory is allocated by this function, it must be freed afterward
- * todo: make it read-only (and avoid the free)
+ * todo: make it read-only (and avoid the free) (how??)
  */
 char *ld_log_generate_string(unsigned long ll, const char *log_message, va_list arg) {
     time_t raw_time;

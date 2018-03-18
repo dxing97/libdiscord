@@ -700,6 +700,9 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
 //    return NULL;
 //}
 
+/*
+ * todo: depreciate this function and switch to the json-struct functions in json.h
+ */
 json_t *_ld_generate_identify(struct ld_context *context) {
     json_t *ident;
     json_error_t error;
@@ -745,6 +748,9 @@ json_t *_ld_generate_identify(struct ld_context *context) {
     return ident;
 }
 
+/*
+ * todo: this function needs to be broken up into smaller parts
+ */
 int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) {
     //parse as JSON
     json_t *payload, *value, *tmp;
@@ -904,7 +910,6 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
     return 0;
 }
 
-
 int ld_dispatch_ready(struct ld_context *context, json_t *data) {
     //save session_id
     const char *key;
@@ -1025,6 +1030,7 @@ int ld_gateway_reconnect(struct ld_context *context) {
 
 /*
  * gets the name of the operating system (checks uname -o)
+ * future: check #ifdef _WIN32 or something
  */
 char *ld_get_os_name() {
     FILE *fd = popen("uname -o", "r");

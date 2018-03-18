@@ -67,3 +67,12 @@ ld_rest_simple_perform(request, response)
 ## JSON 
 Some JSON objects/payloads are arrays of objects of some length. libdiscord will treat them as arrays of pointers to 
 their respective struct type, and sets the last pointer to be a null pointer.
+
+## REST API
+There will be functions that generate requests, queue or perform requests, and parse responses
+
+The Ulfius API makes this relatively straightforward, but incurs a performance penalty associated with not reusing connections.
+
+There should be a built-in libcurl-based API that allows for the reusing of connections (have a pool of easy handles)
+
+Similar to the curl interface, there should be an option to use non blocking and blocking requests. 
