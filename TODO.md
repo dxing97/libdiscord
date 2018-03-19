@@ -9,14 +9,12 @@ some convenience functions to make this easier
 Ordered roughly in terms of priority.
 
 ### Library
-* remove old presence system, use new json-based system
 * libuv event loop for libdiscord, libwebsockets and libcurl
   * figure out how libuv works
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket
-* Race condition: sending a HB_ACK before gateway identify
-* Recover from websocket disconnections (currently the main cause of halts)
+* Recover from websocket disconnections 
 * More callbacks
 * Sharding
 

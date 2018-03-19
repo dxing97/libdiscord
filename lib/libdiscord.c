@@ -88,6 +88,8 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
 
     context->gateway_rx_buffer_len = 0;
     context->gateway_rx_buffer = NULL;
+
+    context->hb_count = 0;
     return context;
 }
 
@@ -400,8 +402,7 @@ int ld_service(struct ld_context *context, int timeout) {
     if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
         //we are unconnected, let's check if there was a close code
         //we are trying to service a closed connection, so we should try opening that connection
-        ld_connect(context);
-        return 0;
+        return ld_connect(context);
     }
 
     //check heartbeat timer
@@ -409,7 +410,7 @@ int ld_service(struct ld_context *context, int timeout) {
             context->heartbeat_interval != 0) {
         //put heartbeat payload in gateway_queue
         context->hb_count++;
-        if(context->hb_count > 1){
+        if(context->hb_count > 1){ //todo: settable limit for hb_ack misses
             //didn't receive HB_ACK
             ld_warning("ld_service: didn't recieve a HB_ACK");
             return LD_HB_ACKMISS;
@@ -438,6 +439,9 @@ int ld_service(struct ld_context *context, int timeout) {
 }
 
 int ld_gateway_connect(struct ld_context *context) {
+
+    context->gateway_state = LD_GATEWAY_CONNECTING;
+
     //lws context creation info
     struct lws_context_creation_info info;
     struct lws_context *lws_context;
@@ -497,12 +501,6 @@ int ld_gateway_connect(struct ld_context *context) {
     return 0;
 }
 
-//todo: integrate resuming into connecting
-int ld_gateway_resume(struct ld_context *context) {
-    //doesn't do anything yet
-    return 0;
-}
-
 int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len) {
 
@@ -540,7 +538,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             ld_debug("first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
             if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {
                 //first fragment is also the last fragment
-                ld_notice("first gateway fragment is also last fragment");
+                ld_debug("first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
                 ld_notice("single RX: %s", (char *) in);
@@ -686,67 +684,53 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
     return LD_GATEWAY_UNKNOWN;
 }
 
-//const char *ld_json_status2str(enum ld_json_status_type type){
-//    switch(type) {
-//        case LD_PRESENCE_IDLE:
-//            return "idle";
-//        case LD_PRESENCE_DND:
-//            return "dnd";
-//        case LD_PRESENCE_ONLINE:
-//            return "online";
-//        case LD_PRESENCE_OFFLINE:
-//            return "offline";
-//    }
-//    return NULL;
-//}
-
 /*
- * todo: depreciate this function and switch to the json-struct functions in json.h
+ * DEPRECIATED: use json.h functions
  */
-json_t *_ld_generate_identify(struct ld_context *context) {
-    json_t *ident;
-    json_error_t error;
-    //token:string, token
-    //todo: use struct to json functions
-    ident = json_pack_ex(&error, 0, "{"
-                    "ss" //token
-                    "si" //large_threshold
-                    "sb" //compress
-                    "s[ii]" //shard
-                    "s{ss ss ss}" //properties {$os, $browser, $device}
-                    "s{" //presence
-                      "s{ss si}" //game {name, type, url?}
-                      "ss" //status
-                      "so?" //since
-                      "sb}" //afk
-    "}"
-            ,
-    "token", context->bot_token,
-    "large_threshold", 250,
-    "compress", 0,
-    "shard", 0, context->shards,
-    "properties",
-              "$os", "Linux",
-              "$browser", "libdiscord",
-              "$device", "libdiscord"
-            ,
-    "presence",
-        "game",
-            "name", context->presence->game,
-            "type", context->presence->game_type,
-            //NULL, NULL,
-        "status", ld_json_status2str(context->presence->status_type),
-        "since", NULL,
-        "afk", 0
-    );
-    if(ident == NULL) {
-        ld_error("error generating IDENTIFY payload: %s\n"
-                 "source: \n%s\nin line %d column %d and position %d",
-                error.text, error.source, error.line, error.column, error.position);
-    }
-
-    return ident;
-}
+//json_t *_ld_generate_identify(struct ld_context *context) {
+//    json_t *ident;
+//    json_error_t error;
+//    //token:string, token
+//    //todo: use struct to json functions
+//    ident = json_pack_ex(&error, 0, "{"
+//                    "ss" //token
+//                    "si" //large_threshold
+//                    "sb" //compress
+//                    "s[ii]" //shard
+//                    "s{ss ss ss}" //properties {$os, $browser, $device}
+//                    "s{" //presence
+//                      "s{ss si}" //game {name, type, url?}
+//                      "ss" //status
+//                      "so?" //since
+//                      "sb}" //afk
+//    "}"
+//            ,
+//    "token", context->bot_token,
+//    "large_threshold", 250,
+//    "compress", 0,
+//    "shard", 0, context->shards,
+//    "properties",
+//              "$os", "Linux",
+//              "$browser", "libdiscord",
+//              "$device", "libdiscord"
+//            ,
+//    "presence",
+//        "game",
+//            "name", context->presence->game,
+//            "type", context->presence->game_type,
+//            //NULL, NULL,
+//        "status", ld_json_status2str(context->presence->status_type),
+//        "since", NULL,
+//        "afk", 0
+//    );
+//    if(ident == NULL) {
+//        ld_error("error generating IDENTIFY payload: %s\n"
+//                 "source: \n%s\nin line %d column %d and position %d",
+//                error.text, error.source, error.line, error.column, error.position);
+//    }
+//
+//    return ident;
+//}
 
 /*
  * todo: this function needs to be broken up into smaller parts
@@ -852,16 +836,19 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
 
             memset(&game, 0, sizeof(struct ld_json_activity));
 
+//            game.name = context->presence->game;
             memset(&status, 0, sizeof(struct ld_json_gateway_update_status));
             if(context->presence != NULL)
                 status.status = strdup(ld_json_status2str(context->presence->status_type)); //todo: remove old presence system
             status.game = &game;
+            status.roles = NULL;
 
             memset(&ident, 0, sizeof(struct ld_json_identify));
             ident.token = context->bot_token;
             ident.compress = 0; // zlib compression not yet implemented
-            ident.large_threshold = 300; //valid between 50 and 250, libdiscord will emit warning of outside range
-            ident.shard = 0; //sharding not yet implemented
+            ident.large_threshold = 250; //valid between 50 and 250, libdiscord will emit warning of outside range
+            ident.shard[0] = 0; //sharding not yet implemented
+            ident.shard[1] = context->shards;
             ident.properties = &properties;
             ident.status_update =&status;
 
@@ -869,7 +856,8 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
             op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
             t = NULL;
             s = NULL;
-            d = _ld_generate_identify(context);
+//            d = _ld_generate_identify(context);
+            d = ld_json_dump_identify(&ident);
 
             if(d == NULL) {
                 ld_error("couldn't generate identify payload, closing gateway connection");
@@ -971,6 +959,18 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
             {"WEBHOOKS_UPDATE", LD_CALLBACK_WEBHOOKS_UPDATE},
             {NULL, LD_CALLBACK_UNKNOWN} //null terminator
     };
+    /*
+     * there are a bunch of dispatch types
+     * the "dispatch dict" is a array of structs containing a string, a enum, and a callback
+     * this bit goes through the entire list of dispatches, and tries
+     * to match the right string
+     * if it matches, it'll call the dispatch's callback (if there is one)
+     * otherwise, skip that
+     * call the user callback with the enum set to the matching dictonary entry
+     */
+
+    ret = 0;
+
     for(i = 0; dispatch_dict[i].name != NULL; i++) {
         if(strcmp(typestr, dispatch_dict[i].name) == 0) {
             ld_debug("dispatch type is %s, callback reason is %d", dispatch_dict[i].name,
@@ -978,7 +978,10 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
             if(dispatch_dict[i].dispatch_callback != NULL) {
                 ld_debug("calling dispatch libdiscord callback for ld_callback (%s)", typestr);
                 ret = dispatch_dict[i].dispatch_callback(context, data);
-                return ret;
+                if(ret != 0) {
+                    ld_error("dispatch parser: internal dispatch callback errored out");
+                    return 1;
+                }
             }
             i = context->user_callback(context, dispatch_dict[i].cbk_reason, data, 0);
             return i;
@@ -1015,18 +1018,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
     return 0;
 }
 
-/*
- * calls lws_context_destroy to close the ws connection
- * sets the gateway state to unconnected
- * sets reconnection context
- * todo: integrate into ld_gateway_connect
- */
-int ld_gateway_reconnect(struct ld_context *context) {
-    lws_close_reason(context->lws_wsi, LWS_CLOSE_STATUS_POLICY_VIOLATION, NULL, 0);
-    lws_context_destroy(context->lws_context);
 
-    return 0;
-}
 
 /*
  * gets the name of the operating system (checks uname -o)

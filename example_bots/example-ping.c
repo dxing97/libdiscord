@@ -137,7 +137,6 @@ int main(int argc, char *argv[]) {
             }
             bot_state = 1;
         }
-
         ret = ld_service(context, 20);
         if(ret != 0) {
             ld_error("ld_service returned nonzero {%d}", ret);

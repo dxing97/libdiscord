@@ -350,12 +350,8 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
 int ld_gateway_queue_heartbeat(struct ld_context *context);
 
 /*
- * calls lws_context_destroy to close the ws connection
- * sets the gateway state to unconnected
- * calls ld_gateway_connect to reinitialize the connection to the gateway
+ * tries to get the operating system name
  */
-int ld_gateway_reconnect(struct ld_context *context);
-
 char *ld_get_os_name();
 
 #include "REST.h"

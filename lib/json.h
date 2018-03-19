@@ -57,7 +57,7 @@ struct ld_json_identify {
     struct ld_json_identify_connection_properties *properties;
     int compress;
     int large_threshold;
-    int shard;
+    int shard[2];
     struct ld_json_status_update *status_update;
 };
 

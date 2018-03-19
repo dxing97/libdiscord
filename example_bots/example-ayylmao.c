@@ -5,7 +5,7 @@
 #include "libdiscord.h"
 
 /*
- * This bot will respond to every "ayy" with "lmao"
+ * This bot will respond to every "ayy" with "lmao", or any other trigger-response pair you want
  */
 
 #include <getopt.h>

@@ -70,10 +70,12 @@ json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) 
 
     json_t *roles = json_array();
 
-    for(i = 0; i < strlen((char *) status_update->roles); i++) {
-        json_array_append_new(roles, json_string(ld_snowflake_num2str(status_update->roles[i])));
+    if(status_update->roles != NULL) {
+        for (i = 0; i < strlen((char *) status_update->roles); i++) {
+            json_array_append_new(roles, json_string(ld_snowflake_num2str(status_update->roles[i])));
+        }
+        json_object_set(su, "roles", roles);
     }
-    json_object_set(su, "roles", roles);
 
     if(status_update->game != NULL) {
         json_object_set(su, "game", ld_json_dump_activity(status_update->game));
@@ -141,8 +143,16 @@ json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
         ld_warning("ld_json_dump_identify: large_theshold is out of expected range");
     }
     json_object_set(ident, "large_threshold", json_integer(identify->large_threshold));
+    if(identify->shard != NULL) {
+        json_t *array = json_array();
+        json_array_append_new(array, json_integer(identify->shard[0]));
+        json_array_append_new(array, json_integer(identify->shard[1]));
+        json_object_set(ident, "shard", array);
+    } else {
+        ld_error("ld_json_dump_identify: shard array is NULL");
+        return NULL;
+    }
 
-    json_object_set(ident, "shard", json_integer(identify->shard)); //todo: this is wrong, should be json array
 
     if(identify->status_update != NULL) {
         //presence is optional
