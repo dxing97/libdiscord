@@ -413,13 +413,13 @@ int ld_service(struct ld_context *context, int timeout) {
         if(context->hb_count > 1){ //todo: settable limit for hb_ack misses
             //didn't receive HB_ACK
             ld_warning("ld_service: didn't recieve a HB_ACK");
-            return LD_HB_ACKMISS;
+            return LDE_HB_ACKMISS;
         }
         ret = ld_gateway_queue_heartbeat(context);
         if(ret != 0) {
             ld_warning("couldn't put heartbeat into gateway tx ringbuffer");
             context->hb_count--;
-            return 1;
+            return LDE_HB_RINGBUF_FULL;
         }
 
         context->last_hb = lws_now_secs();

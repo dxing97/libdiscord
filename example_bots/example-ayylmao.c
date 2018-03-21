@@ -14,6 +14,7 @@
 
 static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
+static int fail_mode = 0; //0: default, try recovering, 1: exit on error
 CURL *handle;
 int use_ulfius = 0;
 char *trigger = "ayy", *response = "lmao";
@@ -185,11 +186,12 @@ int main(int argc, char *argv[]) {
                 {"game", required_argument, 0, 'g'},
                 {"trigger", required_argument, 0, 'r'},
                 {"response", required_argument, 0, 'R'},
+                {"abort-on-error", no_argument, 0, 'a'},
                 {0,0,0,0}
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:ug:r:R:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:ug:r:R:a", long_options, &option_index);
 
         if(c == -1){
             break;
@@ -204,13 +206,16 @@ int main(int argc, char *argv[]) {
                                "-t, --bot-token [bot_token]\n\t\t"
                                "Required. Discord bot token. See Discord developer pages on how to obtain one.\n\t"
                                "-u, --use-ulfius\n\t\t"
-                               "If set, uses libulfius to send messages instead of libcurl. Default is to use libcurl\n\t"
+                               "If set, uses ulfius to send messages instead of libcurl. \n\t\t"
+                               "Default is to use libcurl\n\t"
                                "-g, --game\n\t\t"
                                "Sets the initial value of the \"game\" field in the bot presence.\n\t"
                                "-r, --trigger [trigger_string]\n\t\t"
                                "Sets string that will trigger a response from the bot. Default is \"ayy\".\n\t"
                                "-R, --response [response_string]\n\t\t"
                                "Sets response that will be sent when the trigger is read. Default is \"lmao\".\n\t"
+                               "-a --abort-on-error \n\t\t"
+                               "If set, the bot will exit if the websocket connection is closed instead of trying to reconnect.\n\t"
                                "-h, --help\n\t\t"
                                "Displays this help dialog\n", argv[0]);
                 return 0;
@@ -231,8 +236,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'R':
                 response = strdup(optarg);
-
                 break;
+            case 'a':
+                fail_mode = 1;
             default:
                 abort();
         }
@@ -305,7 +311,9 @@ int main(int argc, char *argv[]) {
         ret = ld_service(context, 20); //service the connection
         if(ret != 0) {
             ld_error("ld_service returned non-0 (%d)", ret);
-            break;
+            if(fail_mode)
+                break;
+            bot_state = 0;
         }
     }
     //disconnect from discord gracefully

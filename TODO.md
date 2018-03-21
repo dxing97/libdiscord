@@ -9,12 +9,11 @@ some convenience functions to make this easier
 Ordered roughly in terms of priority.
 
 ### Library
-* libuv event loop for libdiscord, libwebsockets and libcurl
+* see if we want to use libuv for libdiscord - libwebsockets and libcurl
   * figure out how libuv works
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket
-* Recover from websocket disconnections 
 * More callbacks
 * Sharding
 
@@ -51,7 +50,7 @@ Ordered roughly in terms of priority.
 #### A Discord CLI Tool
 * Shell scripting integration?
 
-#### dbotc - A Bot for the Masses
+#### A Configurable Bot for the Masses
 * Look into YAML formatting
 * YAML -> JSON converter? Support multiple config types
 

@@ -57,7 +57,7 @@ int ld_rest_free_request(struct ld_rest_request *request){
     free(request->base_url);
     free(request->endpoint);
     free(request);
-    return LD_EOK;
+    return LDE_OK;
 }
 
 int ld_rest_free_response(struct ld_rest_response *response){
@@ -65,10 +65,10 @@ int ld_rest_free_response(struct ld_rest_response *response){
     ret = u_map_clean_full(response->headers);
     if(ret != U_OK) {
         ld_warning("free response: couldn't free response headers");
-        return LD_EMEM;
+        return LDE_MEM;
     }
     free(response);
-    return LD_EOK;
+    return LDE_OK;
 }
 
 /*
@@ -92,7 +92,7 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
 //    }
     if(request->base_url == NULL) {
         ld_error("send blocking request: base url is NULL!");
-        return LD_EMISSING;
+        return LDE_MISSING_PARAM;
     }
     char *url;
     url = malloc(strlen(request->base_url) + strlen(request->endpoint) + 1);
@@ -116,7 +116,7 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
     ret = ulfius_send_http_request(&req, &resp);
     if(ret != U_OK) {
         ld_warning("ulfius: couldn't send ulfius blocking HTTP request! (%d)", ret);
-        return LD_EULFIUS;
+        return LDE_ULFIUS;
     }
 
     response->http_status = resp.status;
@@ -125,7 +125,7 @@ int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_res
 
     free(url);
 
-    return LD_EOK;
+    return LDE_OK;
 }
 
 char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb) {
@@ -205,7 +205,7 @@ int ld_create_message(struct ld_rest_request *req,
     body = json_pack("{ss}", "content", message_content);
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
-        return LD_EJSON;
+        return LDE_JSON;
     }
 
     char *json_body;
@@ -213,7 +213,7 @@ int ld_create_message(struct ld_rest_request *req,
     json_body = json_dumps(body, 0);
     if(json_body == NULL) {
         ld_error("couldn't dump JSON string for lmao data");
-        return LD_EJSON;
+        return LDE_JSON;
     }
     json_body = strdup(json_body);
 
@@ -222,5 +222,5 @@ int ld_create_message(struct ld_rest_request *req,
     req->body = json_body;
     req->body_size = strlen(req->body);
 
-    return LD_EOK;
+    return LDE_OK;
 }

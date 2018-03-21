@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
-LWS_VERSION=2.4.1
-#ULFIUS_VERSION=2.2.2
-## libdiscord dependencies installation script
+LWS_VERSION=2.4.2
+ULFIUS_VERSION=2.3.2
+## Uber basic installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
 
 #future plans:
 # check what version is required for each package
 # if a package is already installed, prompt user for options (keep old, install new, something else)
-
-#assuming Ubuntu 17.10
+# Have forks of libwebsockets, ulfius, libcurl as submodules in libdiscord and link them
+# statically as an option?
+#assuming Ubuntu 17.10, debian 9
 #assuming the current directory is where everything is going to be downloaded
 #assuming sudo access
 
@@ -29,10 +30,11 @@ sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-gnutls-d
                  libgnutls28-dev libgcrypt20-dev git \
                  make cmake gcc libssl-dev libconfig-dev\
                  zlib1g-dev libssl-dev libcurl4-gnutls-dev libuv1-dev
-sudo apt install libulfius-dev
+#sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 #
-#echo "Installing libulfius"
+echo "Installing libulfius"
+## Old makefile based compilation
 #git clone https://github.com/babelouest/ulfius.git
 #cd ulfius
 #    git checkout 2.2.4
@@ -46,15 +48,26 @@ sudo apt install libulfius-dev
 #        cd ../..
 #    make && sudo checkinstall --pkgname libulfius-sdev --install=yes
 #cd ..
+git clone https://github.com/babelouest/ulfius.git
+cd ulfius
+    git checkout $(ULFIUS_VERSION)
+    git submodule update --init
+    mkdir build && cd build
+        cmake ..
+        make
+        sudo checkinstall --pkgname libulfius-dev --pkgversion="$(ULFIUS_VERSION)"
+        sudo ldconfig
+    cd ..
+cd ..
 
-# need to compile for v2.4.1
+# need to compile for v2.4.2 (ringbuffer APIs)
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v${LWS_VERSION}
     mkdir build && cd build
         cmake .. -DCMAKE_BUILD_TYPE=Debug DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
         make
-        sudo checkinstall --pkgname libwebsockets --pkgversion="2.4.1"
+        sudo checkinstall --pkgname libwebsockets-dev --pkgversion="$(LWS_VERSION)"
         sudo ldconfig
     cd ..
 cd ..
@@ -66,6 +79,7 @@ cd libdiscord
     mkdir build && cd build
         cmake ..
         make
+        echo "finished installing dependencies and compiled libdiscord and test apps"
 #    cd ..
 #cd ..
 
