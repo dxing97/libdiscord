@@ -63,7 +63,7 @@ cd ..
 # need to compile for v2.4.2 (ringbuffer APIs)
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
-    git checkout v${LWS_VERSION}
+    git checkout v$(LWS_VERSION)
     mkdir build && cd build
         cmake .. -DCMAKE_BUILD_TYPE=Debug DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
         make
