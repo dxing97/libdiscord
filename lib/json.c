@@ -9,7 +9,7 @@
 char *ld_snowflake_num2str(LD_SNOWFLAKE flake) {
     char *tmp;
     tmp = malloc(sizeof(char)*128);
-    snprintf(tmp, 127, "%lu", (uint64_t) flake);
+    snprintf(tmp, 127, "%llu", (unsigned long long) flake);
     return tmp;
 }
 
@@ -64,7 +64,7 @@ json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) 
     int i;
 
     char tmp[128];
-    snprintf(tmp, 127, "%lu", (uint64_t) status_update->guild_id);
+    snprintf(tmp, 127, "%llu", (unsigned long long) status_update->guild_id);
 
     json_object_set(su, "user", json_string(ld_snowflake_num2str(status_update->guild_id)));
 
