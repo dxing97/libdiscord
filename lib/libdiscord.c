@@ -413,6 +413,8 @@ int ld_service(struct ld_context *context, int timeout) {
         if(context->hb_count > 1){ //todo: settable limit for hb_ack misses
             //didn't receive HB_ACK
             ld_warning("ld_service: didn't recieve a HB_ACK");
+            // todo: make sure we're actually disconnected from gateway
+            context->gateway_state = LD_GATEWAY_UNCONNECTED;
             return LDE_HB_ACKMISS;
         }
         ret = ld_gateway_queue_heartbeat(context);
@@ -1017,8 +1019,6 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
     }
     return 0;
 }
-
-
 
 /*
  * gets the name of the operating system (checks uname -o)
