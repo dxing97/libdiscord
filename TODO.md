@@ -1,9 +1,9 @@
 ## Goals
 * Get a stable working minimal example bot with minimal spaghetti (mostly working, still too much spaghet)
-* Get 100% coverage of all API functions (v1.0 release)
+* Get 100% coverage of all API functions (websocket gateway, REST, voice websocket, voice UDP, v1.0 release)
 * ~~Discord developer ToS compliant~~ compliance will be up to bot developers, although the library will try to include 
-some convenience functions to make this easier
-* A bot that can turn your lights on 
+some convenience functions to make this easier if nessecary
+* ~~A bot that can turn your lights on~~ too vague
 
 ## Todo
 Ordered roughly in terms of priority.
@@ -42,6 +42,7 @@ Ordered roughly in terms of priority.
 * Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
   * add wew-lad
+  * rename bot to call-response when this is implemented
 * Ignore calls from other bots
 
 #### ping - A Comprehensive Latency Tool
@@ -62,8 +63,7 @@ Ordered roughly in terms of priority.
 
 ## Far Future
 * Rich presence integration for IoT
-* OAuth support (write/find a OAuth2 library for C)
-* A command line application for scripting with bash
+* OAuth2 support (write/find a OAuth2 library for C)
 * Support for voice channels (UDP connections)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation integration (Allegro 5 bitmaps? MagickWand? SDL?)
