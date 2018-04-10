@@ -526,6 +526,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             ld_info("established websocket connection to gateway");
             i = context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL, 0);
             context->gateway_state = LD_GATEWAY_CONNECTED;
+            context->last_hb = lws_now_secs(); //reset heartbeat counter every time we connect
             return i;
 
         case LWS_CALLBACK_GET_THREAD_ID:
