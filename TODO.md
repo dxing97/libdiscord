@@ -45,6 +45,9 @@ Ordered roughly in terms of priority.
   * rename bot to call-response when this is implemented
 * Ignore calls from other bots
 
+#### Stalkerbot - Track user presence
+* a bot to tell you when your bot crashes (wait...)
+
 #### ping - A Comprehensive Latency Tool
 * Measure latency between libcurl and ulfius
 
