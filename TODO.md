@@ -66,15 +66,15 @@ Ordered roughly in terms of priority.
 
 ## Far Future
 * Rich presence integration for IoT
-* OAuth2 support (write/find a OAuth2 library for C)
+* OAuth2 support (write/find a OAuth2 client library for C)
 * Support for voice channels (UDP connections)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation integration (Allegro 5 bitmaps? MagickWand? SDL?)
-* Support for userbots
+* Proper unofficial support for userbots
 * A Discord CLI client (not necessarily as an example app - may be a separate app)
 * Port to ESP32
 * Support for MinGW, Cygwin
-* Figure out what Spotify is
+* Look into Spotify rich presence integration 
 * Make/autogenerate wrapper for other languages, including Python, C++, Rust, and Go.
 
 ## Far Far Future
