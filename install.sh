@@ -61,6 +61,7 @@ cd ulfius
 cd ..
 
 # need to compile for v2.4.2 (ringbuffer APIs)
+echo "Installing libwebsockets"
 git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v$(LWS_VERSION)
