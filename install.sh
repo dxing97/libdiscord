@@ -66,7 +66,7 @@ git clone https://github.com/warmcat/libwebsockets
 cd libwebsockets
     git checkout v$(LWS_VERSION)
     mkdir build && cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Debug DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON
         make
         sudo checkinstall --pkgname libwebsockets-dev --pkgversion="$(LWS_VERSION)"
         sudo ldconfig
