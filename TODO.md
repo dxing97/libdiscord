@@ -9,6 +9,7 @@ some convenience functions to make this easier if nessecary
 Ordered roughly in terms of priority.
 
 ### Library
+* Basic metadata manipulation functions: sublibrary/module for JSON data payloads/structs for lower level abstraction
 * see if we want to use libuv for libdiscord - libwebsockets and libcurl
   * figure out how libuv works
 * Better documentation (comments in the source code is NOT good documentation)
