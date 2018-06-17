@@ -1,4 +1,6 @@
 # libdiscord
+**LIBRARY IS CURRENTLY NOT WORKING. FIX IS COMING SOON MAYBE.**
+
 A Discord library written in C, currently in development.
 
 Discord server: https://discord.gg/BGgcQQh

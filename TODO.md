@@ -9,12 +9,13 @@ some convenience functions to make this easier if nessecary
 Ordered roughly in terms of priority.
 
 ### Library
-* Basic metadata manipulation functions: sublibrary/module for JSON data payloads/structs for lower level abstraction
 * see if we want to use libuv for libdiscord - libwebsockets and libcurl
-  * figure out how libuv works
+  * figure out how libuv 
+* Basic metadata manipulation functions: sublibrary/module for JSON data payloads/structs for lower level abstraction
 * Better documentation (comments in the source code is NOT good documentation)
 
 ### Websocket
+* look into potentially migrating to LWS 3.0
 * More callbacks
 * Sharding
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 LWS_VERSION=2.4.2
-ULFIUS_VERSION=2.3.2
+ULFIUS_VERSION=2.3.6
 ## Uber basic installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
 
