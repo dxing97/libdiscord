@@ -44,7 +44,7 @@ make
 ```
 Install the library (option 1, preferred). Make sure you read the prompts that come up regarding expluding certain files.
 ```bash
-sudo checkinstall --pkgnamne libwebsockets-sdev --pkgversion="2.4.1"
+sudo checkinstall --pkgname libwebsockets-sdev --pkgversion="2.4.1"
 ```
 Note that you can uninstall libwebsockets afterward using apt or dpkg 
 if you install libwebsockets with checkinstall, in case something breaks
