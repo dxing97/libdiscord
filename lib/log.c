@@ -141,5 +141,6 @@ char *ld_log_generate_string(unsigned long ll, const char *log_message, va_list 
 
     message = malloc(strlen(time_string) + strlen(ld_log_level_string(ll)) + strlen(msg) + 15);
     sprintf(message, "[%s] LD_%s: %s", time_string, ld_log_level_string(ll), msg);
+    free(time_string);
     return message;
 }

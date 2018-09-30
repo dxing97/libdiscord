@@ -143,7 +143,7 @@ json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
         ld_warning("ld_json_dump_identify: large_theshold is out of expected range");
     }
     json_object_set(ident, "large_threshold", json_integer(identify->large_threshold));
-    if(identify->shard != NULL) {
+    if(&(identify->shard) != NULL) {
         json_t *array = json_array();
         json_array_append_new(array, json_integer(identify->shard[0]));
         json_array_append_new(array, json_integer(identify->shard[1]));
