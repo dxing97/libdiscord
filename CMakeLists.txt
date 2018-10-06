@@ -29,6 +29,10 @@ set(CPACK_PACKAGE_NAME libdiscord)
 include_directories(/usr/local/lib /usr/local/include)
 include_directories(example_bots lib cmake)
 
+#homebrew on macOS
+include_directories(/usr/local/opt/curl/include)
+include_directories(/usr/local/opt/openssl/include)
+
 configure_file(
         "${PROJECT_SOURCE_DIR}/cmake/libdiscord_config.h.in"
         "${PROJECT_BINARY_DIR}/libdiscord_config.h"
