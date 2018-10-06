@@ -13,11 +13,13 @@ Dependencies:
 
 Note that each dependency has their own dependencies, except for jansson. 
 
-Tested to buuld and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
+Tested to build and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
 but note that if you want to install libwebsockets with checkinstall on Raspbian, 
 then you will have to compile checkinstall yourself. Otherwise, install with ``sudo make install``
 
 Works on sparc64 debian 4.13.4-1 with no issues currently.
+
+Works on macOS 10.14 "Mojave" after dependencies are properly installed.
 
 ### Quick build instructions for libwebsockets
 
