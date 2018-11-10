@@ -4,11 +4,11 @@
 
 #include "REST.h"
 
-struct ld_rest_request * ld_rest_init_request() {
-    struct ld_rest_request *request;
-    request = (struct ld_rest_request *)malloc(sizeof(struct ld_rest_request));
+struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request) {
+//    struct ld_rest_request *request;
+//    request = (struct ld_rest_request *)malloc(sizeof(struct ld_rest_request));
     if(request == NULL) {
-        ld_error("couldn't allocate ld_rest_request");
+        ld_warning("ld_rest_request: unexpected null request");
         return NULL;
     }
     request->base_url = NULL;
@@ -16,8 +16,8 @@ struct ld_rest_request * ld_rest_init_request() {
     request->verb = LD_REST_VERB_GET;
     request->body_size = 0;
     request->body = NULL;
-    request->headers = malloc(sizeof(struct _u_map));
-    u_map_init(request->headers);
+    request->headers = malloc(sizeof(struct ld_headers));
+//    u_map_init(request->headers);
     request->timeout = 0;
     request->user_agent = NULL;
 

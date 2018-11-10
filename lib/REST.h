@@ -7,7 +7,7 @@
 #define LIBDISCORD_REST_H
 
 #include <curl/curl.h>
-#include <ulfius.h>
+//#include <ulfius.h>
 #include <libdiscord.h>
 
 struct ld_context; //anonymous declaration
@@ -29,11 +29,13 @@ enum ld_rest_http_verb {
 };
 
 /*
- * rather opaque structure used to process headers
- * utilizes ulfius' _u_map API
+ * rather opaque structure used to process headers into libcurl
  */
 struct ld_headers {
-    struct _u_map *umap;
+//    struct _u_map *umap;
+    int length;
+    char **key;
+    char **value;
 };
 
 /*
@@ -45,7 +47,7 @@ struct ld_rest_request {
     char *endpoint;
     char *body;
     size_t body_size;
-    struct _u_map *headers;
+    struct ld_headers *headers;
     int timeout; //ulfius default is 0
     char *user_agent;
 };
@@ -59,13 +61,20 @@ struct ld_rest_response {
     size_t body_length;
 };
 
+//put header key/value pair into
+int ld_headers_put(struct ld_headers *headers, char *key, char *value);
 
+//removes everything from the header
+int ld_headers_clean(struct ld_headers *headers);
+
+//remove a specific header matching to this key
+int ld_headers_remove
 
 /*
  * allocates memory
  * initializes a request with defaults
  */
-struct ld_rest_request * ld_rest_init_request();
+struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request);
 
 /*
  * allocates memory

@@ -13,11 +13,13 @@ Ordered roughly in terms of priority.
   * figure out how libuv 
 * Basic metadata manipulation functions: sublibrary/module for JSON data payloads/structs for lower level abstraction
 * Better documentation (comments in the source code is NOT good documentation)
+* helper function to verify if a bot token is valid without connecting to discord
 
 ### Websocket
 * look into potentially migrating to LWS 3.0
 * More callbacks
 * Sharding
+* merge ld_connect and ld_service
 
 ### REST
 * Nonblocking HTTP requests

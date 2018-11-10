@@ -13,10 +13,10 @@
 #include <REST.h>
 
 static int bot_exit = 0; //0: no exit, 1: exit
-static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
+static int bot_exit = 0; //0: not connected/disconnected, 1: connect initiated
 static int fail_mode = 0; //0: default, try recovering, 1: exit on error
 CURL *handle;
-int use_ulfius = 0;
+//int use_ulfius = 0;
 char *trigger = "ayy", *response = "lmao";
 
 void int_handler(int i){
@@ -99,15 +99,15 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
     char *jsonbody = strdup(tmp);
     ld_debug("body to post: %s", jsonbody);
 
-    if(use_ulfius) {
-        struct ld_rest_request *request;
-        struct ld_rest_response *resp;
-        request = ld_rest_init_request();
-        resp = ld_rest_init_response();
-
-        ld_create_message(request, context, channelid, response);
-        ld_rest_send_blocking_request(request, resp);
-    } else {
+//    if(use_ulfius) {
+//        struct ld_rest_request *request;
+//        struct ld_rest_response *resp;
+//        request = ld_rest_init_request();
+//        resp = ld_rest_init_response();
+//
+//        ld_create_message(request, context, channelid, response);
+//        ld_rest_send_blocking_request(request, resp);
+//    } else {
         //curl POST to that channel
         struct curl_slist *headers = NULL;
         char auth_header[1000];
@@ -149,7 +149,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
 
         curl_slist_free_all(headers);
-    }
+//    }
 
     free(jsonbody);
     return 0;
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
                 {"bot-token", required_argument, 0, 't'},
                 {"help", no_argument, 0, 'h'},
                 {"log-level", required_argument, 0, 'l'},
-                {"use-ulfius", no_argument, 0, 'u'},
+//                {"use-ulfius", no_argument, 0, 'u'},
                 {"game", required_argument, 0, 'g'},
                 {"trigger", required_argument, 0, 'r'},
                 {"response", required_argument, 0, 'R'},
@@ -191,7 +191,9 @@ int main(int argc, char *argv[]) {
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:ug:r:R:a", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:"
+//                                    "u"
+                                    "g:r:R:a", long_options, &option_index);
 
         if(c == -1){
             break;
@@ -205,9 +207,9 @@ int main(int argc, char *argv[]) {
                                "Options: \n\t"
                                "-t, --bot-token [bot_token]\n\t\t"
                                "Required. Discord bot token. See Discord developer pages on how to obtain one.\n\t"
-                               "-u, --use-ulfius\n\t\t"
-                               "If set, uses ulfius to send messages instead of libcurl. \n\t\t"
-                               "Default is to use libcurl\n\t"
+//                               "-u, --use-ulfius\n\t\t"
+//                               "If set, uses ulfius to send messages instead of libcurl. \n\t\t"
+//                               "Default is to use libcurl\n\t"
                                "-g, --game\n\t\t"
                                "Sets the initial value of the \"game\" field in the bot presence.\n\t"
                                "-r, --trigger [trigger_string]\n\t\t"
@@ -225,9 +227,9 @@ int main(int argc, char *argv[]) {
             case 'l':
                 log_level = strtoul(optarg, NULL, 10);
                 break;
-            case 'u':
-                use_ulfius = 1;
-                break;
+//            case 'u':
+//                use_ulfius = 1;
+//                break;
             case 'g':
                 game = strdup(optarg);
                 break;
@@ -272,16 +274,17 @@ int main(int argc, char *argv[]) {
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
-    info->log_level = log_level;
+//    info->log_level = log_level;
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
 
     free(bot_token);
 
     //initialize context with context info
-    struct ld_context *context;
-    context = ld_create_context(info); //garbage in, garbage out
-    if(context == NULL) {
+    struct ld_context context;
+    void *retp;
+    retp = ld_init_context(&context, info); //garbage in, garbage out
+    if(retp == NULL) {
         ld_error("error creating libdiscord context");
         return 1;
     }
@@ -295,31 +298,31 @@ int main(int argc, char *argv[]) {
 
     handle = curl_easy_init();
 
-    int ret, i = 0;
+    int ret, i = 0; 
     //while the bot is still alive
     while(!bot_exit) {
-        if(bot_state == 0) {
+        if(bot_exit == 0) {
             //bot isn't connected, so we should try connecting
-            ret = ld_connect(context);
+            ret = ld_connect(&context);
             if(ret != 0) {
                 ld_warning("error connecting to discord: error code %d", ret);
                 break;
             }
-            bot_state = 1;
+            bot_exit = 1;
         }
 
-        ret = ld_service(context, 20); //service the connection
+        ret = ld_service(&context, 20); //service the connection
         if(ret != 0) {
             ld_error("ld_service returned non-0 (%d)", ret);
             if(fail_mode)
                 break;
-            bot_state = 0;
+            bot_exit = 0;
         }
     }
     //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
-    ld_destroy_context(context);
+    ld_destroy_context(&context);
     curl_easy_cleanup(handle);
     return 0;
 }

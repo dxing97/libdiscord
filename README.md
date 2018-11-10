@@ -1,5 +1,4 @@
 # libdiscord
-**LIBRARY IS CURRENTLY NOT WORKING. FIX IS COMING SOON MAYBE.**
 
 A Discord library written in C, currently in development.
 
@@ -18,6 +17,9 @@ Currently only tested against Ubuntu 17.10, Raspbian stretch, and the unofficial
 Tested to work on Raspberry Pi 3/Raspbian (stretch).
 
 ## Example Bots
+### example-minimal 
+Minimal example bot
+
 ### example-ayylmao
 Currently this is the only example bot under development. 
 This is the first working bot using libdiscord, and 

@@ -31,12 +31,12 @@ static const struct lws_extension exts[] = { //default lws extension, code from 
         { NULL, NULL, NULL /* terminator */ }
 };
 
-struct ld_context *ld_create_context(struct ld_context_info *info) {
+struct ld_context *ld_init_context(struct ld_context *context, struct ld_context_info *info) {
     //assuming the values passed in are good
-    struct ld_context *context;
-    context = malloc(sizeof(struct ld_context));
+//    struct ld_context *context;
+//    context = malloc(sizeof(struct ld_context));
 
-    context->log_level = info->log_level; //todo: remove this: use ld_set_logging_level instead
+//    context->log_level = info->log_level; //todo: remove this: use ld_set_logging_level instead
 
     context->gateway_state = LD_GATEWAY_UNCONNECTED;
 
@@ -186,7 +186,7 @@ int _ld_get_gateway(struct ld_context *context) {
      * examine /gateway and see if we get a valid response
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request();
+    struct ld_rest_request *request = ld_rest_init_request(NULL);
     struct ld_rest_response *response = ld_rest_init_response();
 
     request = ld_get_gateway(request, context);
@@ -264,7 +264,7 @@ int _ld_get_gateway_bot(struct ld_context *context){
      *  Now we should check the bot token validity using /gateway/bot
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request();
+    struct ld_rest_request *request = ld_rest_init_request(NULL);
     struct ld_rest_response *response = ld_rest_init_response();
     request = ld_get_gateway_bot(request, context);
     ret = ld_rest_send_blocking_request(request, response);
