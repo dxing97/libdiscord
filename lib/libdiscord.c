@@ -45,6 +45,7 @@ struct ld_context *ld_init_context(struct ld_context *context, struct ld_context
     /* curl init */
     curl_global_init(CURL_GLOBAL_DEFAULT);
     context->curl_multi_handle=curl_multi_init();
+    context->curl_handle = curl_easy_init();
 
     if(info->bot_token == NULL) {
         ld_error("bot token is null");
@@ -186,28 +187,30 @@ int _ld_get_gateway(struct ld_context *context) {
      * examine /gateway and see if we get a valid response
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request(NULL);
-    struct ld_rest_response *response = ld_rest_init_response();
+    struct ld_rest_request request;
+    ld_rest_init_request(&request);
+    struct ld_rest_response response;
+    ld_rest_init_response(&response);
 
-    request = ld_get_gateway(request, context);
+    ld_get_gateway(&request, context);
 
-    ret = ld_rest_send_blocking_request(request, response);
+    ret = ld_rest_send_request(context, &response, &request);
 
     if(ret != 0) {
         ld_error("ulfius: couldn't send request to /gateway (%d)", ret);
         return 1;
     }
 
-    ld_debug("get gateway response: %s", response->body);
+    ld_debug("get gateway response: %s", response.body);
 
     //use jansson to extract the JSON data
     json_t *object, *tmp;
     json_error_t error;
 
-    object = json_loads(response->body, 0, &error);
+    object = json_loads(response.body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway in ld_connext: %s", response->body);
+                "from /gateway in ld_connext: %s", response.body);
         return 3;
     }
 
@@ -226,8 +229,8 @@ int _ld_get_gateway(struct ld_context *context) {
     context->gateway_url = malloc(strlen(json_string_value(tmp)) + 1);
     context->gateway_url = strcpy(context->gateway_url, json_string_value(tmp));
 
-    ld_rest_free_request(request);
-    ld_rest_free_response(response);
+//    ld_rest_free_request(request);
+//    ld_rest_free_response(response);
     free(tmp);
     free(object);
     return 0;
@@ -264,22 +267,24 @@ int _ld_get_gateway_bot(struct ld_context *context){
      *  Now we should check the bot token validity using /gateway/bot
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request(NULL);
-    struct ld_rest_response *response = ld_rest_init_response();
-    request = ld_get_gateway_bot(request, context);
-    ret = ld_rest_send_blocking_request(request, response);
+    struct ld_rest_request request;
+    ld_rest_init_request(&request);
+    struct ld_rest_response response;
+    ld_rest_init_response(&response);
+    ld_get_gateway_bot(context, &request);
+    ret = ld_rest_send_request(context, &response, &request);
     if(ret != 0) {
         ld_error("couldn't send request to /gateway/bot");
     }
-    ld_debug("get gateway bot response: %s", response->body);
+    ld_debug("get gateway bot response: %s", response.body);
 
     json_t *object, *tmp;
     json_error_t error;
 
-    object = json_loads(response->body, 0, &error);
+    object = json_loads(response.body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway/bot in ld_connect: %s", response->body);
+                "from /gateway/bot in ld_connect: %s", response.body);
         return 3;
     }
 

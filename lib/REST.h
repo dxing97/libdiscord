@@ -61,6 +61,8 @@ struct ld_rest_response {
     size_t body_length;
 };
 
+struct ld_headers * ld_headers_init(struct ld_headers *headers);
+
 //put header key/value pair into
 int ld_headers_put(struct ld_headers *headers, char *key, char *value);
 
@@ -68,7 +70,9 @@ int ld_headers_put(struct ld_headers *headers, char *key, char *value);
 int ld_headers_clean(struct ld_headers *headers);
 
 //remove a specific header matching to this key
-int ld_headers_remove();
+//int ld_headers_remove();
+
+int ld_headers2curl(struct ld_headers *headers, struct curl_slist **slist);
 
 /*
  * allocates memory
@@ -80,7 +84,7 @@ struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request);
  * allocates memory
  * initializes a response with defaults
  */
-struct ld_rest_response * ld_rest_init_response();
+struct ld_rest_response *ld_rest_init_response(struct ld_rest_response *response);
 
 /*
  * frees memory for request
@@ -99,7 +103,8 @@ int ld_rest_free_response(struct ld_rest_response *response);
  * rather slow, since it creates and destroys a curl handle.
  * basically a wrapper around ulfius
  */
-int ld_rest_send_blocking_request(struct ld_rest_request *request, struct ld_rest_response *response);
+int
+ld_rest_send_request(struct ld_context *context, struct ld_rest_response *response, struct ld_rest_request *request);
 
 /*
  * makes a HTTP request of some kind to some URL with some headers
@@ -126,7 +131,7 @@ struct ld_rest_request *ld_get_gateway(struct ld_rest_request *req, struct ld_co
 /*
  * generates ld_rest_request for GET /gateway/bot
  */
-struct ld_rest_request *ld_get_gateway_bot(struct ld_rest_request *req, struct ld_context *context);
+struct ld_rest_request *ld_get_gateway_bot(struct ld_context *context, struct ld_rest_request *req);
 
 /*
  * generates a POST request to create a message
