@@ -11,7 +11,7 @@ set(LD_API_URL "\"https://discordapp.com/api\"")
 set(LD_REST_API_VERSION "\"/v6\"")
 set(LD_WS_API_VERSION 6)
 #set(LD_GATEWAY_API_VERSION 3 "Only version 3 of the gateway API is supported")
-set(LD_GITHUB_URL "\"https://github.com/dxing97/libdiscord\"")
+set(LD_GITHUB_URL "\"https://github.com/dxing97/libdiscord\"") # do we need this?
 
 set(CMAKE_C_STANDARD 99)
 
@@ -42,9 +42,9 @@ include_directories("${PROJECT_BINARY_DIR}")
 # If libwebsockets was compiled and installed in Cygwin:
 include_directories(/usr/local/lib/include)
 
-set(LD_LIBS websockets jansson curl ulfius)
+set(LD_LIBS websockets jansson curl)
 
-set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h)
+set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h lib/utils.c lib/utils.h)
 add_library(discord SHARED ${LD_SOURCE})
 
 target_link_libraries(discord ${LD_LIBS})
@@ -59,3 +59,11 @@ target_link_libraries(example-bot-ayylmao discord)
 set(BOT_PING_SOURCE example_bots/example-ping.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ping ${BOT_PING_SOURCE})
 target_link_libraries(example-bot-ping discord)
+
+set(BOT_MINIMAL_SOURCE example_bots/example-minimal.c cmake/libdiscord_config.h.in)
+add_executable(example-bot-minimal ${BOT_MINIMAL_SOURCE})
+target_link_libraries(example-bot-minimal discord)
+
+set(EXAMPLE_TESTING_SOURCE cmake/libdiscord_config.h.in example_bots/example-testing.c)
+add_executable(example-testing ${EXAMPLE_TESTING_SOURCE})
+target_link_libraries(example-testing discord)

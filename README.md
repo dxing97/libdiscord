@@ -1,5 +1,4 @@
 # libdiscord
-**LIBRARY IS CURRENTLY NOT WORKING. FIX IS COMING SOON MAYBE.**
 
 A Discord library written in C, currently in development.
 
@@ -13,11 +12,10 @@ See [the todo list](TODO.md) for a list of features that will be implemented at 
 ## Building
 See [building](doc/BUILDING.md)
 
-Currently only tested against Ubuntu 17.10, Raspbian stretch, and the unofficial sparc64 port for Debian.
-
-Tested to work on Raspberry Pi 3/Raspbian (stretch).
+Currently only tested against Ubuntu 18.04 and macOS Mojave.
 
 ## Example Bots
+
 ### example-ayylmao
 Currently this is the only example bot under development. 
 This is the first working bot using libdiscord, and 
@@ -33,3 +31,5 @@ Under consideration. Will try to roughly measure latencies and response times of
 * Response time of REST-gateway event pairs (POST [message] | recieved gateway dispatch for message event, etc)
 * Response time to (user defined) third party servers (like a CLI ping tool)
 
+### example-minimal 
+Minimal example bot

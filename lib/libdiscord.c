@@ -31,12 +31,12 @@ static const struct lws_extension exts[] = { //default lws extension, code from 
         { NULL, NULL, NULL /* terminator */ }
 };
 
-struct ld_context *ld_create_context(struct ld_context_info *info) {
+struct ld_context *ld_init_context(struct ld_context *context, struct ld_context_info *info) {
     //assuming the values passed in are good
-    struct ld_context *context;
-    context = malloc(sizeof(struct ld_context));
+//    struct ld_context *context;
+//    context = malloc(sizeof(struct ld_context));
 
-    context->log_level = info->log_level; //todo: remove this: use ld_set_logging_level instead
+//    context->log_level = info->log_level; //todo: remove this: use ld_set_logging_level instead
 
     context->gateway_state = LD_GATEWAY_UNCONNECTED;
 
@@ -45,6 +45,7 @@ struct ld_context *ld_create_context(struct ld_context_info *info) {
     /* curl init */
     curl_global_init(CURL_GLOBAL_DEFAULT);
     context->curl_multi_handle=curl_multi_init();
+    context->curl_handle = curl_easy_init();
 
     if(info->bot_token == NULL) {
         ld_error("bot token is null");
@@ -186,28 +187,30 @@ int _ld_get_gateway(struct ld_context *context) {
      * examine /gateway and see if we get a valid response
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request();
-    struct ld_rest_response *response = ld_rest_init_response();
+    struct ld_rest_request request;
+    ld_rest_init_request(&request);
+    struct ld_rest_response response;
+    ld_rest_init_response(&response);
 
-    request = ld_get_gateway(request, context);
+    ld_get_gateway(&request, context);
 
-    ret = ld_rest_send_blocking_request(request, response);
+    ret = ld_rest_send_request(context, &response, &request);
 
-    if(ret != 0) {
-        ld_error("ulfius: couldn't send request to /gateway (%d)", ret);
+    if(ret != LDE_OK) {
+        ld_error("_ld_get_gateway: couldn't send request to /gateway (%d)", ret);
         return 1;
     }
 
-    ld_debug("get gateway response: %s", response->body);
+    ld_debug("get gateway response: %s", response.body);
 
     //use jansson to extract the JSON data
     json_t *object, *tmp;
     json_error_t error;
 
-    object = json_loads(response->body, 0, &error);
+    object = json_loads(response.body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway in ld_connext: %s", response->body);
+                "from /gateway in ld_connext: %s", response.body);
         return 3;
     }
 
@@ -226,8 +229,8 @@ int _ld_get_gateway(struct ld_context *context) {
     context->gateway_url = malloc(strlen(json_string_value(tmp)) + 1);
     context->gateway_url = strcpy(context->gateway_url, json_string_value(tmp));
 
-    ld_rest_free_request(request);
-    ld_rest_free_response(response);
+//    ld_rest_free_request(request);
+//    ld_rest_free_response(response);
     free(tmp);
     free(object);
     return 0;
@@ -264,22 +267,24 @@ int _ld_get_gateway_bot(struct ld_context *context){
      *  Now we should check the bot token validity using /gateway/bot
      */
     int ret;
-    struct ld_rest_request *request = ld_rest_init_request();
-    struct ld_rest_response *response = ld_rest_init_response();
-    request = ld_get_gateway_bot(request, context);
-    ret = ld_rest_send_blocking_request(request, response);
+    struct ld_rest_request request;
+    ld_rest_init_request(&request);
+    struct ld_rest_response response;
+    ld_rest_init_response(&response);
+    ld_get_gateway_bot(context, &request);
+    ret = ld_rest_send_request(context, &response, &request);
     if(ret != 0) {
         ld_error("couldn't send request to /gateway/bot");
     }
-    ld_debug("get gateway bot response: %s", response->body);
+    ld_debug("get gateway bot response: %s", response.body);
 
     json_t *object, *tmp;
     json_error_t error;
 
-    object = json_loads(response->body, 0, &error);
+    object = json_loads(response.body, 0, &error);
     if(object == NULL) {
         ld_error("jansson: couldn't decode string returned "
-                "from /gateway/bot in ld_connect: %s", response->body);
+                "from /gateway/bot in ld_connect: %s", response.body);
         return 3;
     }
 
@@ -686,54 +691,6 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
 
     return LD_GATEWAY_UNKNOWN;
 }
-
-/*
- * DEPRECIATED: use json.h functions
- */
-//json_t *_ld_generate_identify(struct ld_context *context) {
-//    json_t *ident;
-//    json_error_t error;
-//    //token:string, token
-//    //todo: use struct to json functions
-//    ident = json_pack_ex(&error, 0, "{"
-//                    "ss" //token
-//                    "si" //large_threshold
-//                    "sb" //compress
-//                    "s[ii]" //shard
-//                    "s{ss ss ss}" //properties {$os, $browser, $device}
-//                    "s{" //presence
-//                      "s{ss si}" //game {name, type, url?}
-//                      "ss" //status
-//                      "so?" //since
-//                      "sb}" //afk
-//    "}"
-//            ,
-//    "token", context->bot_token,
-//    "large_threshold", 250,
-//    "compress", 0,
-//    "shard", 0, context->shards,
-//    "properties",
-//              "$os", "Linux",
-//              "$browser", "libdiscord",
-//              "$device", "libdiscord"
-//            ,
-//    "presence",
-//        "game",
-//            "name", context->presence->game,
-//            "type", context->presence->game_type,
-//            //NULL, NULL,
-//        "status", ld_json_status2str(context->presence->status_type),
-//        "since", NULL,
-//        "afk", 0
-//    );
-//    if(ident == NULL) {
-//        ld_error("error generating IDENTIFY payload: %s\n"
-//                 "source: \n%s\nin line %d column %d and position %d",
-//                error.text, error.source, error.line, error.column, error.position);
-//    }
-//
-//    return ident;
-//}
 
 /*
  * todo: this function needs to be broken up into smaller parts

@@ -170,6 +170,7 @@ struct ld_context {
     enum ld_gateway_state gateway_state;
     int shards;
     CURLM *curl_multi_handle;
+    CURL *curl_handle;
     struct lws_context *lws_context;
     struct lws *lws_wsi;
     int (*user_callback)
@@ -222,7 +223,7 @@ struct ld_gi {
  */
 struct ld_context_info {
     char *bot_token;
-    unsigned long log_level;  //DEPRECIATED, use new functions in log.h
+//    unsigned long log_level;  //DEPRECIATED, use new functions in log.h
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
     size_t gateway_ringbuffer_size;
     struct _ld_json_presence *init_presence;
@@ -253,7 +254,7 @@ struct ld_dispatch {
  * returns NULL if the info struct was malformed or missing things
  * allocates memory for the struct and internal components
  */
-struct ld_context* ld_create_context(struct ld_context_info *info);
+struct ld_context *ld_init_context(struct ld_context *context, struct ld_context_info *info);
 
 /*
  * destroys context
