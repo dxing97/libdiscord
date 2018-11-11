@@ -68,7 +68,7 @@ int ld_headers_put(struct ld_headers *headers, char *key, char *value);
 int ld_headers_clean(struct ld_headers *headers);
 
 //remove a specific header matching to this key
-int ld_headers_remove
+int ld_headers_remove();
 
 /*
  * allocates memory
