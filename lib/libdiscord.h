@@ -170,6 +170,7 @@ struct ld_context {
     enum ld_gateway_state gateway_state;
     int shards;
     CURLM *curl_multi_handle;
+    CURL *curl_handle;
     struct lws_context *lws_context;
     struct lws *lws_wsi;
     int (*user_callback)

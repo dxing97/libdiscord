@@ -22,14 +22,9 @@ Ordered roughly in terms of priority.
 * merge ld_connect and ld_service
 
 ### REST
+* finish implementing curl writefunction for responses
 * Nonblocking HTTP requests
 * Ratelimiting
-* Do we need ulfius?
-    * Try running a test bot on a high-end Intel server instead of Raspberry Pis and see if using ulfius incurs a 
-        noticible performance difference. 
-    * Add wrapper for ulfius' u_map functions and adapt for nonblocking curl use
-    * A macro that loops through all _u_map members (like jansson's foreach object function)
-    * Look into Ulfius performance issues (excessive ``curl_easy_init`` and ``curl_easy_cleanup``)
 * keep libcurl handles open - add some way of keeping connections open
 * Try using OpenSSL to see if our "unexpected TLS packet" error goes away
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)

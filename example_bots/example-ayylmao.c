@@ -13,7 +13,7 @@
 #include <REST.h>
 
 static int bot_exit = 0; //0: no exit, 1: exit
-static int bot_exit = 0; //0: not connected/disconnected, 1: connect initiated
+static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 static int fail_mode = 0; //0: default, try recovering, 1: exit on error
 CURL *handle;
 //int use_ulfius = 0;
@@ -106,7 +106,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 //        resp = ld_rest_init_response();
 //
 //        ld_create_message(request, context, channelid, response);
-//        ld_rest_send_blocking_request(request, resp);
+//        ld_rest_send_request(request, resp);
 //    } else {
         //curl POST to that channel
         struct curl_slist *headers = NULL;
@@ -301,14 +301,14 @@ int main(int argc, char *argv[]) {
     int ret, i = 0; 
     //while the bot is still alive
     while(!bot_exit) {
-        if(bot_exit == 0) {
+        if(bot_state == 0) {
             //bot isn't connected, so we should try connecting
             ret = ld_connect(&context);
             if(ret != 0) {
                 ld_warning("error connecting to discord: error code %d", ret);
                 break;
             }
-            bot_exit = 1;
+            bot_state = 1;
         }
 
         ret = ld_service(&context, 20); //service the connection
