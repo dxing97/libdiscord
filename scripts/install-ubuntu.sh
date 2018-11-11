@@ -28,7 +28,7 @@ fi
 sudo apt update && sudo apt upgrade
 sudo apt install libjansson-dev libcurl4-openssl-dev\
                  git cmake gcc libssl-dev libconfig-dev\
-                 zlib1g-dev libssl-dev libuv1-dev
+                 zlib1g-dev libssl-dev libuv1-dev checkinstall
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 #
