@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#LWS_VERSION=2.4.2
+LWS_VERSION=2.4.2
 #ULFIUS_VERSION=2.3.6
 ## Uber basic installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
@@ -60,18 +60,18 @@ sudo apt install libjansson-dev libcurl4-openssl-dev\
 #cd ..
 
 # need to compile for v2.4.2 (ringbuffer APIs)
-#echo "Installing libwebsockets"
-#git clone https://github.com/warmcat/libwebsockets
-#cd libwebsockets
-#    git checkout v$(LWS_VERSION)
-#    mkdir build
-#    cd build
-#        cmake .. -DCMAKE_BUILD_TYPE=Debug -DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON -DLWS_WITH_IPV6=ON -DLWS_WITH_PLUGINS=ON
-#        make
-#        sudo checkinstall --pkgname libwebsockets-dev --pkgversion="$(LWS_VERSION)"
-#        sudo ldconfig
-#    cd ..
-#cd ..
+echo "Installing libwebsockets"
+git clone https://github.com/warmcat/libwebsockets
+cd libwebsockets
+    git checkout v$(LWS_VERSION)
+    mkdir build
+    cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Debug -DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON -DLWS_WITH_IPV6=ON -DLWS_WITH_PLUGINS=ON
+        make
+        sudo checkinstall --pkgname libwebsockets-dev --pkgversion="$(LWS_VERSION)"
+        sudo ldconfig
+    cd ..
+cd ..
 
 
 ## build libdiscord and example bots
