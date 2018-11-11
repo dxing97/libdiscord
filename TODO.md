@@ -22,10 +22,8 @@ Ordered roughly in terms of priority.
 * merge ld_connect and ld_service
 
 ### REST
-* finish implementing curl writefunction for responses
 * Nonblocking HTTP requests
 * Ratelimiting
-* keep libcurl handles open - add some way of keeping connections open
 * Try using OpenSSL to see if our "unexpected TLS packet" error goes away
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 
@@ -37,10 +35,13 @@ Ordered roughly in terms of priority.
     * Make/find functions that will encode/decode ISO8601-formatted strings. Will GNU save us?
     
 ### Example Bots
+#### minimal - Minimal example websocket bot
+* get it working
+
 #### ayylmao - A Basic Call and Response Bot
 * Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
-  * add wew-lad
+  * wew-lad?
   * rename bot to call-response when this is implemented
 * Ignore calls from other bots
 
@@ -64,16 +65,16 @@ Ordered roughly in terms of priority.
 * More elaborate CMake setup for OS detection, dependency checks
 
 ## Far Future
-* Rich presence integration for IoT
+* Rich presence integration?
 * OAuth2 support (write/find a OAuth2 client library for C)
-* Support for voice channels (UDP connections)
+* Support for voice channels (UDP connections, use libuv?)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * Example bot with image generation integration (Allegro 5 bitmaps? MagickWand? SDL?)
-* Proper unofficial support for userbots
+* Support for userbots
 * A Discord CLI client (not necessarily as an example app - may be a separate app)
-* Port to ESP32
-* Support for MinGW, Cygwin
-* Look into Spotify rich presence integration 
+* Test on a ESP32
+* Support for MinGW, Cygwin, or WSL
+* Spotify rich presence integration
 * Make/autogenerate wrapper for other languages, including Python, C++, Rust, and Go.
 
 ## Far Far Future

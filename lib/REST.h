@@ -56,8 +56,8 @@ struct ld_rest_request {
 
 struct ld_rest_response {
     long http_status;
-    struct _u_map *headers;
-    void *body;
+    struct ld_headers *headers;
+    char *body;
     size_t body_length;
 };
 
@@ -96,7 +96,7 @@ int ld_rest_free_request(struct ld_rest_request *request);
  */
 int ld_rest_free_response(struct ld_rest_response *response);
 
-
+size_t ld_rest_writefunction(void *ptr, size_t size, size_t nmemb, struct ld_rest_response *response);
 /*
  * takes a request, performs it, then saves the response
  * returns 0 on successful request (even if the response is 4XX)

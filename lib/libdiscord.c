@@ -196,8 +196,8 @@ int _ld_get_gateway(struct ld_context *context) {
 
     ret = ld_rest_send_request(context, &response, &request);
 
-    if(ret != 0) {
-        ld_error("ulfius: couldn't send request to /gateway (%d)", ret);
+    if(ret != LDE_OK) {
+        ld_error("_ld_get_gateway: couldn't send request to /gateway (%d)", ret);
         return 1;
     }
 
@@ -691,54 +691,6 @@ enum ld_gateway_payloadtype ld_gateway_payload_objectparser(const char *key) {
 
     return LD_GATEWAY_UNKNOWN;
 }
-
-/*
- * DEPRECIATED: use json.h functions
- */
-//json_t *_ld_generate_identify(struct ld_context *context) {
-//    json_t *ident;
-//    json_error_t error;
-//    //token:string, token
-//    //todo: use struct to json functions
-//    ident = json_pack_ex(&error, 0, "{"
-//                    "ss" //token
-//                    "si" //large_threshold
-//                    "sb" //compress
-//                    "s[ii]" //shard
-//                    "s{ss ss ss}" //properties {$os, $browser, $device}
-//                    "s{" //presence
-//                      "s{ss si}" //game {name, type, url?}
-//                      "ss" //status
-//                      "so?" //since
-//                      "sb}" //afk
-//    "}"
-//            ,
-//    "token", context->bot_token,
-//    "large_threshold", 250,
-//    "compress", 0,
-//    "shard", 0, context->shards,
-//    "properties",
-//              "$os", "Linux",
-//              "$browser", "libdiscord",
-//              "$device", "libdiscord"
-//            ,
-//    "presence",
-//        "game",
-//            "name", context->presence->game,
-//            "type", context->presence->game_type,
-//            //NULL, NULL,
-//        "status", ld_json_status2str(context->presence->status_type),
-//        "since", NULL,
-//        "afk", 0
-//    );
-//    if(ident == NULL) {
-//        ld_error("error generating IDENTIFY payload: %s\n"
-//                 "source: \n%s\nin line %d column %d and position %d",
-//                error.text, error.source, error.line, error.column, error.position);
-//    }
-//
-//    return ident;
-//}
 
 /*
  * todo: this function needs to be broken up into smaller parts

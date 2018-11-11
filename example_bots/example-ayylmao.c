@@ -139,12 +139,10 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             ld_debug("TCP keepalive interval unavailable");
         }
 
-        //todo: add a way to print the response
-
         res = curl_easy_perform(handle);
         if(res != CURLE_OK) {
             ld_error("couldn't POST lmao");
-            return 0; //todo: possibly retry the POST if it fails
+            return 0;
         }
 
 
@@ -262,7 +260,7 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
-    struct _ld_json_presence *presence; //todo: presence currently cannot be null, fix this
+    struct _ld_json_presence *presence;
     presence = malloc(sizeof(struct _ld_json_presence));
     presence->status_type = LD_PRESENCE_DND;
     presence->game_type = LD_PRESENCE_STREAMING;

@@ -5,11 +5,10 @@ portable.
 
 Dependencies: 
 * libwebsockets 
-    * minimum required version is v2.4, anything below that will not work, compiled from source)
+    * minimum required version is v2.4, anything below that will not work
 * jansson (used package bundled with ubuntu, version 2.9 or later should work, v2.7 has been confirmed to NOT work
 (json_pack changed behavior))
 * libcurl (used package bundled with ubuntu 17.10, any recent version should work)
-* ulfius (any recent version should work)
 
 Note that each dependency has their own dependencies, except for jansson. 
 

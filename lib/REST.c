@@ -109,17 +109,15 @@ struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request) {
 
 
 struct ld_rest_response *ld_rest_init_response(struct ld_rest_response *response) {
-//    struct ld_rest_response *response;
-    response = (struct ld_rest_response *)malloc(sizeof(struct ld_rest_response));
     if(response == NULL) {
-        ld_error("init response: allocated response pointer is NULL");
+        ld_debug("ld_rest_init_response: response pointer is null");
         return NULL;
     }
     response->http_status = -1;
-    response->headers = (struct _u_map *)malloc(sizeof(struct ld_headers));
+    response->headers = (struct ld_headers *) malloc(sizeof(struct ld_headers));
     if(response->headers == NULL) {
-        ld_error("init response: error allocating headers");
-        free(response);
+        ld_error("ld_rest_init_response: error allocating headers");
+//        free(response);
         return NULL;
     }
 //    if(u_map_init(response->headers) != U_OK) {
@@ -151,8 +149,27 @@ int ld_rest_free_response(struct ld_rest_response *response){
 //        ld_warning("free response: couldn't free response headers");
 //        return LDE_MEM;
 //    }
+    ld_headers_clean(response->headers);
+    if(response->body != NULL) {
+        free(response->body);
+    }
     free(response);
     return LDE_OK;
+}
+
+size_t ld_rest_writefunction(void *ptr, size_t size, size_t nmemb, struct ld_rest_response *response) {
+    void *tmp;
+    size_t new_len = response->body_length + size * nmemb;
+    tmp = realloc(response->body, new_len+1);
+    if(tmp == NULL) {
+        ld_warning("ld_rest_writefunction: couldn't realloc body");
+        return 0;
+    }
+    response->body = tmp;
+    memcpy(response->body + response->body_length, ptr, size*nmemb);
+    response->body[new_len] = '\0';
+    response->body_length = new_len;
+    return size * nmemb;
 }
 
 /*
@@ -161,8 +178,7 @@ int ld_rest_free_response(struct ld_rest_response *response){
  * performance is not good if you need to do a lot of REST requests
  * this function won't touch the memory you pass to it, so you will have to free it yourself
  */
-int
-ld_rest_send_request(struct ld_context *context, struct ld_rest_response *response, struct ld_rest_request *request) {
+int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *response, struct ld_rest_request *request) {
     /*
      * initialize a request
      * translate libdiscord request to an ulfius request
@@ -198,38 +214,17 @@ ld_rest_send_request(struct ld_context *context, struct ld_rest_response *respon
     curl_easy_setopt(context->curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(context->curl_handle, CURLOPT_HTTPHEADER, slist);
     curl_easy_setopt(context->curl_handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
-    curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDS, request->body);
-    curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDSIZE, (long) request->body_size);
+    if(request->verb == LD_REST_VERB_POST){
+        curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDS, request->body);
+        curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDSIZE, (long) request->body_size);
+    }
     curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 1);
-
+    curl_easy_setopt(context->curl_handle, CURLOPT_WRITEFUNCTION, ld_rest_writefunction);
+    curl_easy_setopt(context->curl_handle, CURLOPT_WRITEDATA, response);
     ret = curl_easy_perform(context->curl_handle);
     if(ret != CURLE_OK) {
         ld_warning("ld_rest_send_request: curl_easy_perform returned error");
     }
-
-    //todo: add response part
-
-//    ld_debug("blocking REST request URL: %s", url);
-
-//    req.http_verb = strdup(ld_rest_verb_enum2str(request->verb));
-//    req.http_url = url;
-//    req.binary_body = request->body;
-//    req.binary_body_length = request->body_size;
-//    req.map_header = request->headers; //watch out for this
-//    req.timeout = request->timeout;
-
-//    ret = ulfius_send_http_request(&req, &resp);
-//    if(ret != U_OK) {
-//        ld_warning("ulfius: couldn't send ulfius blocking HTTP request! (%d)", ret);
-//        return LDE_ULFIUS;
-//    }
-//
-//    response->http_status = resp.status;
-//    response->body = strndup(resp.binary_body, resp.binary_body_length);
-//    response->body_length = resp.binary_body_length;
-//
-//    free(url);
-//
     return LDE_OK;
 }
 
