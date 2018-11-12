@@ -312,9 +312,10 @@ int main(int argc, char *argv[]) {
         ret = ld_service(&context, 20); //service the connection
         if(ret != 0) {
             ld_error("ld_service returned non-0 (%d)", ret);
-            if(fail_mode)
-                break;
-            bot_exit = 0;
+            if(fail_mode == 1)
+                bot_exit = 0;
+            else
+                bot_exit = 1;
         }
     }
     //disconnect from discord gracefully
