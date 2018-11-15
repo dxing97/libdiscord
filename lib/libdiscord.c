@@ -302,7 +302,7 @@ int _ld_get_gateway_bot(struct ld_context *context){
     }
 
     context->gateway_bot_url = malloc(strlen(json_string_value(tmp)) + 1);
-    context->gateway_bot_url = strcpy(context->gateway_url, json_string_value(tmp));
+    context->gateway_bot_url = strcpy(context->gateway_bot_url, json_string_value(tmp));
 
     tmp = json_object_get(object, "shards");
     if(tmp == NULL) {
