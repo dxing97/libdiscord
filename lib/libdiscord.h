@@ -6,6 +6,7 @@
 #include <jansson.h>
 #include "libdiscord_config.h"
 #include "log.h"
+#include "json.h"
 
 
 
@@ -190,6 +191,7 @@ struct ld_context {
     unsigned long gateway_bot_reset; //unix time for reset
     struct ld_gi **gi;
     int gi_count;
+    struct ld_json_user *current_user;
 };
 
 /*

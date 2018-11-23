@@ -53,6 +53,112 @@ json_t *ld_json_dump_activity(struct ld_json_activity *activity) {
     return NULL;
 }
 
+int ld_json_user_init(struct ld_json_user *user) {
+    user->username = NULL;
+    user->discriminator = NULL;
+    user->avatar = NULL;
+    user->locale = NULL;
+    return 0;
+}
+
+int ld_json_user_cleanup(struct ld_json_user *user) {
+    if(user->username != NULL) {
+        free(user->username);
+    }
+    if(user->discriminator != NULL) {
+        free(user->discriminator);
+    }
+    if(user->avatar != NULL) {
+        free(user->avatar);
+    }
+    if(user->locale != NULL) {
+        free(user->locale);
+    }
+    return 0;
+}
+
+int ld_json_load_user(struct ld_json_user *new_user, json_t *user) {
+    json_t *value;
+    int bool;
+    const char *key;
+    const char *tmp;
+
+    json_object_foreach(user, key, value) {
+        if(strcmp(key, "id") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get user id");
+            } else {
+                new_user->id = strtoull(tmp, NULL, 10);
+            }
+        }
+
+        if(strcmp(key, "username") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get username");
+            } else {
+                new_user->username = strdup(tmp);
+            }
+        }
+
+        if(strcmp(key, "discriminator") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get user discriminator");
+            } else {
+                new_user->discriminator = strdup(tmp);
+            }
+        }
+
+        if(strcmp(key, "avatar") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get user avatar");
+            } else {
+                new_user->avatar = strdup(tmp);
+            }
+        }
+
+        if(strcmp(key, "bot") == 0) {
+            bool = json_boolean_value(value);
+            new_user->bot = bool;
+        }
+
+        if(strcmp(key, "mfa_enabled") == 0) {
+            bool = json_boolean_value(value);
+            new_user->mfa_enabled = bool;
+        }
+
+        if(strcmp(key, "locale") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get user locale");
+            } else {
+                new_user->locale = strdup(tmp);
+            }
+        }
+
+        if(strcmp(key, "verified") == 0) {
+            bool = json_boolean_value(value);
+            new_user->verified = bool;
+        }
+
+        if(strcmp(key, "email") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_user: couldn't get user email");
+            } else {
+                new_user->email = strdup(tmp);
+            }
+        }
+
+
+    }
+
+    return 0;
+}
+
 json_t *ld_json_dump_user(struct ld_json_user *user) {
 
     return NULL;
@@ -174,6 +280,102 @@ const char *ld_json_status2str(enum ld_json_status_type type) {
             return "offline";
     }
     return NULL;
+}
+
+int ld_json_message_init(struct ld_json_message *message) {
+    message->id = 0;
+    message->channel_id = 0;
+    message->author = NULL;
+    message->content = NULL;
+    message->timestamp = NULL;
+    message->edited_timestamp = NULL;
+    message->tts = 0;
+    message->mention_everyone = 0;
+    message->mentions = NULL;
+    message->mention_roles = NULL;
+    message->attachments = NULL;
+    message->embeds = NULL;
+    message->reactions = NULL;
+    message->webhook_id = 0;
+    message->type = 0;
+    message->activity = NULL;
+    message->application = NULL;
+    return 0;
+}
+
+int ld_json_message_cleanup(struct ld_json_message *message) {
+    if(message->content != NULL) {
+        free(message->content);
+    }
+    if(message->author != NULL) {
+        free(message->author);
+    }
+    return 0;
+}
+
+int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) {
+//    struct ld_json_message *new_message = NULL;
+//    json_error_t error;
+//    message = json_object();
+//    int i;
+//    void *ret;
+
+    json_t *value;
+    const char *key;
+    const char *tmp;
+
+    json_object_foreach(message, key, value) {
+        if(strcmp(key, "content") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_message: couldn't get message content");
+            } else {
+                new_message->content = strdup(tmp);
+            }
+
+        }
+
+        if(strcmp(key, "channel_id") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_message: couldn't get message channel_id");
+            } else {
+                new_message->channel_id = strtoull(tmp, NULL, 10);
+            }
+
+        }
+
+        if(strcmp(key, "id") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_message: couldn't get message id");
+            } else {
+                new_message->id = strtoull(tmp, NULL, 10);
+            }
+
+        }
+
+        if(strcmp(key, "type") == 0) {
+            tmp = json_string_value(value);
+            if (tmp == NULL) {
+                ld_warning("ld_json_load_message: couldn't get message type");
+            } else {
+                new_message->type = (int) strtol(tmp, NULL, 10);
+            }
+
+        }
+        if(strcmp(key, "author") == 0) {
+//            tmp = json_string_value(value);
+            new_message->author = malloc(sizeof(struct ld_json_user));
+            if(ld_json_load_user(new_message->author, value) != 0) {
+                ld_warning("ld_json_load_message: couldn't read author object properly");
+            }
+        }
+
+    }
+
+    return 0;
+
 }
 
 

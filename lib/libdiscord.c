@@ -91,6 +91,10 @@ struct ld_context *ld_init_context(struct ld_context *context, struct ld_context
     context->gateway_rx_buffer = NULL;
 
     context->hb_count = 0;
+
+    context->gateway_session_id = NULL;
+
+    context->current_user = NULL;
     return context;
 }
 
@@ -98,12 +102,17 @@ void ld_destroy_context(struct ld_context *context) {
     if(context->presence != NULL) {
         free(context->presence->game);
     }
-    free(context->gateway_session_id);
+    if(context->gateway_session_id != NULL) {
+        free(context->gateway_session_id);
+    }
+    if(context->current_user != NULL) {
+        free(context->current_user);
+    }
     curl_multi_cleanup(context->curl_multi_handle);
     curl_global_cleanup();
     lws_context_destroy(context->lws_context);
     lws_ring_destroy(context->gateway_ring);
-    free(context);
+//    free(context);
 }
 /*
 void _ld_err(struct ld_context *context, const char *message, ...) {
@@ -188,7 +197,7 @@ int _ld_get_gateway(struct ld_context *context) {
      */
     int ret;
     struct ld_rest_request request;
-    ld_rest_init_request(&request);
+    ld_rest_init_request(&request, NULL);
     struct ld_rest_response response;
     ld_rest_init_response(&response);
 
@@ -268,35 +277,39 @@ int _ld_get_gateway_bot(struct ld_context *context){
      */
     int ret;
     struct ld_rest_request request;
-    ld_rest_init_request(&request);
     struct ld_rest_response response;
+
+    ld_rest_init_request(&request, NULL);
     ld_rest_init_response(&response);
+
     ld_get_gateway_bot(context, &request);
+
     ret = ld_rest_send_request(context, &response, &request);
     if(ret != 0) {
         ld_error("couldn't send request to /gateway/bot");
     }
-    ld_debug("get gateway bot response: %s", response.body);
+
+    ld_debug("_ld_get_gateway_bot: get gateway bot response: %s", response.body);
 
     json_t *object, *tmp;
     json_error_t error;
 
     object = json_loads(response.body, 0, &error);
     if(object == NULL) {
-        ld_error("jansson: couldn't decode string returned "
+        ld_error("_ld_get_gateway_bot: couldn't decode string returned "
                 "from /gateway/bot in ld_connect: %s", response.body);
         return 3;
     }
 
     tmp = json_object_get(object, "url");
     if(tmp == NULL) {
-        ld_error("jansson: couldn't find key \"url\" in JSON object from /gateway/bot."
+        ld_error("_ld_get_gateway_bot: couldn't find key \"url\" in JSON object from /gateway/bot."
                 " is the bot token valid? are we being ratelimited?");
         return 3;
     }
 
     if(json_string_value(tmp) == NULL) {
-        ld_error("jansson: didn't receive string object in \"url\" from "
+        ld_error("_ld_get_gateway_bot: didn't receive string object in \"url\" from "
                 "JSON payload received from /gateway/bot");
         return 3;
     }
@@ -361,7 +374,21 @@ int ld_connect(struct ld_context *context) {
     if(context->gateway_url == NULL) {
         ret = _ld_get_gateway(context);
         if(ret != 0) {
-            ld_error("couldn't get gateway URL from /gateway");
+            ld_error("ld_connect: couldn't get gateway URL from /gateway");
+            return ret;
+        }
+    }
+    if(context->gateway_bot_url == NULL) {
+        ret = _ld_get_gateway_bot(context);
+        if(ret != 0) {
+            ld_error("ld_connect: couldn't get gateway URL from /gateway/bot");
+            return ret;
+        }
+    }
+    if(context->current_user == NULL) {
+        ret = ld_get_current_user(context, context->current_user);
+        if(ret != 0) {
+            ld_error("ld_connect: couldn't get current user info from /users/@me");
             return ret;
         }
     }
@@ -371,24 +398,18 @@ int ld_connect(struct ld_context *context) {
 
     switch(context->gateway_state) {
         case LD_GATEWAY_UNCONNECTED:
-            ret = _ld_get_gateway_bot(context);
-            if(ret != 0) {
-                ld_error("couldn't get gateway URL from /gateway/bot");
-                return ret;
-            }
-
             context->gateway_state = LD_GATEWAY_CONNECTING;
-
             ret = ld_gateway_connect(context);
 
             if(ret != 0){
+                ld_warning("ld_connect: ld_gateway_connect returned bad");
                 return 1;
             }
 
             break;
         case LD_GATEWAY_CONNECTING:
             //??? do nothing
-            ld_notice("ld_connect called while connecting to gateway!");
+            ld_debug("ld_connect called while connecting to gateway!");
             break;
         case LD_GATEWAY_CONNECTED:
             //this context already has an established connection to the gateway
@@ -447,7 +468,18 @@ int ld_service(struct ld_context *context, int timeout) {
 
 int ld_gateway_connect(struct ld_context *context) {
 
-    context->gateway_state = LD_GATEWAY_CONNECTING;
+    switch(context->gateway_state) {
+        case LD_GATEWAY_UNCONNECTED:
+            context->gateway_state = LD_GATEWAY_CONNECTING;
+            break;
+        case LD_GATEWAY_CONNECTING:
+            ld_debug("ld_gateway_connect: still trying to connect");
+            break;
+//            return 0;
+        case LD_GATEWAY_CONNECTED:
+            ld_debug("ld_gateway_connect: already connected");
+            return 0;
+    }
 
     //lws context creation info
     struct lws_context_creation_info info;
@@ -496,11 +528,11 @@ int ld_gateway_connect(struct ld_context *context) {
 
     i->protocol = protocols[0].name;
 
-    ld_debug("connecting to gateway");
+    ld_debug("ld_gateway_connect: connecting to gateway");
     struct lws *wsi;
     wsi = lws_client_connect_via_info(i);
     if(wsi == NULL) {
-        ld_error("failed to connect to gateway (%s)", i->address);
+        ld_error("ld_gateway_connect: failed to connect to gateway (%s)", i->address);
         return 1;
     }
     context->lws_wsi = wsi;
@@ -517,7 +549,6 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
     char *payload = (char *) user;
     struct ld_gateway_payload *gateway_payload;
     char *close_message = NULL;
-
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
             ld_error("lws: error connecting to gateway: %.*s(%d)", in, len, len);
@@ -601,7 +632,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
             return 0;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
-            ld_debug("lws: recieved pong from gateway");
+            ld_debug("ld_lws_callback: recieved pong from gateway");
             break;
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             ld_debug("lws: client writable callback");

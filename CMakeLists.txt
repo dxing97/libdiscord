@@ -60,9 +60,9 @@ set(BOT_PING_SOURCE example_bots/example-ping.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ping ${BOT_PING_SOURCE})
 target_link_libraries(example-bot-ping discord)
 
-set(BOT_MINIMAL_SOURCE example_bots/example-minimal.c cmake/libdiscord_config.h.in)
-add_executable(example-bot-minimal ${BOT_MINIMAL_SOURCE})
-target_link_libraries(example-bot-minimal discord)
+set(BOT_COUNTER_SOURCE example_bots/example-counter.c cmake/libdiscord_config.h.in)
+add_executable(example-bot-counter ${BOT_COUNTER_SOURCE})
+target_link_libraries(example-bot-counter discord)
 
 set(EXAMPLE_TESTING_SOURCE cmake/libdiscord_config.h.in example_bots/example-testing.c)
 add_executable(example-testing ${EXAMPLE_TESTING_SOURCE})

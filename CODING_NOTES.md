@@ -59,7 +59,7 @@ ld_rest_simple_perform(request, response)
 //process response
 ```
 ```C
-request = ld_create_message(char *channel_id, message_t *message);
+request = ld_create_basic_message(char *channel_id, message_t *message);
 ld_queue_request(request);
 ld_rest_simple_perform(request, response)
 ```
@@ -76,3 +76,32 @@ The Ulfius API makes this relatively straightforward, but incurs a performance p
 There should be a built-in libcurl-based API that allows for the reusing of connections (have a pool of easy handles)
 
 Similar to the curl interface, there should be an option to use non blocking and blocking requests. 
+
+## 
+```markdown
+heartbeat_handler() {
+    if there hasn't been a heartbeat response in a while
+        disconnect with reason "HEART_ATTACK"
+    if enough time has passed since the last heartbeat
+        queue a new heartbeat
+}
+
+service() {
+    switch(bot state) {
+        case: not connected
+            connect()
+        case: connected
+            heartbeat_handler()
+            service(wsi)
+}
+
+main() { // bot event loop, user code
+    context = initialize connection context
+    while bot is on
+        if(service(context) != OK) 
+            bot is off
+            
+   cleanup(context)
+}
+
+```

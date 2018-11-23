@@ -9,6 +9,13 @@
 #include <jansson.h>
 
 /*
+ * dump:    json_t to char *
+ * load:    char * to json_t
+ * create:  json_t to struct
+ * save:    struct to char *
+ */
+
+/*
  * snowflakes are 64 bit unsigned integers encoded in decimal in a string for maximum compatability with languages that
  * can't handle 64 bit integers
  *
@@ -99,6 +106,7 @@ struct ld_json_user {
     char *avatar;
     int bot; //boolean
     int mfa_enabled; //boolean
+    char *locale;
     int verified; //boolean (email verification)
     char *email;
 };
@@ -376,6 +384,7 @@ char *ld_snowflake_num2str(LD_SNOWFLAKE flake);
 
 json_t *ld_json_dump_activity(struct ld_json_activity *activity);
 
+int ld_json_load_user(struct ld_json_user *new_user, json_t *user);
 json_t *ld_json_dump_user(struct ld_json_user *user);
 
 json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update);
@@ -385,5 +394,9 @@ json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_conn
 json_t *ld_json_dump_identify(struct ld_json_identify *identify);
 
 const char *ld_json_status2str(enum ld_json_status_type type);
+
+int ld_json_message_init(struct ld_json_message *message);
+int ld_json_message_cleanup(struct ld_json_message *message);
+int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) ;
 
 #endif //LIBDISCORD_JSON_H
