@@ -65,18 +65,18 @@ struct ld_context *ld_init_context(struct ld_context *context, struct ld_context
         return NULL;
     }
 
-    if(info->init_presence != NULL) {
-        context->presence = malloc(sizeof(struct _ld_json_presence));
-        if(context->presence == NULL) {
-            ld_error("couldn't allocate presence");
-            return NULL;
-        }
-        context->presence->game = strdup(info->init_presence->game);
-        context->presence->game_type = info->init_presence->game_type;
-        context->presence->status_type = LD_PRESENCE_ONLINE;
-    } else {
-        context->presence = NULL;
-    }
+//    if(info->init_presence != NULL) {
+//        context->presence = malloc(sizeof(struct _ld_json_presence));
+//        if(context->presence == NULL) {
+//            ld_error("couldn't allocate presence");
+//            return NULL;
+//        }
+//        context->presence->game = strdup(info->init_presence->game);
+//        context->presence->game_type = info->init_presence->game_type;
+//        context->presence->status_type = LD_PRESENCE_ONLINE;
+//    } else {
+//        context->presence = NULL;
+//    }
 
 
     context->gateway_bot_limit = 1;
@@ -99,9 +99,9 @@ struct ld_context *ld_init_context(struct ld_context *context, struct ld_context
 }
 
 void ld_destroy_context(struct ld_context *context) {
-    if(context->presence != NULL) {
-        free(context->presence->game);
-    }
+//    if(context->presence != NULL) {
+//        free(context->presence->game);
+//    }
     if(context->gateway_session_id != NULL) {
         free(context->gateway_session_id);
     }
@@ -386,6 +386,11 @@ int ld_connect(struct ld_context *context) {
         }
     }
     if(context->current_user == NULL) {
+        context->current_user = malloc(sizeof(struct ld_json_user));
+        if(context->current_user == NULL) {
+            ld_error("ld_connect: couldn't allocate user struct");
+            return 1;
+        }
         ret = ld_get_current_user(context, context->current_user);
         if(ret != 0) {
             ld_error("ld_connect: couldn't get current user info from /users/@me");
@@ -557,7 +562,6 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
         case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH:
             ld_info("lws: received handshake from Discord gateway");
             return 0;
-            break;
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
             ld_info("established websocket connection to gateway");
             i = context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL, 0);
@@ -567,7 +571,6 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
         case LWS_CALLBACK_GET_THREAD_ID:
             return 0;
-            break;
         case LWS_CALLBACK_CLOSED:
             ld_notice("lws: websocket connection to gateway closed");
             break;
@@ -679,6 +682,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             }
 
             i = context->user_callback(context, LD_CALLBACK_WS_PEER_CLOSE, close_message, context->close_code);
+            //todo: non-zero user return values
 
             if(len != 0) {
                 free(close_message);
@@ -829,8 +833,8 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len) 
 
 //            game.name = context->presence->game;
             memset(&status, 0, sizeof(struct ld_json_gateway_update_status));
-            if(context->presence != NULL)
-                status.status = strdup(ld_json_status2str(context->presence->status_type)); //todo: remove old presence system
+//            if(context->presence != NULL)
+//                status.status = strdup(ld_json_status2str(context->presence->status_type)); //todo: remove old presence system
             status.game = &game;
             status.roles = NULL;
 

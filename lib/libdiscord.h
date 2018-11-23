@@ -184,7 +184,7 @@ struct ld_context {
     unsigned int close_code;
     char *gateway_rx_buffer;
     size_t gateway_rx_buffer_len;
-    struct _ld_json_presence *presence;
+//    struct _ld_json_presence *presence;
     char *gateway_session_id;
     int gateway_bot_limit; //ratelimit reset amount
     int gateway_bot_remaining; //last ratelimit remaining value
@@ -228,7 +228,7 @@ struct ld_context_info {
 //    unsigned long log_level;  //DEPRECIATED, use new functions in log.h
     int (*user_callback)(struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
     size_t gateway_ringbuffer_size;
-    struct _ld_json_presence *init_presence;
+//    struct _ld_json_presence *init_presence;
 };
 
 struct ld_dispatch {
@@ -357,6 +357,8 @@ int ld_gateway_queue_heartbeat(struct ld_context *context);
  * tries to get the operating system name
  */
 char *ld_get_os_name();
+
+
 
 #include "REST.h"
 #include "json.h"

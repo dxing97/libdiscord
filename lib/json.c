@@ -367,7 +367,9 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
         if(strcmp(key, "author") == 0) {
 //            tmp = json_string_value(value);
             new_message->author = malloc(sizeof(struct ld_json_user));
-            if(ld_json_load_user(new_message->author, value) != 0) {
+            if(new_message->author == NULL) {
+                ld_warning("ld_json_load_message: couldn't malloc user object");
+            } else if(ld_json_load_user(new_message->author, value) != 0) {
                 ld_warning("ld_json_load_message: couldn't read author object properly");
             }
         }
