@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
 
     struct ld_rest_request request;
     void * ret;
-    ret = ld_rest_init_request(&request);
+    ret = ld_rest_init_request(&request, NULL);
     if(ret == NULL) {
         return 1;
     }

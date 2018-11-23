@@ -11,9 +11,47 @@
 
 int bot_exit = 0;
 
+unsigned long long target_channel = 342013131121229824;
+
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
+    if(reason == LD_CALLBACK_MESSAGE_CREATE) {
+        struct ld_json_message message;
+        ld_json_message_init(&message);
+
+        ld_json_load_message(&message, (json_t *) data);
+
+        char *next;
+        if(message.content == NULL) {
+            ld_debug("empty message!");
+            return 0;
+        }
+        long long count = strtoll(message.content, &next, 10);
+        if(next == message.content) {
+            ld_debug("not a number");
+            return 0;
+        }
+
+        if(message.channel_id != target_channel){
+            //not in target channel
+            ld_debug("not in target channel");
+            return 0;
+        }
+
+        char channelid[64], new_message[64];
+        sprintf(channelid, "%llu", target_channel);
+        sprintf(new_message, "%lld", count + 1);
+        ld_send_basic_message(context, channelid, new_message);
+
+        return 0;
+    }
+
 
     return 0;
+}
+
+void sig_handler(int i) {
+    bot_exit = 1;
+    return;
 }
 
 void print_help(char *executable_name) {
@@ -29,7 +67,7 @@ printf("libdiscord minimal bot\n"
 
 int main(int argc, char *argv[]) {
     char *bot_token = NULL;
-    unsigned long log_level = 31;
+    unsigned long log_level = 63;
 
     if(argc == 1) {
         goto HELP;
@@ -74,6 +112,8 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    signal(SIGINT, sig_handler);
+
     printf("Initializing libdiscord at log level %lu\n", log_level);
 
     ld_set_logging_level(log_level);
@@ -100,13 +140,17 @@ int main(int argc, char *argv[]) {
                 ld_error("example-minimal: error connecting to discord (error %d)", ret);
                 bot_exit = 1;
             }
-        }
-        ret = ld_service(&context, 20);
-        if(ret != 0) {
-            ld_error("example-minimal: ld_service returned error (error %d)", ret);
-            bot_exit = 1;
+            bot_state = 1;
+        } else {
+            ret = ld_service(&context, 20);
+            if(ret != 0) {
+                ld_error("example-minimal: ld_service returned error (error %d)", ret);
+                bot_exit = 1;
+            }
         }
     }
+
+    ld_send_basic_message(&context, "345264084679131146", "received SIGINT, terminating");
 
     ld_destroy_context(&context);
     free(bot_token);

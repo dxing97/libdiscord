@@ -105,7 +105,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 //        request = ld_rest_init_request();
 //        resp = ld_rest_init_response();
 //
-//        ld_create_message(request, context, channelid, response);
+//        ld_create_basic_message(request, context, channelid, response);
 //        ld_rest_send_request(request, resp);
 //    } else {
         //curl POST to that channel
@@ -272,7 +272,6 @@ int main(int argc, char *argv[]) {
 
     info->init_presence = presence;
     info->bot_token = strdup(bot_token);
-//    info->log_level = log_level;
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
 
