@@ -55,6 +55,10 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             return 0;
         }
 
+        if(rand() % 3 == 0) { //33 % chance of responding
+            return 0;
+        }
+
         char channelid[64], new_message[64];
         sprintf(channelid, "%llu", message.channel_id);
         sprintf(new_message, "%lld", count + 1);
@@ -143,7 +147,7 @@ int main(int argc, char *argv[]) {
     info.user_callback = callback;
     info.gateway_ringbuffer_size = 8;
 
-
+    srand((unsigned int)time(NULL));
     struct ld_context context;
     {
         void *ret;
