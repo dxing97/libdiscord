@@ -11,7 +11,7 @@
 
 int bot_exit = 0;
 
-unsigned long long target_channel = 342013131121229824;
+//unsigned long long target_channel = 342013131121229824;
 
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     if(reason == LD_CALLBACK_MESSAGE_CREATE) {
@@ -25,20 +25,38 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             ld_debug("empty message!");
             return 0;
         }
+
+        if(strcmp(message.content, "hcf") == 0) {
+            //halt
+            bot_exit = 1;
+        }
+
         long long count = strtoll(message.content, &next, 10);
         if(next == message.content) {
             ld_debug("not a number");
             return 0;
         }
 
-        if(message.channel_id != target_channel){
-            //not in target channel
-            ld_debug("not in target channel");
+
+
+//        if(message.channel_id != target_channel){
+//            //not in target channel
+//            ld_debug("not in target channel");
+//            return 0;
+//        }
+
+        if(message.author->id == context->current_user->id) {
+            ld_debug("can't respond to ourselves");
+            return 0;
+        }
+
+        if(message.author->bot == 1) {
+            ld_debug("shouldn't respond to another bot");
             return 0;
         }
 
         char channelid[64], new_message[64];
-        sprintf(channelid, "%llu", target_channel);
+        sprintf(channelid, "%llu", message.channel_id);
         sprintf(new_message, "%lld", count + 1);
         ld_send_basic_message(context, channelid, new_message);
 
@@ -51,11 +69,10 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
 void sig_handler(int i) {
     bot_exit = 1;
-    return;
 }
 
 void print_help(char *executable_name) {
-printf("libdiscord minimal bot\n"
+printf("libdiscord counter bot\n"
        "%s [-t bot_token]\n\n"
        "Options: \n\t"
        "-t, --bot-token [bot_token]\n\t\t"
@@ -121,17 +138,21 @@ int main(int argc, char *argv[]) {
 
     struct ld_context_info info;
 
-    info.init_presence = NULL;
+//    info.init_presence = NULL;
     info.bot_token = bot_token;
     info.user_callback = callback;
     info.gateway_ringbuffer_size = 8;
 
-    void *ret;
+
     struct ld_context context;
-    ret = ld_init_context(&context, &info);
-    if(ret == NULL) {
-        ld_error("example-minimal: couldn't initalize context");
+    {
+        void *ret;
+        ret = ld_init_context(&context, &info);
+        if (ret == NULL) {
+            ld_error("example-minimal: couldn't initalize context");
+        }
     }
+    int ret;
     int bot_state = 0; //not connected initially
     while(!bot_exit) {
         if(bot_state == 0) {
@@ -150,7 +171,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ld_send_basic_message(&context, "345264084679131146", "received SIGINT, terminating");
+    ld_send_basic_message(&context, "345264084679131146", "example-bot-counter: received SIGINT or HCF, cleaning up");
 
     ld_destroy_context(&context);
     free(bot_token);

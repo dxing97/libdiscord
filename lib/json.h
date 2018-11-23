@@ -302,11 +302,11 @@ struct ld_json_guild_member {
 /*
  * Depreciated: DO NOT USE
  */
-struct _ld_json_presence {
-    char *game;
-    enum ld_presence_game_type game_type;
-    enum ld_json_status_type status_type;
-};
+//struct _ld_json_presence {
+//    char *game;
+//    enum ld_presence_game_type game_type;
+//    enum ld_json_status_type status_type;
+//};
 
 
 

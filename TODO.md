@@ -29,21 +29,25 @@ Ordered roughly in terms of priority.
 
 ### JSON
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
-* Consider changing the snowflake type to uint64_t
 * string to snowflake function
 * Timestamp manipulation functions
     * Make/find functions that will encode/decode ISO8601-formatted strings. Will GNU save us?
     
 ### Example Bots
 #### minimal - Minimal example websocket bot
-* get it working
+* remake it again
+
+#### counter - responds to i with i+1
+* add halt message channel option
 
 #### ayylmao - A Basic Call and Response Bot
+* rewrite using new message commands used in counter
+    * Ignore calls from other bots
 * Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
   * wew-lad?
   * rename bot to call-response when this is implemented
-* Ignore calls from other bots
+
 
 #### Stalkerbot - Track user presence
 * a bot to tell you when your bot crashes (wait...)
