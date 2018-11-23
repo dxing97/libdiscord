@@ -30,6 +30,13 @@ typedef uint64_t LD_SNOWFLAKE;
  */
 typedef char * TIMESTAMP;
 
+struct ld_json_snowflake { //snowflake member valies
+    unsigned long long timestamp; //milliseconds since the first second of 2015
+    unsigned long long worker_id;
+    unsigned long long process_id;
+    unsigned long long increment;
+};
+
 enum ld_json_status_type {
     LD_PRESENCE_IDLE = 0,
     LD_PRESENCE_DND = 1,
@@ -398,5 +405,7 @@ const char *ld_json_status2str(enum ld_json_status_type type);
 int ld_json_message_init(struct ld_json_message *message);
 int ld_json_message_cleanup(struct ld_json_message *message);
 int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) ;
+
+int ld_json_load_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake);
 
 #endif //LIBDISCORD_JSON_H

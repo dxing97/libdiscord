@@ -380,4 +380,27 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
 
 }
 
+//snowflake conversion function
+int ld_json_load_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake) {
+    if(new_flake == NULL) {
+        return 0;
+    }
 
+    unsigned long long tmp;
+
+    tmp = (snowflake >> 22)
+            + 1420070400000 //convert to unix time in ms
+            ;
+    new_flake->timestamp = tmp;
+
+    tmp = (snowflake & 0x3E0000) >> 17;
+    new_flake->worker_id = tmp;
+
+    tmp = (snowflake & 0x1F000) >> 12;
+    new_flake->process_id = tmp;
+
+    tmp = snowflake & 0xFFF;
+    new_flake->increment = tmp;
+
+    return 0;
+}
