@@ -105,7 +105,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 //        request = ld_rest_init_request();
 //        resp = ld_rest_init_response();
 //
-//        ld_create_basic_message(request, context, channelid, response);
+//        ld_create_message(request, context, channelid, response);
 //        ld_rest_send_request(request, resp);
 //    } else {
         //curl POST to that channel
@@ -260,7 +260,19 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
+    struct _ld_json_presence *presence;
+    presence = malloc(sizeof(struct _ld_json_presence));
+    presence->status_type = LD_PRESENCE_DND;
+    presence->game_type = LD_PRESENCE_STREAMING;
+    if(game != NULL) {
+        presence->game = strdup(game);
+    } else {
+        presence->game = strdup("AlienSimulator");
+    }
+
+    info->init_presence = presence;
     info->bot_token = strdup(bot_token);
+//    info->log_level = log_level;
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
 
@@ -269,12 +281,18 @@ int main(int argc, char *argv[]) {
     //initialize context with context info
     struct ld_context context;
     void *retp;
-    retp = ld_init_context(info); //garbage in, garbage out
+    retp = ld_init_context(&context, info); //garbage in, garbage out
     if(retp == NULL) {
         ld_error("error creating libdiscord context");
         return 1;
     }
+
+    free(presence->game);
+    presence->game = NULL;
+    free(game);
+    game = NULL;
     free(info);
+    free(presence);
 
     handle = curl_easy_init();
 
@@ -294,16 +312,15 @@ int main(int argc, char *argv[]) {
         ret = ld_service(&context, 20); //service the connection
         if(ret != 0) {
             ld_error("ld_service returned non-0 (%d)", ret);
-            if(fail_mode == 1)
-                bot_exit = 0;
-            else
-                bot_exit = 1;
+            if(fail_mode)
+                break;
+            bot_exit = 0;
         }
     }
     //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
-    ld_cleanup_context(&context);
+    ld_destroy_context(&context);
     curl_easy_cleanup(handle);
     return 0;
 }
