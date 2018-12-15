@@ -86,23 +86,36 @@ int ld_headers2curl(struct ld_headers *headers, struct curl_slist **slist) {
     return 0;
 }
 
-struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request) {
+struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request, struct ld_context *context) {
 //    struct ld_rest_request *request;
 //    request = (struct ld_rest_request *)malloc(sizeof(struct ld_rest_request));
     if(request == NULL) {
         ld_warning("ld_rest_request: unexpected null request");
         return NULL;
     }
-    request->base_url = NULL;
+
+    char tmp[1000];
+    sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
+    request->base_url = strdup(tmp);
+
+//    request->base_url = NULL;
     request->endpoint = NULL;
     request->verb = LD_REST_VERB_GET;
     request->body_size = 0;
     request->body = NULL;
     request->headers = malloc(sizeof(struct ld_headers));
     request->headers = ld_headers_init(request->headers);
+    if(context != NULL) {
+        sprintf(tmp, "Bot %s", context->bot_token);
+        ld_headers_put(request->headers, "Authorization", tmp);
+    }
+
 //    u_map_init(request->headers);
     request->timeout = 0;
-    request->user_agent = NULL;
+
+    sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
+    request->user_agent = strdup(tmp);
+//    request->user_agent = NULL;
 
     return request;
 }
@@ -160,9 +173,15 @@ int ld_rest_free_response(struct ld_rest_response *response){
 size_t ld_rest_writefunction(void *ptr, size_t size, size_t nmemb, struct ld_rest_response *response) {
     void *tmp;
     size_t new_len = response->body_length + size * nmemb;
-    tmp = realloc(response->body, new_len+1);
+
+    if(response->body == NULL) {
+        tmp = malloc(sizeof(char) * (new_len));
+    } else {
+        tmp = realloc(response->body, new_len+1);
+    }
+
     if(tmp == NULL) {
-        ld_warning("ld_rest_writefunction: couldn't realloc body");
+        ld_warning("ld_rest_writefunction: couldn't alloc body");
         return 0;
     }
     response->body = tmp;
@@ -200,9 +219,18 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
     url = strcpy(url, request->base_url);
     url = strcat(url, request->endpoint);
 
-    struct ld_rest_response resp;
-    ld_rest_init_response(&resp);
-    struct curl_slist *slist;
+//    struct ld_rest_response *resp;
+//    resp = malloc(sizeof(struct ld_rest_response));
+//    if(resp == NULL) {
+//        ld_warning("ld_rest_send_request: error when malloc response");
+//        return 1;
+//    }
+    if(ld_rest_init_response(response) == NULL) {
+        ld_error("ld_send_rest_request: error initiating response");
+        return 1;
+    }
+
+    struct curl_slist *slist = NULL;
 
 
     ld_headers2curl(request->headers, &slist);
@@ -213,7 +241,7 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
 
     curl_easy_setopt(context->curl_handle, CURLOPT_URL, url);
     curl_easy_setopt(context->curl_handle, CURLOPT_HTTPHEADER, slist);
-    curl_easy_setopt(context->curl_handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
+    curl_easy_setopt(context->curl_handle, CURLOPT_USERAGENT, request->user_agent);
     if(request->verb == LD_REST_VERB_POST){
         curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDS, request->body);
         curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDSIZE, (long) request->body_size);
@@ -225,6 +253,7 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
     if(ret != CURLE_OK) {
         ld_warning("ld_rest_send_request: curl_easy_perform returned error");
     }
+    curl_easy_getinfo(context->curl_handle, CURLINFO_RESPONSE_CODE, &(response->http_status));
     return LDE_OK;
 }
 
@@ -280,16 +309,14 @@ struct ld_rest_request *ld_get_gateway_bot(struct ld_context *context, struct ld
 /*
  * message_content is the actual content of the message, not the HTTP body
  */
-int ld_create_message(struct ld_rest_request *req,
-                      struct ld_context *context,
-                      const char *channel_id,
-                      const char *message_content){
+int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, LD_SNOWFLAKE channel_id,
+                            const char *message_content) {
     char tmp[1000];
 
     sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
     req->base_url = strdup(tmp);
 
-    sprintf(tmp, "/channels/%s/messages", channel_id);
+    sprintf(tmp, "/channels/%llu/messages", channel_id);
     req->endpoint = strdup(tmp);
 
     sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
@@ -324,4 +351,46 @@ int ld_create_message(struct ld_rest_request *req,
     req->body_size = strlen(req->body);
 
     return LDE_OK;
+}
+
+int ld_send_basic_message(struct ld_context *context, LD_SNOWFLAKE channelid, const char *message) {
+    struct ld_rest_request req;
+    struct ld_rest_response resp;
+
+    ld_rest_init_request(&req, NULL);
+    ld_create_basic_message(context, &req, channelid, message);
+    ld_rest_send_request(context, &resp, &req);
+    if(resp.http_status >= 400) {
+        ld_notice("ld_send_basic_message: request returned %d", resp.http_status);
+        return 1;
+    }
+    return 0;
+}
+
+int ld_get_current_user(struct ld_context *context, struct ld_json_user *user) {
+    struct ld_rest_request req;
+    struct ld_rest_response resp;
+
+    ld_rest_init_request(&req, context);
+    ld_rest_init_response(&resp);
+
+    req.verb = LD_REST_VERB_GET;
+    req.endpoint = strdup("/users/@me");
+
+    ld_rest_send_request(context, &resp, &req);
+
+    if(resp.http_status != 200) {
+        ld_warning("ld_get_current_user: request returned HTTP code %d", resp.http_status);
+        return 1;
+    }
+
+    json_t *json_user;
+    json_user = json_loads(resp.body, 0, NULL);
+    if(json_user == NULL) {
+        ld_warning("ld_get_current_user: could not read JSON body");
+        return 1;
+    }
+    ld_json_load_user(user, json_user);
+
+    return 0;
 }

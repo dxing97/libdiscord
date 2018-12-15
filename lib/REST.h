@@ -7,10 +7,16 @@
 #define LIBDISCORD_REST_H
 
 #include <curl/curl.h>
-//#include <ulfius.h>
-#include <libdiscord.h>
+
+//#include <libdiscord.h>
+#include "json.h"
+
+//forward declaration
+typedef uint64_t LD_SNOWFLAKE;
 
 struct ld_context; //anonymous declaration
+
+struct ld_json_user;
 
 /*
  * functions related to the REST API
@@ -43,13 +49,13 @@ struct ld_headers {
  */
 struct ld_rest_request {
     enum ld_rest_http_verb verb;
-    char *base_url;
+    char *base_url; //automatically allocated for you in init
     char *endpoint;
     char *body;
     size_t body_size;
-    struct ld_headers *headers;
+    struct ld_headers *headers; //authorization is automatically included if context is passed to init function
     int timeout; //ulfius default is 0
-    char *user_agent;
+    char *user_agent; //automatically allocated in init
 };
 
 
@@ -78,7 +84,7 @@ int ld_headers2curl(struct ld_headers *headers, struct curl_slist **slist);
  * allocates memory
  * initializes a request with defaults
  */
-struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request);
+struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request, struct ld_context *context);
 
 /*
  * allocates memory
@@ -137,6 +143,11 @@ struct ld_rest_request *ld_get_gateway_bot(struct ld_context *context, struct ld
  * generates a POST request to create a message
  * only supports basic messages (no embeds)
  */
-int ld_create_message(struct ld_rest_request *req, struct ld_context *context, const char *channel_id, const char *message_content);
+int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, LD_SNOWFLAKE channel_id,
+                            const char *message_content);
+
+int ld_send_basic_message(struct ld_context *context, LD_SNOWFLAKE channelid, const char *message);
+
+int ld_get_current_user(struct ld_context *context, struct ld_json_user *user);
 
 #endif //LIBDISCORD_REST_H
