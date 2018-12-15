@@ -5,8 +5,9 @@
 #ifndef LIBDISCORD_JSON_H
 #define LIBDISCORD_JSON_H
 
-#include "libdiscord.h"
+#include <libdiscord.h>
 #include <jansson.h>
+#include "REST.h"
 
 /*
  * dump:    json_t to char *
@@ -23,18 +24,63 @@
  * i.e. 32 bit only
  * how we handle that will be interesting
  */
-typedef uint64_t LD_SNOWFLAKE;
+//typedef uint64_t LD_SNOWFLAKE;
 
 /*
  * timestamp types are strings formatted in the ISO8601 format
  */
-typedef char * TIMESTAMP;
+typedef char *TIMESTAMP;
+
+enum ld_presence_game_type;
+enum ld_json_status_type;
+
+struct ld_json_snowflake;
+struct ld_json_status_update;
+struct ld_json_identify_connection_properties;
+struct ld_json_identify;
+struct ld_json_party;
+struct ld_json_assets;
+struct ld_json_activity;
+struct ld_json_gateway_update_status;
+struct ld_json_user;
+struct ld_json_role;
+struct ld_json_attachemnt;
+struct ld_json_embed_footer;
+struct ld_json_embed_image;
+struct ld_json_embed_thumbnail;
+struct ld_json_embed_video;
+struct ld_json_embed_provider;
+struct ld_json_embed_author;
+struct ld_json_embed_field;
+struct ld_json_embed;
+struct ld_json_emoji;
+struct ld_json_reaction;
+struct ld_json_message_activity;
+struct ld_json_message_application;
+struct ld_json_message;
+struct ld_json_overwrite;
+struct ld_json_attachment;
+struct ld_json_channel;
+struct ld_json_voice_state;
+struct ld_json_guild_member;
+struct ld_json_guild;
+struct ld_json_account;
+struct ld_json_ban;
+struct ld_json_integration;
+
 
 struct ld_json_snowflake { //snowflake member valies
     unsigned long long timestamp; //milliseconds since the first second of 2015
     unsigned long long worker_id;
     unsigned long long process_id;
     unsigned long long increment;
+};
+
+enum ld_presence_game_type {
+    LD_PRESENCE_PLAYING = 0,
+    LD_PRESENCE_STREAMING = 1,
+    LD_PRESENCE_LISTENING = 2,
+    LD_PRESENCE_WATCHING = 3
 };
 
 enum ld_json_status_type {
@@ -49,7 +95,7 @@ struct ld_json_status_update {
     LD_SNOWFLAKE *roles; //array of snowflakes
     struct ld_json_activity *game;
     LD_SNOWFLAKE guild_id;
-    char *status;
+    enum ld_json_status_type status;
 };
 
 /*
@@ -71,7 +117,7 @@ struct ld_json_identify {
     struct ld_json_identify_connection_properties *properties;
     int compress;
     int large_threshold;
-    int shard[2];
+    int shard[2]; //[shard id, number of shards]
     struct ld_json_status_update *status_update;
 };
 
@@ -89,7 +135,7 @@ struct ld_json_assets {
 
 struct ld_json_activity {
     char *name;
-    int type;
+    enum ld_presence_game_type type;
     char *url; //optional and nullable (double check this)
     struct ld_json_timestamps *timestamps;
     LD_SNOWFLAKE application_id;
@@ -306,17 +352,6 @@ struct ld_json_guild_member {
     int mute; //boolean
 };
 
-/*
- * Depreciated: DO NOT USE
- */
-//struct _ld_json_presence {
-//    char *game;
-//    enum ld_presence_game_type game_type;
-//    enum ld_json_status_type status_type;
-//};
-
-
-
 struct ld_json_guild {
     LD_SNOWFLAKE id;
     char *name;
@@ -348,7 +383,7 @@ struct ld_json_guild {
     struct ld_json_voice_state **voice_states;
     struct ld_json_guild_member **members;
     struct ld_json_channel **channels;
-    struct ld_json_presence_update **presences;
+    struct ld_json_status_update **presences;
 };
 
 struct ld_json_account {
@@ -388,24 +423,16 @@ json_t *ld_json_create_message();
 //todo: snowflake conversion functions
 uint64_t ld_snowflake_str2num();
 char *ld_snowflake_num2str(LD_SNOWFLAKE flake);
-
 json_t *ld_json_dump_activity(struct ld_json_activity *activity);
-
 int ld_json_load_user(struct ld_json_user *new_user, json_t *user);
 json_t *ld_json_dump_user(struct ld_json_user *user);
-
 json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update);
-
 json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_connection_properties *properties);
-
 json_t *ld_json_dump_identify(struct ld_json_identify *identify);
-
 const char *ld_json_status2str(enum ld_json_status_type type);
-
 int ld_json_message_init(struct ld_json_message *message);
 int ld_json_message_cleanup(struct ld_json_message *message);
-int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) ;
-
+int *ld_json_load_message(struct ld_json_message *new_message, json_t *message);
 int ld_json_load_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake);
 
 #endif //LIBDISCORD_JSON_H

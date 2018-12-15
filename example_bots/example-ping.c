@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     info->gateway_ringbuffer_size = 8;
 
     struct ld_context *context;
-    context = ld_init_context(NULL, info);
+    context = ld_init_context(info);
     if(context == NULL) {
         ld_error("error creating libdiscord context");
         return 1;
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     }
 
     ld_info("closing connections and exiting");
-    ld_destroy_context(context);
+    ld_cleanup_context(context);
     
     return 0;
 }

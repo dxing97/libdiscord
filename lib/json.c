@@ -6,6 +6,9 @@
 #include "log.h"
 #include <stdio.h>
 
+
+
+
 char *ld_snowflake_num2str(LD_SNOWFLAKE flake) {
     char *tmp;
     tmp = malloc(sizeof(char)*128);
@@ -187,9 +190,7 @@ json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) 
         json_object_set(su, "game", ld_json_dump_activity(status_update->game));
     }
 
-    if(status_update->status != NULL) {
-        json_object_set(su, "status", json_string(status_update->status));
-    }
+    json_object_set(su, "status", json_string(ld_json_status2str(status_update->status)));
 
     return su;
 }

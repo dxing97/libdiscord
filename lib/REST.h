@@ -7,11 +7,16 @@
 #define LIBDISCORD_REST_H
 
 #include <curl/curl.h>
-//#include <ulfius.h>
-#include <libdiscord.h>
+
+//#include <libdiscord.h>
 #include "json.h"
 
+//forward declaration
+typedef uint64_t LD_SNOWFLAKE;
+
 struct ld_context; //anonymous declaration
+
+struct ld_json_user;
 
 /*
  * functions related to the REST API
@@ -138,10 +143,10 @@ struct ld_rest_request *ld_get_gateway_bot(struct ld_context *context, struct ld
  * generates a POST request to create a message
  * only supports basic messages (no embeds)
  */
-int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, const char *channel_id,
+int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, LD_SNOWFLAKE channel_id,
                             const char *message_content);
 
-int ld_send_basic_message(struct ld_context *context, const char *channelid, const char *message);
+int ld_send_basic_message(struct ld_context *context, LD_SNOWFLAKE channelid, const char *message);
 
 int ld_get_current_user(struct ld_context *context, struct ld_json_user *user);
 
