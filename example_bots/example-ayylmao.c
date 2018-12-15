@@ -260,17 +260,6 @@ int main(int argc, char *argv[]) {
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
 
-    struct _ld_json_presence *presence;
-    presence = malloc(sizeof(struct _ld_json_presence));
-    presence->status_type = LD_PRESENCE_DND;
-    presence->game_type = LD_PRESENCE_STREAMING;
-    if(game != NULL) {
-        presence->game = strdup(game);
-    } else {
-        presence->game = strdup("AlienSimulator");
-    }
-
-    info->init_presence = presence;
     info->bot_token = strdup(bot_token);
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
@@ -280,18 +269,12 @@ int main(int argc, char *argv[]) {
     //initialize context with context info
     struct ld_context context;
     void *retp;
-    retp = ld_init_context(&context, info); //garbage in, garbage out
+    retp = ld_init_context(info); //garbage in, garbage out
     if(retp == NULL) {
         ld_error("error creating libdiscord context");
         return 1;
     }
-
-    free(presence->game);
-    presence->game = NULL;
-    free(game);
-    game = NULL;
     free(info);
-    free(presence);
 
     handle = curl_easy_init();
 
@@ -320,7 +303,7 @@ int main(int argc, char *argv[]) {
     //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
-    ld_destroy_context(&context);
+    ld_cleanup_context(&context);
     curl_easy_cleanup(handle);
     return 0;
 }

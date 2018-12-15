@@ -6,7 +6,7 @@
 #include <getopt.h>
 
 /*
- * minimal bot
+ * counting bot
  */
 
 int bot_exit = 0;
@@ -138,20 +138,19 @@ int main(int argc, char *argv[]) {
     printf("Initializing libdiscord at log level %lu\n", log_level);
 
     ld_set_logging_level(log_level);
-    //switch over to libdiscord logging functions
 
     struct ld_context_info info;
-
-//    info.init_presence = NULL;
+    if(ld_init_context_info(&info) != 0) {
+        ld_error("%s: couldn't init context info", __FUNCTION__);
+    }
     info.bot_token = bot_token;
     info.user_callback = callback;
-    info.gateway_ringbuffer_size = 8;
 
     srand((unsigned int)time(NULL));
     struct ld_context context;
     {
         void *ret;
-        ret = ld_init_context(&context, &info);
+        ret = ld_init_context(&info);
         if (ret == NULL) {
             ld_error("example-minimal: couldn't initalize context");
         }
@@ -177,7 +176,7 @@ int main(int argc, char *argv[]) {
 
     ld_send_basic_message(&context, "345264084679131146", "example-bot-counter: received SIGINT or HCF, cleaning up");
 
-    ld_destroy_context(&context);
+    ld_cleanup_context(&context);
     free(bot_token);
     return 0;
 }

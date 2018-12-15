@@ -309,14 +309,14 @@ struct ld_rest_request *ld_get_gateway_bot(struct ld_context *context, struct ld
 /*
  * message_content is the actual content of the message, not the HTTP body
  */
-int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, const char *channel_id,
+int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *req, LD_SNOWFLAKE channel_id,
                             const char *message_content) {
     char tmp[1000];
 
     sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
     req->base_url = strdup(tmp);
 
-    sprintf(tmp, "/channels/%s/messages", channel_id);
+    sprintf(tmp, "/channels/%llu/messages", channel_id);
     req->endpoint = strdup(tmp);
 
     sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);
@@ -353,7 +353,7 @@ int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *
     return LDE_OK;
 }
 
-int ld_send_basic_message(struct ld_context *context, const char *channelid, const char *message) {
+int ld_send_basic_message(struct ld_context *context, LD_SNOWFLAKE channelid, const char *message) {
     struct ld_rest_request req;
     struct ld_rest_response resp;
 
