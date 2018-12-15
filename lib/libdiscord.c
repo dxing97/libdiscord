@@ -107,8 +107,10 @@ struct ld_context *ld_init_context(struct ld_context_info *info) {
         ld_error("%s: error mallocing initial presence");
         return NULL;
     }
-    context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
-
+    if(info->init_presence != NULL)
+        context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
+    else
+        context->init_presence = NULL;
     context->gateway_bot_limit = 1;
     context->gateway_bot_remaining = 1;
     context->gateway_bot_reset = lws_now_secs();
