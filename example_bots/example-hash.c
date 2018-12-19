@@ -258,7 +258,7 @@ int main(int argc, char *argv[]) {
 
     info.init_presence = &presence;
 
-    struct ld_context *context = ld_init_context(&info);
+    struct ld_context *context = ld_init_context(&info, NULL);
     if(context == NULL) {
         ld_error("example-bot-hash: couldn't initalize context");
         goto ABORT;

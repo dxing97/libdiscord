@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
     //initialize context with context info
     struct ld_context context;
     void *retp;
-    retp = ld_init_context(info); //garbage in, garbage out
+    retp = ld_init_context(info, NULL); //garbage in, garbage out
     if(retp == NULL) {
         ld_error("error creating libdiscord context");
         return 1;

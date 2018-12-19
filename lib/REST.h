@@ -11,8 +11,12 @@
 //#include <libdiscord.h>
 #include "json.h"
 
+#ifndef LD_SNOWFLAKE
+#define LD_SNOWFLAKE unsigned long long
+#endif
+
 //forward declaration
-typedef uint64_t LD_SNOWFLAKE;
+//typedef uint64_t LD_SNOWFLAKE;
 
 struct ld_context; //anonymous declaration
 

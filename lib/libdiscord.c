@@ -57,11 +57,12 @@ int ld_init_context_info(struct ld_context_info *info) {
  * returns NULL if the info struct was malformed or missing things
  * allocates memory for the struct and internal components
  */
-struct ld_context *ld_init_context(struct ld_context_info *info) {
-    struct ld_context *context = malloc(sizeof(struct ld_context));
+int ld_init_context(struct ld_context_info *info, struct ld_context *context) {
+
     if(context == NULL) {
-        ld_error("couldn't allocate memory for context");
-        return context;
+//        struct ld_context *context = malloc(sizeof(struct ld_context));
+        ld_error("%s: was passed null pointer for context", __FUNCTION__);
+        return LDE_MEM;
     }
 
     context->gateway_state = LD_GATEWAY_UNCONNECTED;
@@ -72,10 +73,14 @@ struct ld_context *ld_init_context(struct ld_context_info *info) {
     curl_global_init(CURL_GLOBAL_DEFAULT);
     context->curl_multi_handle = curl_multi_init();
     context->curl_handle = curl_easy_init();
+    if(context->curl_handle == NULL) {
+        ld_error("%s: curl_easy_init() returned NULL", __FUNCTION__);
+        return LDE_CURL;
+    }
 
     if(info->bot_token == NULL) {
-        ld_error("bot token is null, can't continue");
-        return NULL;
+        ld_error("%s: bot token is null, can't continue", __FUNCTION__);
+        return LDE_MISSING_PARAM;
     }
     context->bot_token = strdup(info->bot_token);
 
@@ -87,25 +92,13 @@ struct ld_context *ld_init_context(struct ld_context_info *info) {
             NULL);
     if(context->gateway_ring == NULL) {
         ld_error("couldn't init gateway ringbuffer");
-        return NULL;
+        return LDE_LWS;
     }
 
-//    if(info->init_presence != NULL) {
-//        context->presence = malloc(sizeof(struct _ld_json_presence));
-//        if(context->presence == NULL) {
-//            ld_error("couldn't allocate presence");
-//            return NULL;
-//        }
-//        context->presence->game = strdup(info->init_presence->game);
-//        context->presence->game_type = info->init_presence->game_type;
-//        context->presence->status_type = LD_PRESENCE_ONLINE;
-//    } else {
-//        context->presence = NULL;
-//    }
     context->init_presence = malloc(sizeof(struct ld_json_status_update));
     if(context->init_presence == NULL) {
         ld_error("%s: error mallocing initial presence");
-        return NULL;
+        return LDE_MEM;
     }
     if(info->init_presence != NULL)
         context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
@@ -118,18 +111,16 @@ struct ld_context *ld_init_context(struct ld_context_info *info) {
     context->gi_count = 0;
 
     context->heartbeat_interval = 0;
+    context->hb_count = 0;
+    context->last_hb = lws_now_secs();
 
     context->gateway_rx_buffer_len = 0;
     context->gateway_rx_buffer = NULL;
 
-    context->hb_count = 0;
 
     context->gateway_session_id = NULL;
 
     context->current_user = NULL;
-
-
-
 
     //hello payload properties
     if(info->device != NULL) { //override default
@@ -150,7 +141,7 @@ struct ld_context *ld_init_context(struct ld_context_info *info) {
         context->os = ld_get_os_name();
     }
 
-    return context;
+    return LDE_OK;
 }
 
 /*
@@ -499,7 +490,7 @@ int ld_service(struct ld_context *context, int timeout) {
         context->hb_count++;
         if(context->hb_count > 1) { //todo: settable limit for hb_ack misses
             //didn't receive HB_ACK
-            ld_warning("ld_service: didn't recieve a HB_ACK");
+            ld_warning("%s: didn't recieve a HB_ACK", __FUNCTION__);
             // todo: make sure we're actually disconnected from gateway
             context->gateway_state = LD_GATEWAY_UNCONNECTED;
             return LDE_HB_ACKMISS;
@@ -1114,7 +1105,7 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
                                 json_integer(context->last_seq), NULL, NULL); //create heartbeat payload
 
     if(lws_ring_get_count_free_elements(context->gateway_ring) == 0) {
-        ld_warning("can't fit any new payloads into gateway ringbuffer");
+        ld_warning("%s: can't fit any new payloads into gateway ringbuffer", __FUNCTION__);
         return 1;
     }
 

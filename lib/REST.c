@@ -316,7 +316,7 @@ int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *
     sprintf(tmp, "%s%s", LD_API_URL, LD_REST_API_VERSION);
     req->base_url = strdup(tmp);
 
-    sprintf(tmp, "/channels/%" PRIu64"/messages", channel_id);
+    sprintf(tmp, "/channels/%llu/messages", channel_id);
     req->endpoint = strdup(tmp);
 
     sprintf(tmp, "DiscordBot (%s %s)", LD_GITHUB_URL, LD_VERSION);

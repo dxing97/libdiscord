@@ -15,21 +15,21 @@
  *
  *
  */
-
-#define LD_SNOWFLAKE uint64_t
-
+#ifndef LD_SNOWFLAKE
+#define LD_SNOWFLAKE unsigned long long
+#endif
 /*
  * return values
  */
 enum ldecode {
     LDE_OK = 0, //everything is OK
-    LDE_ULFIUS = 1, //problem doing something with ulfius
-    LDE_JSON = 2, //problem doing something with json manipulation/jansson
-    LDE_CURL = 3, //problem with something involving curl
-    LDE_MEM = 4, //problem with something involving memory allocation/deallocation
-    LDE_MISSING_PARAM = 5, //missing parameters
-    LDE_HB_ACKMISS = 6, //didn't recieve an ACK from gateway
-    LDE_HB_RINGBUF_FULL = 7
+    LDE_LWS, //problem doing something with ulfius
+    LDE_JSON, //problem doing something with json manipulation/jansson
+    LDE_CURL, //problem with something involving curl
+    LDE_MEM, //problem with something involving memory allocation/deallocation
+    LDE_MISSING_PARAM, //missing parameters
+    LDE_HB_ACKMISS, //didn't recieve an ACK from gateway
+    LDE_HB_RINGBUF_FULL
 };
 
 /*
@@ -184,6 +184,7 @@ struct ld_context {
     int gi_count;
     struct ld_json_user *current_user;
 
+    //init presence
     char *device;
     char *browser;
     char *os;
@@ -243,7 +244,7 @@ struct ld_json_identify;
 struct ld_json_identify;
 
 int ld_init_context_info(struct ld_context_info *info);
-struct ld_context *ld_init_context(struct ld_context_info *info);
+int ld_init_context(struct ld_context_info *info, struct ld_context *context);
 void ld_cleanup_context(struct ld_context *context);
 int _ld_get_gateway_bot(struct ld_context *context);
 size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void *userptr);
