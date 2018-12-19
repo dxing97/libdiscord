@@ -315,7 +315,7 @@ int _ld_get_gateway_bot(struct ld_context *context) {
 
     ret = ld_rest_send_request(context, &response, &request);
     if(ret != 0) {
-        ld_error("couldn't send request to /gateway/bot");
+        ld_error("%s, couldn't send request to /gateway/bot", __FUNCTION__);
     }
 
     ld_debug("_ld_get_gateway_bot: get gateway bot response: %s", response.body);
@@ -1126,6 +1126,25 @@ int ld_gateway_queue_heartbeat(struct ld_context *context) {
  * future: check #ifdef _WIN32 or something
  */
 char *ld_get_os_name() {
+#ifdef __APPLE__
+    FILE *fd = popen("uname -s", "r");
+    char *os_name, rxbuf[100], *ret;
+    if(fd == NULL) {
+        // if we're not on a POSIX system, this aint gonna work
+        return strdup("unknown");
+    }
+    ret = fgets(rxbuf, 99, fd);
+    if(ret != rxbuf) {
+        // uname -o didn't return anything?
+        return strdup("unknown");
+    }
+
+    pclose(fd);
+
+    ld_debug("%s: os name: %s", __FUNCTION__, rxbuf);
+    os_name = strdup(rxbuf);
+    return os_name;
+#else
     FILE *fd = popen("uname -o", "r");
     char *os_name, rxbuf[100], *ret;
     if(fd == NULL) {
@@ -1143,5 +1162,5 @@ char *ld_get_os_name() {
     ld_debug("%s: os name: %s", __FUNCTION__, rxbuf);
     os_name = strdup(rxbuf);
     return os_name;
-
+#endif
 }

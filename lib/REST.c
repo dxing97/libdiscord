@@ -211,7 +211,7 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
 //        return 1;
 //    }
     if(request->base_url == NULL) {
-        ld_error("send blocking request: base url is NULL!");
+        ld_error("%s: send blocking request: base url is NULL!", __FUNCTION__);
         return LDE_MISSING_PARAM;
     }
     char *url;
@@ -239,19 +239,46 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
 //    char url[1000];
 //    sprintf(url, "%s%s", request->base_url, request->endpoint);
 
-    curl_easy_setopt(context->curl_handle, CURLOPT_URL, url);
-    curl_easy_setopt(context->curl_handle, CURLOPT_HTTPHEADER, slist);
+    ret = curl_easy_setopt(context->curl_handle, CURLOPT_URL, url);
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+    }
+    ret = curl_easy_setopt(context->curl_handle, CURLOPT_HTTPHEADER, slist);
+
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+    }
     curl_easy_setopt(context->curl_handle, CURLOPT_USERAGENT, request->user_agent);
     if(request->verb == LD_REST_VERB_POST){
-        curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDS, request->body);
-        curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDSIZE, (long) request->body_size);
+        ret = curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDS, request->body);
+
+        if(ret != CURLE_OK){
+            ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+        }
+        ret = curl_easy_setopt(context->curl_handle, CURLOPT_POSTFIELDSIZE, (long) request->body_size);
+
+        if(ret != CURLE_OK){
+            ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+        }
     }
-    curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 1);
-    curl_easy_setopt(context->curl_handle, CURLOPT_WRITEFUNCTION, ld_rest_writefunction);
-    curl_easy_setopt(context->curl_handle, CURLOPT_WRITEDATA, response);
+    ret = curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 1);
+
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+    }
+    ret = curl_easy_setopt(context->curl_handle, CURLOPT_WRITEFUNCTION, ld_rest_writefunction);
+
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+    }
+    ret = curl_easy_setopt(context->curl_handle, CURLOPT_WRITEDATA, response);
+
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+    }
     ret = curl_easy_perform(context->curl_handle);
-    if(ret != CURLE_OK) {
-        ld_warning("ld_rest_send_request: curl_easy_perform returned error");
+    if(ret != CURLE_OK){
+        ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
     }
     curl_easy_getinfo(context->curl_handle, CURLINFO_RESPONSE_CODE, &(response->http_status));
     return LDE_OK;

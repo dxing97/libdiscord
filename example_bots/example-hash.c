@@ -258,9 +258,15 @@ int main(int argc, char *argv[]) {
 
     info.init_presence = &presence;
 
-    struct ld_context *context = ld_init_context(&info, NULL);
+    struct ld_context *context = malloc(sizeof(struct ld_context));
+
+
     if(context == NULL) {
         ld_error("example-bot-hash: couldn't initalize context");
+        goto ABORT;
+    }
+    if(ld_init_context(&info, context) != 0) {
+        ld_error("example-bot-hash: error initalizing context");
         goto ABORT;
     }
 

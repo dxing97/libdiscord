@@ -152,18 +152,21 @@ int main(int argc, char *argv[]) {
         ld_error("example-minimal: couldn't initalize context");
         goto HALT;
     }
-
+    if(context->curl_handle == NULL) {
+        ld_error("curl handle is null");
+        return 1;
+    }
     int bot_state = 0; //not connected initially
     while (!bot_exit) {
         if (bot_state == 0) {
-            ret = ld_connect(&context);
+            ret = ld_connect(context);
             if (ret != 0) {
                 ld_error("example-minimal: error connecting to discord (error %d)", ret);
                 bot_exit = 1;
             }
             bot_state = 1;
         } else {
-            ret = ld_service(&context, 20);
+            ret = ld_service(context, 20);
             if (ret != 0) {
                 ld_error("example-minimal: ld_service returned error (error %d)", ret);
                 bot_exit = 1;
