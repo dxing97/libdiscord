@@ -1,7 +1,8 @@
+/** @file */ 
+
 //
 // Created by dxing97 on 1/15/18.
 //
-
 
 #ifndef LIBDISCORD_REST_H
 #define LIBDISCORD_REST_H
