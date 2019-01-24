@@ -167,6 +167,7 @@ json_t *ld_json_dump_user(struct ld_json_user *user) {
     return NULL;
 }
 
+
 json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) {
     json_t *su = NULL;
     su = json_object();
@@ -179,7 +180,9 @@ json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) 
 
     json_t *roles = json_array();
 
+
     if(status_update->roles != NULL) {
+        ld_debug("role: %d", *status_update->roles);
         for (i = 0; i < strlen((char *) status_update->roles); i++) {
             json_array_append_new(roles, json_string(ld_snowflake_num2str(status_update->roles[i])));
         }

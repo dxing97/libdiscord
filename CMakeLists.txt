@@ -51,6 +51,8 @@ target_link_libraries(discord ${LD_LIBS})
 set_target_properties(discord PROPERTIES VERSION ${PROJECT_VERSION})
 target_compile_options(discord PRIVATE "-Wall")
 target_compile_options(discord PRIVATE "-Werror")
+target_compile_options(discord PRIVATE "-Wno-unknown-pragmas")
+
 
 set(BOT_AYY_SOURCE example_bots/example-ayylmao.c cmake/libdiscord_config.h.in)
 add_executable(example-bot-ayylmao ${BOT_AYY_SOURCE})

@@ -12,7 +12,7 @@
  * bot arguments (in Discord):
  *  !hash <hash function> <stuff to hash>
  *  i.e.
- *  !hash SHA-1 MY MESSAGE HERE WOULD YOU PLEASE
+ *  !hash md5 MY MESSAGE HERE
  */
 
 int bot_exit = 0;
@@ -26,43 +26,82 @@ struct buffer {
     unsigned int len;
 };
 
-int hash(EVP_MD *md, char *content, struct buffer *buffer) {
-    EVP_MD_CTX *mdctx;
+char *binary2hex(unsigned char *buf,int  buflen) {
+    int i = 0;
+    char tmp[3];
+    char *hex = malloc(sizeof(char) * (buflen * 2 + 1));
+    for(; i < buflen; i++) {
+        sprintf(tmp, "%02x", buf[i]);
+        strcat(hex, tmp);
+    }
 
-    unsigned char md_value[EVP_MAX_MD_SIZE];
-    unsigned int md_len;
-
-    mdctx = EVP_MD_CTX_create();
-    EVP_DigestInit_ex(mdctx, md, NULL);
-    EVP_DigestUpdate(mdctx, content, strlen(content));
-//    EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
-    EVP_DigestFinal_ex(mdctx, md_value, (unsigned int *) &md_len);
-    EVP_MD_CTX_destroy(mdctx);
-
-    /*
-    debug_printfnln("token2key: hashed token is ");
-    for(i = 0; i < md_len; i++)
-        debug_printfnln("%02x", md_value[i]);
-    debug_printf("\n");*/
-
-    buffer->buf = malloc(sizeof(char) * md_len + 10);
-    buffer->len = md_len;
-
-    buffer->buf = memcpy(buffer->buf, md_value, md_len); //we only want first 128 bits
-
-    /* Call this once before exit. */
-    EVP_cleanup();
-
-    return 0;
+//    printf("hex: %s\n", hex);
+    return hex;
 }
+
+char *to_hash2(const char *input, const char *hashfun) {
+    EVP_MD_CTX *mdctx;
+    const EVP_MD *md;
+    const char *mess1 = input;
+    char mess2[] = "";
+    unsigned char md_value[EVP_MAX_MD_SIZE];
+    int md_len, i;
+
+
+    md = EVP_get_digestbyname(hashfun);
+
+    if(!md) {
+        //printf("Unknown message digest %s\n", hashfun);
+        return NULL;
+    }
+
+    mdctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(mdctx, md, NULL);
+    EVP_DigestUpdate(mdctx, mess1, strlen(mess1));
+    EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
+    EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+    EVP_MD_CTX_free(mdctx);
+
+    return binary2hex(md_value, md_len);
+}
+
+//int hashfun(EVP_MD *md, char *content, struct buffer *buffer) {
+//    EVP_MD_CTX *mdctx;
+//
+//    unsigned char md_value[EVP_MAX_MD_SIZE];
+//    unsigned int md_len;
+//
+//    mdctx = EVP_MD_CTX_create();
+//    EVP_DigestInit_ex(mdctx, md, NULL);
+//    EVP_DigestUpdate(mdctx, content, strlen(content));
+////    EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
+//    EVP_DigestFinal_ex(mdctx, md_value, (unsigned int *) &md_len);
+//    EVP_MD_CTX_destroy(mdctx);
+//
+//    /*
+//    debug_printfnln("token2key: hashed token is ");
+//    for(i = 0; i < md_len; i++)
+//        debug_printfnln("%02x", md_value[i]);
+//    debug_printf("\n");*/
+//
+//    buffer->buf = malloc(sizeof(char) * md_len + 10);
+//    buffer->len = md_len;
+//
+//    buffer->buf = memcpy(buffer->buf, md_value, md_len); //we only want first 128 bits
+//
+//    /* Call this once before exit. */
+//    EVP_cleanup();
+//
+//    return 0;
+//}
 
 //takes message and extracts the message we want to hash
 char *to_hash(struct ld_json_message *message, struct ld_context *context) {
     char *message_content = message->content;
-    if(strlen(message_content) < strlen(trigger) + 4) {
+    if(strlen(message_content) < strlen(trigger) + 4) { //message is too short, doesn't include trigger
         return NULL;
     }
-    if(strncmp(message_content, trigger, strlen(trigger)) != 0) {
+    if(strncmp(message_content, trigger, strlen(trigger)) != 0) { //message doesn't contain trigger
         return NULL;
     }
 
@@ -75,35 +114,22 @@ char *to_hash(struct ld_json_message *message, struct ld_context *context) {
     head++;
 
     char hash_function[strlen(message_content)];
-    if(sscanf(head, "%s", hash_function) != 1) {
+    if(sscanf(head, "%s", hash_function) != 1) { //couldn't get hash function
         return NULL;
     }
 
-    const EVP_MD *md;
-    OpenSSL_add_all_digests();
-    char tmp[100];
-    md = EVP_get_digestbyname(hash_function);
-    if(md == NULL) {
+    char *ret, tmp[100];
+
+//    sprintf(tmp, "hashing (%s)", head + strlen(hash_function) + 1);
+//    ld_send_basic_message(context, message->channel_id, tmp);
+
+    ret = to_hash2(head + strlen(hash_function) + 1, hash_function);
+    if(ret == NULL) {
         sprintf(tmp, "invalid hash function (%s)", hash_function);
         ld_send_basic_message(context, message->channel_id, tmp);
-        return NULL;
     }
-    struct buffer buf;
-    buf.buf = NULL;
-    hash(md, message_content, &buf);
 
-
-    char *hash = malloc(sizeof(char) * (2 * buf.len) + 1);
-    hash[0] = '\0';
-
-    int i;
-    for(i = 0; i < buf.len; i++) {
-        sprintf(tmp, "%02x", buf.buf[i]);
-        strcat(hash, tmp);
-    }
-//    free(buf.buf);
-
-    return hash;
+    return ret;
 
 }
 
@@ -255,6 +281,7 @@ int main(int argc, char *argv[]) {
     presence.game = &game;
     presence.game->name = "example-bot-hash";
     presence.game->type = LD_PRESENCE_LISTENING;
+    presence.roles = NULL; /// \todo: presences should be initialized by a function
 
     info.init_presence = &presence;
 
