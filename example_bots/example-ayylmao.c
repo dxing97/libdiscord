@@ -42,6 +42,14 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 
     ld_json_load_message(&message, (json_t *) data);
 
+    if(message.author->id == context->current_user->id) {
+        return 0;
+    }
+
+    if(message.author->bot == 1) {
+        return 0;
+    }
+
     if(message.channel_id == 0) {
         return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
     }
