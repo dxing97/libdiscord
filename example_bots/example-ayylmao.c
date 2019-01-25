@@ -16,7 +16,6 @@ static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
 static int fail_mode = 0; //0: default, try recovering, 1: exit on error
 CURL *handle;
-//int use_ulfius = 0;
 char *trigger = "ayy", *response = "lmao";
 
 void int_handler(int i){
@@ -32,124 +31,26 @@ void int_handler(int i){
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
-    /*
-     * depending on the reason, do stuff
-     */
-    //if the reason is a gateway event, and the payload is a dispatch, and the dispatch contains a message JSON, and the message has content "ayy" (case statement?)
-        //post a "lmao" to the channel
-        //create a new message info struct with content "lmao"
-        //add that context to the send queue
-    CURLcode res;
-    const char *key, *content, *channelid;
-    int ayystat = 0, ret = 0;
+    //if content == "ayy", POST "lmao" to that channel
 
-    switch(reason){
-        case LD_CALLBACK_MESSAGE_CREATE: {
-            json_t *jdata = data, *value;
-
-            //if content == "ayy", POST "lmao" to that channel
-            ld_debug("received MESSAGE_CREATE dispatch");
-
-            //we want the "content" and "channel id" fields
-            json_object_foreach(jdata, key, value) {
-                if (strcmp(key, "content") == 0) {
-                    content = json_string_value(value);
-                    if (content == NULL) {
-                        ld_warning("couldn't get message content");
-                        break;
-                    }
-                    if(strcasecmp(content, trigger) == 0 ) {
-                            ayystat++;
-                    }
-                }
-
-                if (strcmp(key, "channel_id") == 0) {
-                    channelid = json_string_value(value);
-                    if (channelid == NULL) {
-                        ld_warning("couldn't get channel_id");
-                        break;
-                    }
-                    ayystat++;
-                }
-            }
-        }
-            break;
-        default:
-            break;
-    }
-
-    ld_debug("ayystat = %d", ayystat);
-
-    if(ayystat != 2) { //did not get channel ID and ayy content
+    if(reason != LD_CALLBACK_MESSAGE_CREATE) {
         return 0;
     }
-    //generate POST message
-    json_t *body;
-    body = json_pack("{ss}", "content", response);
-    if(body == NULL) {
-        ld_error("couldn't create JSON object for lmao data");
+
+    struct ld_json_message message;
+    ld_json_message_init(&message);
+
+    ld_json_load_message(&message, (json_t *) data);
+
+    if(message.channel_id == 0) {
+        return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
+    }
+
+    if(strncasecmp(message.content, trigger, strlen(trigger)) != 0 ) {
         return 0;
     }
-    char *tmp;
-    tmp = json_dumps(body, 0);
-    if(tmp == NULL) {
-        ld_error("couldn't dump JSON string for lmao data");
-        return 0;
-    }
-    char *jsonbody = strdup(tmp);
-    ld_debug("body to post: %s", jsonbody);
 
-//    if(use_ulfius) {
-//        struct ld_rest_request *request;
-//        struct ld_rest_response *resp;
-//        request = ld_rest_init_request();
-//        resp = ld_rest_init_response();
-//
-//        ld_create_basic_message(request, context, channelid, response);
-//        ld_rest_send_request(request, resp);
-//    } else {
-        //curl POST to that channel
-        struct curl_slist *headers = NULL;
-        char auth_header[1000];
-        sprintf(auth_header, "Authorization: Bot %s ", context->bot_token);
-        headers = curl_slist_append(headers, auth_header);
-        headers = curl_slist_append(headers, "Content-Type: application/json");
-
-
-
-        char url[1000];
-        sprintf(url, "%s/%s/messages", LD_API_URL LD_REST_API_VERSION "/channels", channelid);
-
-        curl_easy_setopt(handle, CURLOPT_URL, url);
-        curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(handle, CURLOPT_USERAGENT, "DiscordBot (https://github.com/dxing97/libdiscord 0.3)");
-        curl_easy_setopt(handle, CURLOPT_POSTFIELDS, jsonbody);
-        curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, (long) strlen(jsonbody));
-        curl_easy_setopt(handle, CURLOPT_VERBOSE, 1);
-        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPALIVE, 1L);
-        if(ret != CURLE_OK) {
-            ld_debug("TCP keepalive unavailable");
-        }
-        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPIDLE, 120L);
-        if(ret != CURLE_OK) {
-            ld_debug("TCP keepalive idle unavailable");
-        }
-        ret = curl_easy_setopt(handle, CURLOPT_TCP_KEEPINTVL, 60L);
-        if(ret != CURLE_OK) {
-            ld_debug("TCP keepalive interval unavailable");
-        }
-
-        res = curl_easy_perform(handle);
-        if(res != CURLE_OK) {
-            ld_error("couldn't POST lmao");
-            return 0;
-        }
-
-
-        curl_slist_free_all(headers);
-//    }
-
-    free(jsonbody);
+    ld_send_basic_message(context, message.channel_id, response);
     return 0;
 }
 
@@ -259,10 +160,12 @@ int main(int argc, char *argv[]) {
     //define context info, including bot token
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
+    ld_init_context_info(info);
 
     info->bot_token = strdup(bot_token);
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
+    info->init_presence = NULL;
 
     free(bot_token);
 

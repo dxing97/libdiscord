@@ -171,7 +171,7 @@ void ld_cleanup_context(struct ld_context *context) {
     lws_context_destroy(context->lws_context);
     lws_ring_destroy(context->gateway_ring);
 
-    free(context);
+//    free(context);
 }
 
 struct _ld_buffer {

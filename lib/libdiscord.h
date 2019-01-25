@@ -128,8 +128,7 @@ enum ld_gateway_opcode {
 
 /**
  * @brief enums for the four possible fields inside the discord gateway
- * 
- * (TODO: refactor GATEWAY to PAYLOAD)
+ *
  */
 enum ld_gateway_payloadtype {
     LD_GATEWAY_OP = 0,
