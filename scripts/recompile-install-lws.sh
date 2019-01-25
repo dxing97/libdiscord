@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LWS_VERSION="3.0.1"
+LWS_VERSION="3.1.0"
 
 sudo apt remove libwebsockets-dev
 
