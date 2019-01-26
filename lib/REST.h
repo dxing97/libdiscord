@@ -86,7 +86,7 @@ int ld_headers_clean(struct ld_headers *headers);
 int ld_headers2curl(struct ld_headers *headers, struct curl_slist **slist);
 
 /*
- * initializes a request with defaults
+ * initializes a request with context defaults
  */
 struct ld_rest_request *ld_rest_init_request(struct ld_rest_request *request, struct ld_context *context);
 

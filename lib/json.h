@@ -1,6 +1,4 @@
-//
-// Created by dxing97 on 1/15/18.
-//
+/** @file */
 
 #ifndef LIBDISCORD_JSON_H
 #define LIBDISCORD_JSON_H
@@ -31,8 +29,14 @@
  */
 typedef char *TIMESTAMP;
 
-enum ld_presence_game_type;
+
+
+enum ld_presence_activity_type;
 enum ld_json_status_type;
+enum ld_activity_flags;
+
+
+
 
 struct ld_json_snowflake;
 struct ld_json_status_update;
@@ -41,6 +45,7 @@ struct ld_json_identify;
 struct ld_json_party;
 struct ld_json_assets;
 struct ld_json_activity;
+struct ld_json_secrets;
 struct ld_json_gateway_update_status;
 struct ld_json_user;
 struct ld_json_role;
@@ -68,38 +73,102 @@ struct ld_json_account;
 struct ld_json_ban;
 struct ld_json_integration;
 
+struct ld_json_getgateway;
+struct ld_json_getgateway_bot;
+struct ld_json_getgateway_bot_sessionstartlimit;
 
-struct ld_json_snowflake { //snowflake member valies
-    unsigned long long timestamp; //milliseconds since the first second of 2015
-    unsigned long long worker_id;
-    unsigned long long process_id;
-    unsigned long long increment;
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+#pragma mark Enumeration declarations
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief activity type
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-types" Discord API Documentation</a>
+ */
+enum ld_presence_activity_type {
+    LD_PRESENCE_ACTIVITY_PLAYING = 0,
+    LD_PRESENCE_ACTIVITY_STREAMING = 1,
+    LD_PRESENCE_ACTIVITY_LISTENING = 2
+//    LD_PRESENCE_ACTIVITY_WATCHING = 3
 };
 
-enum ld_presence_game_type {
-    LD_PRESENCE_PLAYING = 0,
-    LD_PRESENCE_STREAMING = 1,
-    LD_PRESENCE_LISTENING = 2,
-    LD_PRESENCE_WATCHING = 3
-};
 
+/**
+ * @brief Status enum type
+ *
+ * enum integer values are used internally, strings are sent in payloads
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#update-status-status-types" Discord API Documentation</a>
+ */
 enum ld_json_status_type {
-    LD_PRESENCE_IDLE = 0,
-    LD_PRESENCE_DND = 1,
-    LD_PRESENCE_ONLINE = 2,
-    LD_PRESENCE_OFFLINE = 3
+    LD_PRESENCE_IDLE = 0, ///< "idle"
+    LD_PRESENCE_DND = 1, ///< "dnd"
+    LD_PRESENCE_ONLINE = 2, ///< "online"
+    LD_PRESENCE_OFFLINE = 3, ///< "offline"
+    LD_PRESENCE_INVISIBLE = 4 ///< "invisible"
 };
 
+/**
+ * @brief Activity flags enum type
+ *
+ * enum values are meant to be OR'd together
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-flags" Discord API Documentation</a>
+ */
+enum ld_activity_flags {
+    LD_ACTIVITY_FLAG_INSTANCE = 1 << 0,
+    LD_ACTIVITY_FLAG_JOIN = 1 << 1,
+    LD_ACTIVITY_FLAG_SPECTATE = 1 << 2,
+    LD_ACTIVITY_FLAG_JOIN_REQUEST = 1 << 3,
+    LD_ACTIVITY_FLAG_SYNC = 1 << 4,
+    LD_ACTIVITY_FLAG_PLAY = 1 << 5
+
+};
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//
+#pragma mark Struct declarations
+//
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief decoded snowflake struct
+ *
+ * <a href="https://discordapp.com/developers/docs/reference#snowflakes" Discord API Documentation</a>
+ */
+struct ld_json_snowflake {
+    unsigned long long timestamp; ///< milliseconds since the first second of 2015, aka Discord epoch
+    unsigned long long worker_id; ///< internal worker ID
+    unsigned long long process_id; ///< internal process ID
+    unsigned long long increment; ///< incremented for every generated snowflake on that process
+};
+
+/**
+ * @brief Status update
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#update-status-gateway-status-update-structure" Discord API Documentation </a>
+ */
 struct ld_json_status_update {
-//    struct ld_json_user *user; // no longer in the discord API documentation???
-    LD_SNOWFLAKE *roles; //array of snowflakes
-    struct ld_json_activity *game;
-    LD_SNOWFLAKE guild_id;
+//    struct ld_json_user *user; // no longer in the discord API documentation
+    LD_SNOWFLAKE *roles; ///< array of snowflakes, no longer in the discord API documentation?
+    struct ld_json_activity *game; ///< nullable field
+    LD_SNOWFLAKE guild_id; // no longer in the discord API documentation?
     enum ld_json_status_type status;
+    int since; ///< nullable field
+    int afk; ///< boolean
 };
 
-/*
- * connection properties json object
+/**
+ * @brief Identify connection properties json object
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#identify-identify-connection-properties" Discord API Documentation </a>
  */
 struct ld_json_identify_connection_properties {
     char *os;
@@ -107,47 +176,88 @@ struct ld_json_identify_connection_properties {
     char *device;
 };
 
-/*
- * identify json object
+/**
+ * @brief Identify json object
  * sent with opcode 2 payloads (IDENTIFY)
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#identify-identify-structure" Discord API Documentation </a>
  *
  */
 struct ld_json_identify {
-    char *token;
+    char *token; ///< auth token
     struct ld_json_identify_connection_properties *properties;
-    int compress;
-    int large_threshold;
-    int shard[2]; //[shard id, number of shards]
-    struct ld_json_status_update *status_update;
+    int compress; ///< optional field
+    int large_threshold; ///< optional field
+    int shard[2]; ///< [shard id, number of shards]
+    struct ld_json_status_update *status_update; ///< optional field
 };
 
+/**
+ * @brief Party json object
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-party" Discord API Documentation </a>
+ *
+ */
 struct ld_json_party {
-    char *id;
-    int size[2];
+    char *id; ///< optional
+    int size[2]; ///< optional
 };
 
+/**
+ * @brief Activity assets json object
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-assets" Discord API Documentation </a>
+ *
+ */
 struct ld_json_assets {
-    char *large_image;
-    char *large_text;
-    char *small_image;
-    char *small_text;
+    char *large_image; ///< optional
+    char *large_text; ///< optional
+    char *small_image; ///< optional
+    char *small_text; ///< optional
 };
 
+/**
+ * @brief Activity json object
+ * bots may only send name, type, and optionally url
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-structure" Discord API Documentation </a>
+ *
+ */
 struct ld_json_activity {
     char *name;
-    enum ld_presence_game_type type;
-    char *url; //optional and nullable (double check this)
-    struct ld_json_timestamps *timestamps;
-    LD_SNOWFLAKE application_id;
-    char *details;
-    char *state;
-    struct ld_json_party *party;
-    struct ld_json_assets *assets;
+    enum ld_presence_activity_type type;
+    char *url; ///< optional and nullable
+    struct ld_json_timestamps *timestamps; ///< optional
+    LD_SNOWFLAKE application_id; ///< optional
+    char *details; ///< optional and nullable
+    char *state; ///< optional and nullable
+    struct ld_json_party *party; ///< optional
+    struct ld_json_assets *assets; ///< optional
+    struct ld_json_secrets *secrets; ///< optional
+    int flags; ///optional, OR'd activity flag enums
 };
 
+/**
+ * @brief Activity secrets json object
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-secrets" Discord API Documentation </a>
+ *
+ */
+struct ld_json_secrets {
+    char *join; ///< optional
+    char *spectate; ///< optional
+    char *match; ///< optional
+};
+
+/**
+ * @brief Gateway status update json object
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#update-status-gateway-status-update-structure" Discord API Documentation </a>
+ */
+
 struct ld_json_gateway_update_status {
-    int since; //nullable
-    struct ld_json_activity *game;
+    int since; ///< nullable
+    struct ld_json_activity *game; ///< nullable
     char *status;
     int afk;
 };
@@ -408,6 +518,23 @@ struct ld_json_integration {
     struct ld_json_user *user;
     struct ld_json_account *account;
     char *synced_at;
+};
+
+struct ld_json_getgateway {
+    char *url; ///< /gateway url
+};
+
+struct ld_json_getgateway_bot {
+    char *url;
+    int shards;
+    struct ld_json_getgateway_bot_sessionstartlimit *limits;
+};
+
+
+struct ld_json_getgateway_bot_sessionstartlimit {
+    int total;
+    int remaining;
+    int reset_after;
 };
 
 /*

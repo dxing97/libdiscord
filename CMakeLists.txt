@@ -66,9 +66,9 @@ set(BOT_COUNTER_SOURCE example_bots/example-counter.c cmake/libdiscord_config.h.
 add_executable(example-bot-counter ${BOT_COUNTER_SOURCE})
 target_link_libraries(example-bot-counter discord)
 
-set(EXAMPLE_TESTING_SOURCE cmake/libdiscord_config.h.in example_bots/example-testing.c)
-add_executable(example-testing ${EXAMPLE_TESTING_SOURCE})
-target_link_libraries(example-testing discord)
+set(EXAMPLE_SIMPLEPOST_SOURCE cmake/libdiscord_config.h.in example_bots/example-simplepost.c)
+add_executable(example-simplepost ${EXAMPLE_SIMPLEPOST_SOURCE})
+target_link_libraries(example-simplepost discord)
 
 set(BOT_HASH_SOURCE cmake/libdiscord_config.h.in example_bots/example-hash.c)
 add_executable(example-bot-hash ${BOT_HASH_SOURCE})

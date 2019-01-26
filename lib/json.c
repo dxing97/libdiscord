@@ -282,6 +282,9 @@ const char *ld_json_status2str(enum ld_json_status_type type) {
             return "online";
         case LD_PRESENCE_OFFLINE:
             return "offline";
+        case LD_PRESENCE_INVISIBLE:
+            return "invisible";
+            break;
     }
     return NULL;
 }

@@ -205,6 +205,9 @@ void sig_handler(int i) {
 
 void print_help(char *executable_name) {
     printf("libdiscord hash bot\n"
+           "Returns the hash of some ASCII text using a user-specified digest\n"
+           "Example: !hash md5 my message here\n\n"
+           "Usage:\n"
            "%s [-t bot_token]\n\n"
            "Options: \n\t"
            "-t, --bot-token [bot_token]\n\t\t"
@@ -280,7 +283,7 @@ int main(int argc, char *argv[]) {
     presence.status = LD_PRESENCE_ONLINE;
     presence.game = &game;
     presence.game->name = "example-bot-hash";
-    presence.game->type = LD_PRESENCE_LISTENING;
+    presence.game->type = LD_PRESENCE_ACTIVITY_LISTENING;
     presence.roles = NULL; /// \todo: presences should be initialized by a function
 
     info.init_presence = &presence;

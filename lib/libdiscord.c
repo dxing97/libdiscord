@@ -65,7 +65,7 @@ int ld_init_context(struct ld_context_info *info, struct ld_context *context) {
         return LDE_MEM;
     }
 
-    context->gateway_state = LD_GATEWAY_UNCONNECTED;
+//    context->gateway_state = LD_GATEWAY_UNCONNECTED;
 
     context->user_callback = info->user_callback;
 
@@ -375,7 +375,7 @@ struct ld_gi *_ld_init_gi(struct ld_context *context) {
     struct ld_gi *gi = context->gi[0];
 
     gi->parent_context = context;
-    gi->state = LD_GATEWAY_UNCONNECTED;
+//    gi->state = LD_GATEWAY_UNCONNECTED;
     gi->shardnum = -1;
     gi->lws_wsi = NULL;
     gi->hb_interval = 41500; //will be overwritten later
@@ -442,28 +442,28 @@ int ld_connect(struct ld_context *context) {
 
     //todo: add init for context.gi here
     //init the gateway interface
-
-    switch(context->gateway_state) {
-        case LD_GATEWAY_UNCONNECTED:
-            context->gateway_state = LD_GATEWAY_CONNECTING;
+//
+//    switch(context->gateway_state) {
+//        case LD_GATEWAY_UNCONNECTED:
+//            context->gateway_state = LD_GATEWAY_CONNECTING;
             ret = ld_gateway_connect(context);
 
             if(ret != 0) {
                 ld_warning("ld_connect: ld_gateway_connect returned bad");
-                return 1;
+                return LDE_LWS;
             }
-            break;
-        case LD_GATEWAY_CONNECTING:
-            //??? do nothing
-            ld_debug("ld_connect called while connecting to gateway!");
-            break;
-        case LD_GATEWAY_CONNECTED:
-            //this context already has an established connection to the gateway
-            break;
-        default:
-            //???
-            break;
-    }
+//            break;
+//        case LD_GATEWAY_CONNECTING:
+//            //??? do nothing
+//            ld_debug("ld_connect called while connecting to gateway!");
+//            break;
+//        case LD_GATEWAY_CONNECTED:
+//            //this context already has an established connection to the gateway
+//            break;
+//        default:
+//            //???
+//            break;
+//    }
 
     return 0;
 }
@@ -477,10 +477,16 @@ int ld_connect(struct ld_context *context) {
 int ld_service(struct ld_context *context, int timeout) {
     int ret = 0;
 
-    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
-        //we are unconnected, let's check if there was a close code
-        //we are trying to service a closed connection, so we should try opening that connection
-        return ld_connect(context);
+//    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
+//        //we are unconnected, let's check if there was a close code
+//        //we are trying to service a closed connection, so we should try opening that connection
+//        return ld_connect(context);
+//    }
+
+    if(context->lws_wsi == NULL) {
+        //reconnect
+        ld_connect(context);
+        return 0;
     }
 
     //check heartbeat timer
@@ -492,7 +498,7 @@ int ld_service(struct ld_context *context, int timeout) {
             //didn't receive HB_ACK
             ld_warning("%s: didn't recieve a HB_ACK", __FUNCTION__);
             // todo: make sure we're actually disconnected from gateway
-            context->gateway_state = LD_GATEWAY_UNCONNECTED;
+//            context->gateway_state = LD_GATEWAY_UNCONNECTED;
             return LDE_HB_ACKMISS;
         }
         ret = ld_gateway_queue_heartbeat(context);
@@ -505,10 +511,10 @@ int ld_service(struct ld_context *context, int timeout) {
         context->last_hb = lws_now_secs();
     }
 
-    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
-        //something happened and we were disconnected from the gateway, or we were never connected in the first place
-        ld_warning("we were disconnected from the gateway!");
-    }
+//    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
+//        //something happened and we were disconnected from the gateway, or we were never connected in the first place
+//        ld_warning("we were disconnected from the gateway!");
+//    }
 
     //call writable if there's things that need to be sent
     if(lws_ring_get_count_waiting_elements(context->gateway_ring, NULL) != 0)
@@ -529,18 +535,19 @@ int ld_service(struct ld_context *context, int timeout) {
  */
 int ld_gateway_connect(struct ld_context *context) {
 
-    switch(context->gateway_state) {
-        case LD_GATEWAY_UNCONNECTED:
-            context->gateway_state = LD_GATEWAY_CONNECTING;
-            break;
-        case LD_GATEWAY_CONNECTING:
-            ld_debug("ld_gateway_connect: still trying to connect");
-            break;
+
+//    switch(context->gateway_state) {
+//        case LD_GATEWAY_UNCONNECTED:
+//            context->gateway_state = LD_GATEWAY_CONNECTING;
+//            break;
+//        case LD_GATEWAY_CONNECTING:
+//            ld_debug("ld_gateway_connect: still trying to connect");
+//            break;
+////            return 0;
+//        case LD_GATEWAY_CONNECTED:
+//            ld_debug("ld_gateway_connect: already connected");
 //            return 0;
-        case LD_GATEWAY_CONNECTED:
-            ld_debug("ld_gateway_connect: already connected");
-            return 0;
-    }
+//    }
 
     //lws context creation info
     struct lws_context_creation_info info;
@@ -589,14 +596,15 @@ int ld_gateway_connect(struct ld_context *context) {
 
     i->protocol = protocols[0].name;
 
+    i->pwsi = &context->lws_wsi;
+
     ld_debug("ld_gateway_connect: connecting to gateway");
-    struct lws *wsi;
-    wsi = lws_client_connect_via_info(i);
-    if(wsi == NULL) {
+//    struct lws *wsi;
+    lws_client_connect_via_info(i);
+    if(context->lws_wsi == NULL) {
         ld_error("ld_gateway_connect: failed to connect to gateway (%s)", i->address);
         return 1;
     }
-    context->lws_wsi = wsi;
     free(ads_port);
     return 0;
 }
@@ -618,15 +626,17 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
     switch(reason) {
         case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
             ld_error("lws: error connecting to gateway: %.*s(%d)", in, len, len);
-            context->user_callback(context, LD_CALLBACK_WS_CONNECTION_ERROR, NULL, 0);
-            return 0;
+
+            i = context->user_callback(context, LD_CALLBACK_WS_CONNECTION_ERROR, NULL, 0);
+            context->lws_wsi = NULL;
+            return i;
         case LWS_CALLBACK_CLIENT_FILTER_PRE_ESTABLISH:
             ld_info("lws: received handshake from Discord gateway");
             return 0;
         case LWS_CALLBACK_CLIENT_ESTABLISHED:
             ld_info("established websocket connection to gateway");
             i = context->user_callback(context, LD_CALLBACK_WS_ESTABLISHED, NULL, 0);
-            context->gateway_state = LD_GATEWAY_CONNECTED;
+//            context->gateway_state = LD_GATEWAY_CONNECTED;
             context->last_hb = lws_now_secs(); //reset heartbeat counter every time we connect
             return i;
 
@@ -634,6 +644,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             return 0;
         case LWS_CALLBACK_CLOSED:
             ld_notice("lws: websocket connection to gateway closed");
+//            context->lws_wsi = NULL;
             break;
         case LWS_CALLBACK_CLIENT_RECEIVE:
             //check to see if we've received a new fragment
@@ -737,12 +748,12 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     "close code: %u\nCONTEXT (%d):\n%.*s",
                     (unsigned int) ((unsigned char *) in)[0] << 8 | ((unsigned char *) in)[1], len, len, in + 2);
             context->close_code = (unsigned int) ((unsigned char *) in)[0] << 8 | ((unsigned char *) in)[1];
-            context->gateway_state = LD_GATEWAY_UNCONNECTED;
+//            context->gateway_state = LD_GATEWAY_UNCONNECTED;
             if(len != 0) {
                 close_message = strndup(in + 1, len);
             }
 
-            i = context->user_callback(context, LD_CALLBACK_WS_PEER_CLOSE, close_message, context->close_code);
+            i = context->user_callback(context, LD_CALLBACK_WS_GATEWAY_INIT_CLOSE, close_message, context->close_code);
             //todo: non-zero user return values
 
             if(len != 0) {

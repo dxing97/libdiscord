@@ -18,7 +18,7 @@ static int fail_mode = 0; //0: default, try recovering, 1: exit on error
 CURL *handle;
 char *trigger = "ayy", *response = "lmao";
 
-void int_handler(int i){
+void int_handler(int i) {
     bot_exit = 1;
 }
 
@@ -54,7 +54,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         return 0; //realistically speaking, the channel ID will never be 0 (but you never know...)
     }
 
-    if(strncasecmp(message.content, trigger, strlen(trigger)) != 0 ) {
+    if(strncasecmp(message.content, trigger, strlen(trigger)) != 0) {
         return 0;
     }
 
@@ -86,23 +86,23 @@ int main(int argc, char *argv[]) {
         //options: help, bot token
         //if bot token isn't specified, exit
         static struct option long_options[] = {
-                {"bot-token", required_argument, 0, 't'},
-                {"help", no_argument, 0, 'h'},
-                {"log-level", required_argument, 0, 'l'},
+                {"bot-token",      required_argument, 0, 't'},
+                {"help",           no_argument,       0, 'h'},
+                {"log-level",      required_argument, 0, 'l'},
 //                {"use-ulfius", no_argument, 0, 'u'},
-                {"game", required_argument, 0, 'g'},
-                {"trigger", required_argument, 0, 'r'},
-                {"response", required_argument, 0, 'R'},
-                {"abort-on-error", no_argument, 0, 'a'},
-                {0,0,0,0}
+                {"game",           required_argument, 0, 'g'},
+                {"trigger",        required_argument, 0, 'r'},
+                {"response",       required_argument, 0, 'R'},
+                {"abort-on-error", no_argument,       0, 'a'},
+                {0, 0,                                0, 0}
         };
 
         int option_index = 0;
         c = getopt_long(argc, argv, "ht:l:"
-//                                    "u"
+                                    //                                    "u"
                                     "g:r:R:a", long_options, &option_index);
 
-        if(c == -1){
+        if(c == -1) {
             break;
         }
 
@@ -110,23 +110,23 @@ int main(int argc, char *argv[]) {
             case 'h':
             HELP:
                 printf("libdiscord example bot: ayylmao - basic call and response bot\n"
-                               "%s [-t bot_token]\n\n"
-                               "Options: \n\t"
-                               "-t, --bot-token [bot_token]\n\t\t"
-                               "Required. Discord bot token. See Discord developer pages on how to obtain one.\n\t"
-//                               "-u, --use-ulfius\n\t\t"
-//                               "If set, uses ulfius to send messages instead of libcurl. \n\t\t"
-//                               "Default is to use libcurl\n\t"
-                               "-g, --game\n\t\t"
-                               "Sets the initial value of the \"game\" field in the bot presence.\n\t"
-                               "-r, --trigger [trigger_string]\n\t\t"
-                               "Sets string that will trigger a response from the bot. Default is \"ayy\".\n\t"
-                               "-R, --response [response_string]\n\t\t"
-                               "Sets response that will be sent when the trigger is read. Default is \"lmao\".\n\t"
-                               "-a --abort-on-error \n\t\t"
-                               "If set, the bot will exit if the websocket connection is closed instead of trying to reconnect.\n\t"
-                               "-h, --help\n\t\t"
-                               "Displays this help dialog\n", argv[0]);
+                       "%s [-t bot_token]\n\n"
+                       "Options: \n\t"
+                       "-t, --bot-token [bot_token]\n\t\t"
+                       "Required. Discord bot token. See Discord developer pages on how to obtain one.\n\t"
+                       //                               "-u, --use-ulfius\n\t\t"
+                       //                               "If set, uses ulfius to send messages instead of libcurl. \n\t\t"
+                       //                               "Default is to use libcurl\n\t"
+                       "-g, --game\n\t\t"
+                       "Sets the initial value of the \"game\" field in the bot presence.\n\t"
+                       "-r, --trigger [trigger_string]\n\t\t"
+                       "Sets string that will trigger a response from the bot. Default is \"ayy\".\n\t"
+                       "-R, --response [response_string]\n\t\t"
+                       "Sets response that will be sent when the trigger is read. Default is \"lmao\".\n\t"
+                       "-a --abort-on-error \n\t\t"
+                       "If set, the bot will exit if the websocket connection is closed instead of trying to reconnect.\n\t"
+                       "-h, --help\n\t\t"
+                       "Displays this help dialog\n", argv[0]);
                 return 0;
             case 't':
                 bot_token = strdup(optarg);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     printf("Example bot 1 \"ayylmao\" starting up using libdiscord v%s\n", LD_VERSION);
 
-    if(bot_token == NULL){
+    if(bot_token == NULL) {
         printf("Bot token not set! See example-ayylmao -h for details.");
         return 1;
     }
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
 
     handle = curl_easy_init();
 
-    int ret, i = 0; 
+    int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
         if(bot_state == 0) {

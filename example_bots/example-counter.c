@@ -10,8 +10,7 @@
  */
 
 int bot_exit = 0;
-
-//unsigned long long target_channel = 342013131121229824;
+float response_chance = 0.01;
 
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
     if (reason == LD_CALLBACK_MESSAGE_CREATE) {
@@ -55,7 +54,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             return 0;
         }
 
-        if (rand() % 3 == 0) { //33 % chance of responding
+        if ((float) rand() / (float) RAND_MAX > response_chance) { // 1% chance of responding
             return 0;
         }
 

@@ -28,6 +28,7 @@ Ordered roughly in terms of priority.
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 
 ### JSON
+* Nullable vs optional fields - how to handle?
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
 * string to snowflake function
 * Timestamp manipulation functions

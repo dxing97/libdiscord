@@ -91,14 +91,16 @@ enum ld_callback_reason {
     /* websocket specific */
     LD_CALLBACK_WS_ESTABLISHED = 35, ///< websocket connection established and ready to rx/tx
     LD_CALLBACK_WS_CONNECTION_ERROR = 36, ///< error while trying to connect to the gateway
-    LD_CALLBACK_WS_PEER_CLOSE = 37 ///< peer closed connection
-    // the gateway closed the connection. len contains the close code,
-    // and data may or may not contain a string with context data
+    LD_CALLBACK_WS_GATEWAY_INIT_CLOSE = 37 /**
+    the gateway closed the connection. len contains the close code,
+    and data may or may not contain a string with a close message
+    */
 
 };
 
 /**
  * @brief State of the gateway connection
+ * depreciated
  */
 enum ld_gateway_state {
     LD_GATEWAY_UNCONNECTED = 0, ///< we're not connected and we can start a fresh connection
@@ -146,8 +148,6 @@ enum ld_gateway_payloadtype {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-//struct _ld_json_presence;
-
 /*
  * gateway ringbuffer elements
  * contains payload to be send and metadata
@@ -178,42 +178,41 @@ struct ld_gi;
  * user_callback: user defined callback function for event loops.
  */
 struct ld_context {
-    char *bot_token;
-    void *user_data;
-    unsigned long log_level; //DEPRECATED, use new functions in log.h
-    char *gateway_url;
-    char *gateway_bot_url;
-    enum ld_gateway_state gateway_state;
-    int shards;
-    CURLM *curl_multi_handle;
-    CURL *curl_handle;
-    struct lws_context *lws_context;
-    struct lws *lws_wsi;
+    char *bot_token; ///< string containing bot token
+    void *user_data; ///< user-specified pointer
+    unsigned long log_level; ///< DEPRECATED, use functions in log.h
+    char *gateway_url; ///< url returned by GET /gateway
+    char *gateway_bot_url; ///< url returned by GET /gateway/bot
+    int shards; ///< number of shards allowed
+    CURLM *curl_multi_handle; ///<
+    CURL *curl_handle; ///< curl easy handle used for simple HTTP requests
+    struct lws_context *lws_context; ///< lws context for gateway connections
+    struct lws *lws_wsi; ///< lws wsi used per gateway connection
     int (*user_callback)
             (struct ld_context *context, enum ld_callback_reason reason, void *data, int len);
-    unsigned int heartbeat_interval; //always in ms
-    int last_seq; //last sequence number received in the gateway
-    unsigned long last_hb;
-    int hb_count; //increments for every sent heartbeat, decrements for every received HB_ACK
-    struct lws_ring *gateway_ring;
-    unsigned int close_code;
-    char *gateway_rx_buffer;
-    size_t gateway_rx_buffer_len;
+    unsigned int heartbeat_interval; ///< gateway heartbeat interval, in milliseconds
+    int last_seq; ///< last sequence number received in the gateway
+    unsigned long last_hb; ///< time last heartbeat was recieved at
+    int hb_count; ///< increments for every sent heartbeat, decrements for every received HB_ACK
+    struct lws_ring *gateway_ring; ///< lws ring buffer for queueing gateway tx payloads
+    unsigned int close_code; ///< gateway-returned close code
+    char *gateway_rx_buffer; ///< pointer to rx buffer used for large websocket payloads
+    size_t gateway_rx_buffer_len; ///< rx buffer size
     // struct _ld_json_presence *presence;
-    char *gateway_session_id;
-    int gateway_bot_limit; //ratelimit reset amount
-    int gateway_bot_remaining; //last ratelimit remaining value
-    unsigned long gateway_bot_reset; //unix time for reset
-    struct ld_gi **gi;
-    int gi_count;
-    struct ld_json_user *current_user;
+    char *gateway_session_id; ///< gateway session ID
+    int gateway_bot_limit; ///< ratelimit reset amount \todo integrate into library ratelimit interface
+    int gateway_bot_remaining; ///< last ratelimit remaining value \todo
+    unsigned long gateway_bot_reset; ///< unix time for reset \todo
+    struct ld_gi **gi; ///< ???
+    int gi_count; ///< ???
+    struct ld_json_user *current_user; ///< current user (i.e. the bot) user info struct
 
     //init presence
     char *device;
     char *browser;
     char *os;
 
-    struct ld_json_status_update *init_presence;
+    struct ld_json_status_update *init_presence; ///< initial presence (game, status) struct
 };
 
 /**
@@ -228,7 +227,7 @@ struct ld_context {
 struct ld_gi {
     struct ld_context *parent_context; ///< pointer to the parent context
     void *user; ///< user defined pointer for user stuff (TODO: add way of allocating *user and setting its size)
-    enum ld_gateway_state state; ///< connected, connecting, disconnected (TODO: have seperate states for websocket connecting and gateway identifying)
+//    enum ld_gateway_state state; ///< connected, connecting, disconnected (TODO: have seperate states for websocket connecting and gateway identifying)
     int shardnum; ///< which shard this gateway connection refers to
     struct lws *lws_wsi; ///< lws wsi corresponding to this connection
     unsigned int hb_interval; ///< interval to send heartbeats at, in ms
