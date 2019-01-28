@@ -55,12 +55,21 @@ char *to_hash2(const char *input, const char *hashfun) {
         return NULL;
     }
 
+#if OPENSSL_VERSION_NUMBER > 0x1010000fL //1.1.0release
     mdctx = EVP_MD_CTX_new();
+#else
+    mdctx = EVP_MD_CTX_create();
+#endif
     EVP_DigestInit_ex(mdctx, md, NULL);
     EVP_DigestUpdate(mdctx, mess1, strlen(mess1));
     EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
     EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+#if OPENSSL_VERSION_NUMBER > 0x1010000fL //1.1.0release
     EVP_MD_CTX_free(mdctx);
+#else
+    EVP_MD_CTX_cleanup(mdctx);
+#endif
+
 
     return binary2hex(md_value, md_len);
 }
