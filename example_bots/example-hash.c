@@ -4,7 +4,7 @@
 
 #include <libdiscord.h>
 #include <getopt.h>
-
+#include <signal.h>
 #include <openssl/evp.h> //openssl EVP crypto API
 
 /*
@@ -47,7 +47,7 @@ char *to_hash2(const char *input, const char *hashfun) {
     unsigned char md_value[EVP_MAX_MD_SIZE];
     int md_len, i;
 
-
+    OpenSSL_add_all_digests();
     md = EVP_get_digestbyname(hashfun);
 
     if(!md) {
@@ -59,6 +59,7 @@ char *to_hash2(const char *input, const char *hashfun) {
     mdctx = EVP_MD_CTX_new();
 #else
     mdctx = EVP_MD_CTX_create();
+
 #endif
     EVP_DigestInit_ex(mdctx, md, NULL);
     EVP_DigestUpdate(mdctx, mess1, strlen(mess1));

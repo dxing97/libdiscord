@@ -137,6 +137,7 @@ int ld_json_load_user(struct ld_json_user *new_user, json_t *user) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
                 ld_warning("ld_json_load_user: couldn't get user locale");
+                new_user->locale = NULL;
             } else {
                 new_user->locale = strdup(tmp);
             }
@@ -150,7 +151,7 @@ int ld_json_load_user(struct ld_json_user *new_user, json_t *user) {
         if(strcmp(key, "email") == 0) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
-                ld_warning("ld_json_load_user: couldn't get user email");
+                ld_notice("ld_json_load_user: couldn't get user email");
             } else {
                 new_user->email = strdup(tmp);
             }
