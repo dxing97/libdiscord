@@ -4,7 +4,7 @@
 
 #include <libdiscord.h>
 #include <getopt.h>
-
+#include <signal.h>
 /*
  * counting bot
  */
