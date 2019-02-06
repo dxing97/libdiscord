@@ -10,6 +10,7 @@
 #include <curl/curl.h>
 
 //#include <libdiscord.h>
+#include "status.h"
 #include "json.h"
 
 #ifndef LD_SNOWFLAKE

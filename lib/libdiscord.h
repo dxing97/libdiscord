@@ -8,6 +8,7 @@
 #include <jansson.h>
 
 #include "libdiscord_config.h"
+
 #include "log.h"
 #include "json.h"
 
@@ -286,7 +287,7 @@ struct ld_json_identify;
  * 
  * @return int Success code (0 success, 1 error)
  */
-int ld_init_context_info(struct ld_context_info *info);
+ld_status ld_init_context_info(struct ld_context_info *info);
 
 /**
  * @brief Initializes an ld_context struct using a given ld_context_info
@@ -296,7 +297,7 @@ int ld_init_context_info(struct ld_context_info *info);
  * 
  * @return int Status code
  */
-int ld_init_context(struct ld_context_info *info, struct ld_context *context);
+ld_status ld_init_context(struct ld_context_info *info, struct ld_context *context);
 
 /**
  * @brief Frees the members of a given ld_context struct, then destroys the struct
@@ -317,7 +318,7 @@ void ld_cleanup_context(struct ld_context *context);
  * @n 2: CURL error
  * @n 3: jansson (JSON parsing) error
  */
-int _ld_get_gateway_bot(struct ld_context *context);
+ld_status _ld_get_gateway_bot(struct ld_context *context);
 
 /**
  * @brief curl callback function used to read data returned from HTTP request
@@ -345,7 +346,7 @@ size_t _ld_curl_response_string(void *contents, size_t size, size_t nmemb, void 
  * @n 2: CURL error
  * @n 3: jansson (JSON parsing) error
  */
-int _ld_get_gateway(struct ld_context *context);
+ld_status _ld_get_gateway(struct ld_context *context);
 
 /**
  * @brief CURL callback function used to (currently) print out HTTP headers line by line for /gateway and /gateway/bot
@@ -365,7 +366,7 @@ size_t ld_curl_header_parser(char *buffer, size_t size, size_t nitems, void *use
  * @param identify Pointer to ld_json_identify struct, from which to take identify information
  * @return int Status code
  */
-int ld_set_identify(struct ld_context *context, struct ld_json_identify *identify);
+ld_status ld_set_identify(struct ld_context *context, struct ld_json_identify *identify);
 
 /**
  * @brief Connects to Discord with a given ld_context struct
@@ -373,7 +374,7 @@ int ld_set_identify(struct ld_context *context, struct ld_json_identify *identif
  * @param context Pointer to an ld_context struct
  * @return int Status code
  */
-int ld_connect(struct ld_context *context);
+ld_status ld_connect(struct ld_context *context);
 
 /**
  * @brief Checks services pending HTTP and websocket requests
@@ -386,7 +387,7 @@ int ld_connect(struct ld_context *context);
  * @n 0: OK
  * @n 1: websocket ringbuffer error
  */
-int ld_service(struct ld_context *context, int timeout);
+ld_status ld_service(struct ld_context *context, int timeout);
 
 /**
  * @brief Starts a fresh gateway connection
@@ -400,7 +401,7 @@ int ld_service(struct ld_context *context, int timeout);
  * 
  * @return int Status code. 0 on success.
  */
-int ld_gateway_connect(struct ld_context *context);
+ld_status ld_gateway_connect(struct ld_context *context);
 
 /**
  * @brief picks out interesting callback reasons (like receive and writeable) and does stuff 
@@ -414,7 +415,7 @@ int ld_gateway_connect(struct ld_context *context);
  * 
  * @return int 
  */
-int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
+ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                     void *user, void *in, size_t len);
 
 /**
@@ -424,7 +425,7 @@ int ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
  * @param identify 
  * @return int 
  */
-int ld_set_identify(struct ld_context *context, struct ld_json_identify *identify);
+ld_status ld_set_identify(struct ld_context *context, struct ld_json_identify *identify);
 
 /**
  * @brief 
@@ -432,7 +433,7 @@ int ld_set_identify(struct ld_context *context, struct ld_json_identify *identif
  * @param identify 
  * @return int 
  */
-int ld_cleanup_identify(struct ld_json_identify *identify);
+ld_status ld_cleanup_identify(struct ld_json_identify *identify);
 
 /**
  * @brief 
@@ -443,7 +444,7 @@ int ld_cleanup_identify(struct ld_json_identify *identify);
  * 
  * @return int 
  */
-int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
+ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
 
 /**
  * @brief callback for parsing READY dispatches, saves session_id for resuming
@@ -453,7 +454,7 @@ int ld_gateway_payload_parser(struct ld_context *context, char *in, size_t len);
  * 
  * @return int Status code
  */
-int ld_dispatch_ready(struct ld_context *context, json_t *data);
+ld_status ld_dispatch_ready(struct ld_context *context, json_t *data);
 
 /**
  * @brief 
@@ -466,7 +467,7 @@ int ld_dispatch_ready(struct ld_context *context, json_t *data);
  * @n 0: success
  * @n 1: jansson (JSON parsing) error
  */
-int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
+ld_status ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
 
 /**
  * @brief Queues a heartbeat payload into the websocket tx ringbuffer
@@ -474,7 +475,7 @@ int ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t 
  * @param context Pointer to an ld_context for which to queue the payload
  * @return int Status code
  */
-int ld_gateway_queue_heartbeat(struct ld_context *context);
+ld_status ld_gateway_queue_heartbeat(struct ld_context *context);
 
 /**
  * @brief Gets the operating system name
