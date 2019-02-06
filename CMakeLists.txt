@@ -44,7 +44,7 @@ include_directories(/usr/local/lib/include)
 
 set(LD_LIBS websockets jansson curl crypto)
 
-set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h lib/utils.c lib/utils.h)
+set(LD_SOURCE lib/libdiscord.c lib/libdiscord.h lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h lib/utils.c lib/utils.h lib/status.h)
 add_library(discord SHARED ${LD_SOURCE})
 
 target_link_libraries(discord ${LD_LIBS})
