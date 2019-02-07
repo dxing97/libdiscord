@@ -262,8 +262,8 @@ ld_status _ld_get_gateway(struct ld_context *context) {
 
 //    ld_rest_free_request(request);
 //    ld_rest_free_response(response);
-    free(tmp);
-    free(object);
+    json_decref(tmp);
+    json_decref(object);
     return LDS_OK;
 }
 
@@ -961,7 +961,7 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
             t = NULL;
             s = NULL;
 //            d = _ld_generate_identify(context);
-            d = ld_json_dump_identify(&ident);
+            d = ld_json_unpack_identify(&ident);
             ld_cleanup_identify(&ident);
 
             if(d == NULL) {
@@ -1129,6 +1129,7 @@ ld_status ld_gateway_queue_heartbeat(struct ld_context *context) {
         ld_warning("couldn't fit heartbeat payload into gateway ringbuffer");
         return LDS_WEBSOCKET_CANTFIT_HEARTBEAT_ERR;
     }
+//    json_decref(hb);
     return LDS_OK;
 }
 

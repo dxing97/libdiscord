@@ -163,13 +163,13 @@ int ld_json_load_user(struct ld_json_user *new_user, json_t *user) {
     return 0;
 }
 
-json_t *ld_json_dump_user(struct ld_json_user *user) {
+json_t *ld_json_unpack_user(struct ld_json_user *user) {
 
     return NULL;
 }
 
 
-json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) {
+json_t *ld_json_unpack_status_update(struct ld_json_status_update *status_update) {
     json_t *su = NULL;
     su = json_object();
     int i;
@@ -199,7 +199,7 @@ json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update) 
     return su;
 }
 
-json_t *ld_json_dump_identify_connection_properties(
+json_t *ld_json_unpack_identify_connection_properties(
         struct ld_json_identify_connection_properties *properties) {
     json_t *p = NULL;
     p = json_object();
@@ -230,28 +230,28 @@ json_t *ld_json_dump_identify_connection_properties(
     return p;
 }
 
-json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
+json_t *ld_json_unpack_identify(struct ld_json_identify *identify) {
     json_t *ident = NULL;
 //    json_error_t error;
     //todo: add error checking
 
     ident = json_object();
     if(identify->token == NULL) {
-        ld_error("ld_json_dump_identify: token is NULL");
+        ld_error("ld_json_unpack_identify: token is NULL");
         return NULL;
     }
     json_object_set(ident, "token", json_string(identify->token));
 
     if(identify->properties == NULL) {
-        ld_error("ld_json_dump_identify: identify connection properties is NULL");
+        ld_error("ld_json_unpack_identify: identify connection properties is NULL");
         return NULL;
     }
-    json_object_set(ident, "properties", ld_json_dump_identify_connection_properties(identify->properties));
+    json_object_set(ident, "properties", ld_json_unpack_identify_connection_properties(identify->properties));
 
     json_object_set(ident, "compress", json_boolean(identify->compress));
 
     if((identify->large_threshold > 250) || (identify->large_threshold < 50)) {
-        ld_warning("ld_json_dump_identify: large_theshold is out of expected range");
+        ld_warning("ld_json_unpack_identify: large_theshold is out of expected range");
     }
     json_object_set(ident, "large_threshold", json_integer(identify->large_threshold));
     if(&(identify->shard) != NULL) {
@@ -260,14 +260,14 @@ json_t *ld_json_dump_identify(struct ld_json_identify *identify) {
         json_array_append_new(array, json_integer(identify->shard[1]));
         json_object_set(ident, "shard", array);
     } else {
-        ld_error("ld_json_dump_identify: shard array is NULL");
+        ld_error("ld_json_unpack_identify: shard array is NULL");
         return NULL;
     }
 
 
     if(identify->status_update != NULL) {
         //presence is optional
-        json_object_set(ident, "presence", ld_json_dump_status_update(identify->status_update));
+        json_object_set(ident, "presence", ld_json_unpack_status_update(identify->status_update));
     }
 
     return ident;
@@ -321,7 +321,7 @@ int ld_json_message_cleanup(struct ld_json_message *message) {
     return 0;
 }
 
-int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) {
+int *ld_json_pack_message(struct ld_json_message *new_message, json_t *message) {
 //    struct ld_json_message *new_message = NULL;
 //    json_error_t error;
 //    message = json_object();
@@ -336,7 +336,7 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
         if(strcmp(key, "content") == 0) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
-                ld_warning("ld_json_load_message: couldn't get message content");
+                ld_warning("ld_json_pack_message: couldn't get message content");
             } else {
                 new_message->content = strdup(tmp);
             }
@@ -346,7 +346,7 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
         if(strcmp(key, "channel_id") == 0) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
-                ld_warning("ld_json_load_message: couldn't get message channel_id");
+                ld_warning("ld_json_pack_message: couldn't get message channel_id");
             } else {
                 new_message->channel_id = strtoull(tmp, NULL, 10);
             }
@@ -356,7 +356,7 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
         if(strcmp(key, "id") == 0) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
-                ld_warning("ld_json_load_message: couldn't get message id");
+                ld_warning("ld_json_pack_message: couldn't get message id");
             } else {
                 new_message->id = strtoull(tmp, NULL, 10);
             }
@@ -366,7 +366,7 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
         if(strcmp(key, "type") == 0) {
             tmp = json_string_value(value);
             if (tmp == NULL) {
-                ld_warning("ld_json_load_message: couldn't get message type");
+                ld_warning("ld_json_pack_message: couldn't get message type");
             } else {
                 new_message->type = (int) strtol(tmp, NULL, 10);
             }
@@ -376,9 +376,9 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
 //            tmp = json_string_value(value);
             new_message->author = malloc(sizeof(struct ld_json_user));
             if(new_message->author == NULL) {
-                ld_warning("ld_json_load_message: couldn't malloc user object");
+                ld_warning("ld_json_pack_message: couldn't malloc user object");
             } else if(ld_json_load_user(new_message->author, value) != 0) {
-                ld_warning("ld_json_load_message: couldn't read author object properly");
+                ld_warning("ld_json_pack_message: couldn't read author object properly");
             }
         }
 
@@ -389,7 +389,7 @@ int *ld_json_load_message(struct ld_json_message *new_message, json_t *message) 
 }
 
 //snowflake conversion function
-int ld_json_load_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake) {
+int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake) {
     if(new_flake == NULL) {
         return 0;
     }

@@ -8,10 +8,25 @@
 #include "REST.h"
 
 /*
- * dump:    json_t to char *
- * load:    char * to json_t
- * create:  json_t to struct
- * save:    struct to char *
+ * READ:
+ * string -> struct
+ *
+ * SAVE:
+ * struct -> string
+ *
+ * LOAD:
+ * string -> json_t
+ * string -> (native type)
+ *
+ * PACK:
+ * json_t -> struct
+ * (native type) -> struct
+ *
+ * UNPACK:
+ * struct -> json_t
+ *
+ * DUMP:
+ * json_t -> string
  */
 
 /*
@@ -27,7 +42,7 @@
 /*
  * timestamp types are strings formatted in the ISO8601 format
  */
-typedef char *TIMESTAMP;
+typedef char * TIMESTAMP;
 
 
 
@@ -552,14 +567,14 @@ uint64_t ld_snowflake_str2num();
 char *ld_snowflake_num2str(LD_SNOWFLAKE flake);
 json_t *ld_json_dump_activity(struct ld_json_activity *activity);
 int ld_json_load_user(struct ld_json_user *new_user, json_t *user);
-json_t *ld_json_dump_user(struct ld_json_user *user);
-json_t *ld_json_dump_status_update(struct ld_json_status_update *status_update);
-json_t *ld_json_dump_identify_connection_properties(struct ld_json_identify_connection_properties *properties);
-json_t *ld_json_dump_identify(struct ld_json_identify *identify);
+json_t *ld_json_unpack_user(struct ld_json_user *user);
+json_t *ld_json_unpack_status_update(struct ld_json_status_update *status_update);
+json_t *ld_json_unpack_identify_connection_properties(struct ld_json_identify_connection_properties *properties);
+json_t *ld_json_unpack_identify(struct ld_json_identify *identify);
 const char *ld_json_status2str(enum ld_json_status_type type);
 int ld_json_message_init(struct ld_json_message *message);
 int ld_json_message_cleanup(struct ld_json_message *message);
-int *ld_json_load_message(struct ld_json_message *new_message, json_t *message);
-int ld_json_load_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake);
+int *ld_json_pack_message(struct ld_json_message *new_message, json_t *message);
+int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake);
 
 #endif //LIBDISCORD_JSON_H
