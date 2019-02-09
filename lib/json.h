@@ -1,13 +1,17 @@
-/** @file */
+#include <cxxabi.h>/** @file */
 
 #ifndef LIBDISCORD_JSON_H
 #define LIBDISCORD_JSON_H
 
 #include <libdiscord.h>
 #include <jansson.h>
+#include <time.h>
+
 #include "REST.h"
 
 /*
+ *
+ * native type:
  * READ:
  * string -> struct
  *
@@ -27,22 +31,11 @@
  *
  * DUMP:
  * json_t -> string
- */
-
-/*
- * snowflakes are 64 bit unsigned integers encoded in decimal in a string for maximum compatability with languages that
- * can't handle 64 bit integers
  *
- * something that libdiscord should check to see is that some architectures don't support numbers past a certain size
- * i.e. 32 bit only
- * how we handle that will be interesting
+ * snowflake: uint64_t
+ * timestamps: strings
+ * example: 2019-02-09T21:31:47.083000+00:00
  */
-//typedef uint64_t LD_SNOWFLAKE;
-
-/*
- * timestamp types are strings formatted in the ISO8601 format
- */
-typedef char * TIMESTAMP;
 
 
 
@@ -51,8 +44,10 @@ enum ld_json_status_type;
 enum ld_activity_flags;
 
 
+//library-specific
+struct ld_timestamp;
 
-
+// JSONs encapsulated into structs
 struct ld_json_snowflake;
 struct ld_json_status_update;
 struct ld_json_identify_connection_properties;
@@ -153,16 +148,30 @@ enum ld_activity_flags {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+
+/**
+ * @brief timestamp struct
+ * used for timestamp fields in events
+ * example string: 2019-02-09T21:31:47.083000+00:00
+ */
+struct ld_timestamp {
+    char * iso_str; ///< raw ISO8601 formatted string
+    uint64_t unix_epoch; ///< unix epoch in seconds
+    uint64_t discord_epoch; ///< milliseconds since first second of 2015
+};
+
 /**
  * @brief decoded snowflake struct
  *
  * <a href="https://discordapp.com/developers/docs/reference#snowflakes" Discord API Documentation</a>
  */
 struct ld_json_snowflake {
-    unsigned long long timestamp; ///< milliseconds since the first second of 2015, aka Discord epoch
+    uint64_t timestamp; ///< milliseconds since the first second of 2015, aka Discord epoch
     unsigned long long worker_id; ///< internal worker ID
     unsigned long long process_id; ///< internal process ID
     unsigned long long increment; ///< incremented for every generated snowflake on that process
+
+    uint64_t unix_timestamp; ///< unix timestamp in milliseconds
 };
 
 /**
@@ -172,9 +181,9 @@ struct ld_json_snowflake {
  */
 struct ld_json_status_update {
 //    struct ld_json_user *user; // no longer in the discord API documentation
-    LD_SNOWFLAKE *roles; ///< array of snowflakes, no longer in the discord API documentation?
+    uint64_t *roles; ///< array of snowflakes, no longer in the discord API documentation?
     struct ld_json_activity *game; ///< nullable field
-    LD_SNOWFLAKE guild_id; // no longer in the discord API documentation?
+    uint64_t guild_id; // no longer in the discord API documentation?
     enum ld_json_status_type status;
     int since; ///< nullable field
     int afk; ///< boolean
@@ -243,7 +252,7 @@ struct ld_json_activity {
     enum ld_presence_activity_type type;
     char *url; ///< optional and nullable
     struct ld_json_timestamps *timestamps; ///< optional
-    LD_SNOWFLAKE application_id; ///< optional
+    uint64_t application_id; ///< optional
     char *details; ///< optional and nullable
     char *state; ///< optional and nullable
     struct ld_json_party *party; ///< optional
@@ -278,7 +287,7 @@ struct ld_json_gateway_update_status {
 };
 
 struct ld_json_user {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *username;
     char *discriminator; //4 digit tag
     char *avatar;
@@ -290,7 +299,7 @@ struct ld_json_user {
 };
 
 struct ld_json_role {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *name;
     int color; //integer representation of hex color code
     int hoist; //boolean
@@ -301,7 +310,7 @@ struct ld_json_role {
 };
 
 struct ld_json_attachemnt {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *filename;
     int size;
     char *url;
@@ -371,7 +380,7 @@ struct ld_json_embed {
 };
 
 struct ld_json_emoji {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *name;
     struct ld_json_role **roles; //pointer to array of pointers
     struct ld_json_user *user;
@@ -392,7 +401,7 @@ struct ld_json_message_activity {
 };
 
 struct ld_json_message_application {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *cover_image;
     char *description;
     char *icon;
@@ -400,12 +409,12 @@ struct ld_json_message_application {
 };
 
 struct ld_json_message {
-    LD_SNOWFLAKE id;
-    LD_SNOWFLAKE channel_id;
+    uint64_t id;
+    uint64_t channel_id;
     struct ld_json_user *author;
     char *content;
-    TIMESTAMP timestamp; //ISO 8601 formatted string
-    TIMESTAMP edited_timestamp; //ISO 8601 formatted string
+    char * timestamp; //ISO 8601 formatted string
+    char * edited_timestamp; //ISO 8601 formatted string
     int tts; //boolean
     int mention_everyone; //boolean
     struct ld_json_user **mentions; //array of user objects. NOTE: last pointer in array is a null pointer
@@ -413,21 +422,21 @@ struct ld_json_message {
     struct ld_json_attachemnt **attachments;
     struct ld_json_embed **embeds;
     struct ld_json_reaction **reactions;
-    LD_SNOWFLAKE webhook_id;
+    uint64_t webhook_id;
     int type;
     struct ld_json_message_activity *activity;
     struct ld_json_message_application *application;
 };
 
 struct ld_json_overwrite {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *type;
     int allow;
     int deny;
 };
 
 struct ld_json_attachment {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *filename;
     int size;
     char *url;
@@ -437,29 +446,29 @@ struct ld_json_attachment {
 };
 
 struct ld_json_channel {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     int type;
-    LD_SNOWFLAKE guild_id;
+    uint64_t guild_id;
     int position;
     struct ld_json_overwrite **permission_overwrites;
     char *name;
     char *topic;
     int nsfw; //boolean
-    LD_SNOWFLAKE last_message_id;
+    uint64_t last_message_id;
     int bitrate;
     int user_limit;
     struct ld_json_user **recipients;
     char *icon;
-    LD_SNOWFLAKE owner_id;
-    LD_SNOWFLAKE application_id;
-    LD_SNOWFLAKE parent_id;
-    TIMESTAMP last_pin_timestamp; //ISO8601 formatted string
+    uint64_t owner_id;
+    uint64_t application_id;
+    uint64_t parent_id;
+    char * last_pin_timestamp; //ISO8601 formatted string
 };
 
 struct ld_json_voice_state {
-    LD_SNOWFLAKE guild_id;
-    LD_SNOWFLAKE channel_id;
-    LD_SNOWFLAKE user_id;
+    uint64_t guild_id;
+    uint64_t channel_id;
+    uint64_t user_id;
     char *session_id; //documentation lists as string type
     int deaf; //boolean
     int mute; //boolean
@@ -471,25 +480,25 @@ struct ld_json_voice_state {
 struct ld_json_guild_member {
     struct ld_json_user *user;
     char *nick;
-    LD_SNOWFLAKE *roles; //array of ints
-    TIMESTAMP joined_at; //ISO8601 formatted timestamp;
+    uint64_t *roles; //array of ints
+    char * joined_at; //ISO8601 formatted timestamp;
     int deaf; //boolean
     int mute; //boolean
 };
 
 struct ld_json_guild {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *name;
     char *icon;
     char *splash;
     int owner;
-    LD_SNOWFLAKE owner_id;
+    uint64_t owner_id;
     int permissions;
     char *region;
-    LD_SNOWFLAKE afk_channel_id;
+    uint64_t afk_channel_id;
     int afk_timeout;
     int embed_enabled; //bool
-    LD_SNOWFLAKE embed_channel_id;
+    uint64_t embed_channel_id;
     int verification_level;
     int default_message_notifications;
     int explicit_content_filter;
@@ -497,11 +506,11 @@ struct ld_json_guild {
     struct ld_json_emoji **emojis;
     char **features; //array of strings
     int mfa_level;
-    LD_SNOWFLAKE application_id;
+    uint64_t application_id;
     int widget_enabled; //boolean
-    LD_SNOWFLAKE widget_channel_id;
-    LD_SNOWFLAKE system_channel_id;
-    TIMESTAMP joined_at; //ISO8601 timestamp formatted string
+    uint64_t widget_channel_id;
+    uint64_t system_channel_id;
+    char * joined_at; //ISO8601 timestamp formatted string
     int large; //boolean
     int unavailable; //boolean
     int member_count;
@@ -512,7 +521,7 @@ struct ld_json_guild {
 };
 
 struct ld_json_account {
-    LD_SNOWFLAKE id; //discord API documentation lists this as a string type
+    uint64_t id; //discord API documentation lists this as a string type
     char *name;
 };
 
@@ -522,12 +531,12 @@ struct ld_json_ban {
 };
 
 struct ld_json_integration {
-    LD_SNOWFLAKE id;
+    uint64_t id;
     char *name;
     char *type;
     int enabled; //boolean
     int syncing; //boolean
-    LD_SNOWFLAKE role_id;
+    uint64_t role_id;
     int expire_behavior;
     int expire_grace_period;
     struct ld_json_user *user;
@@ -563,8 +572,8 @@ json_t *ld_json_create_payload(json_t *op, json_t *d, json_t *t, json_t *s);
 json_t *ld_json_create_message();
 
 //todo: snowflake conversion functions
-uint64_t ld_snowflake_str2num();
-char *ld_snowflake_num2str(LD_SNOWFLAKE flake);
+uint64_t ld_str2snowflake();
+char * ld_snowflake2str(uint64_t flake);
 json_t *ld_json_dump_activity(struct ld_json_activity *activity);
 int ld_json_load_user(struct ld_json_user *new_user, json_t *user);
 json_t *ld_json_unpack_user(struct ld_json_user *user);
@@ -575,6 +584,7 @@ const char *ld_json_status2str(enum ld_json_status_type type);
 int ld_json_message_init(struct ld_json_message *message);
 int ld_json_message_cleanup(struct ld_json_message *message);
 int *ld_json_pack_message(struct ld_json_message *new_message, json_t *message);
-int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake);
+int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, uint64_t snowflake);
+int ld_json_read_timestamp(struct ld_timestamp *new_timestamp, char *timestamp);
 
 #endif //LIBDISCORD_JSON_H

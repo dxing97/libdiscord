@@ -18,8 +18,9 @@
 int bot_exit = 0;
 
 char trigger[] = "!hash";
+char halt_trigger[] = "hcf";
 
-//unsigned long long target_channel = 342013131121229824;
+uint64_t target_channel = 0;
 
 struct buffer {
     char *buf;
@@ -75,36 +76,6 @@ char *to_hash2(const char *input, const char *hashfun) {
     return binary2hex(md_value, md_len);
 }
 
-//int hashfun(EVP_MD *md, char *content, struct buffer *buffer) {
-//    EVP_MD_CTX *mdctx;
-//
-//    unsigned char md_value[EVP_MAX_MD_SIZE];
-//    unsigned int md_len;
-//
-//    mdctx = EVP_MD_CTX_create();
-//    EVP_DigestInit_ex(mdctx, md, NULL);
-//    EVP_DigestUpdate(mdctx, content, strlen(content));
-////    EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
-//    EVP_DigestFinal_ex(mdctx, md_value, (unsigned int *) &md_len);
-//    EVP_MD_CTX_destroy(mdctx);
-//
-//    /*
-//    debug_printfnln("token2key: hashed token is ");
-//    for(i = 0; i < md_len; i++)
-//        debug_printfnln("%02x", md_value[i]);
-//    debug_printf("\n");*/
-//
-//    buffer->buf = malloc(sizeof(char) * md_len + 10);
-//    buffer->len = md_len;
-//
-//    buffer->buf = memcpy(buffer->buf, md_value, md_len); //we only want first 128 bits
-//
-//    /* Call this once before exit. */
-//    EVP_cleanup();
-//
-//    return 0;
-//}
-
 //takes message and extracts the message we want to hash
 char *to_hash(struct ld_json_message *message, struct ld_context *context) {
     char *message_content = message->content;
@@ -153,60 +124,40 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         char *next;
         if(message.content == NULL) {
             ld_debug("empty message!");
-            return 0;
+            return LDS_OK;
         }
 
-        if(strcmp(message.content, "hcf") == 0) {
+        if(strcmp(message.content, halt_trigger) == 0) {
             //halt
+            target_channel = message.channel_id; //reply to hcf message
             bot_exit = 1;
+            return LDS_OK;
         }
-
-
-//        long long count = strtoll(message.content, &next, 10);
-//        if(next == message.content) {
-//            ld_debug("not a number");
-//            return 0;
-//        }
-
-//        if(message.channel_id != target_channel){
-//            //not in target channel
-//            ld_debug("not in target channel");
-//            return 0;
-//        }
 
         if(message.author->id == context->current_user->id) {
-            ld_debug("can't respond to ourselves");
-            return 0;
+            ld_debug("callback: can't respond to ourselves");
+            return LDS_OK;
         }
 
         if(message.author->bot == 1) {
-            ld_debug("shouldn't respond to another bot");
-            return 0;
+            ld_debug("callback: shouldn't respond to another bot");
+            return LDS_OK;
         }
 
         char *hash = to_hash(&message, context);
         if(hash == NULL) {
             //message wasn't formatted correctly, do nothing
-            return 0;
+            return LDS_OK;
         }
 
         ld_send_basic_message(context, message.channel_id, hash);
         free(hash);
 
-//        if(rand() % 3 == 0) { //33 % chance of responding
-//            return 0;
-//        }
-
-//        char channelid[64], new_message[64];
-//        sprintf(channelid, "%llu", message.channel_id);
-//        sprintf(new_message, "%lld", count + 1);
-//        ld_send_basic_message(context, channelid, new_message);
-
-        return 0;
+        return LDS_OK;
     }
 
 
-    return 0;
+    return LDS_OK;
 }
 
 void sig_handler(int i) {
@@ -329,10 +280,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ld_send_basic_message(context, 345264084679131146, "example-bot-hash: received SIGINT or HCF, cleaning up");
+    ld_send_basic_message(context, target_channel, "example-bot-hash: received SIGINT or HALT_TRIGGER, cleaning up");
 
     ABORT:
     ld_cleanup_context(context);
     free(bot_token);
+
     return 0;
 }

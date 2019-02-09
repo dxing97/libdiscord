@@ -9,7 +9,7 @@
 
 
 
-char *ld_snowflake_num2str(LD_SNOWFLAKE flake) {
+char * ld_snowflake2str(uint64_t flake) {
     char *tmp;
     tmp = malloc(sizeof(char)*128);
     snprintf(tmp, 127, "%llu", (unsigned long long) flake);
@@ -177,7 +177,7 @@ json_t *ld_json_unpack_status_update(struct ld_json_status_update *status_update
     char tmp[128];
     snprintf(tmp, 127, "%llu", (unsigned long long) status_update->guild_id);
 
-    json_object_set(su, "user", json_string(ld_snowflake_num2str(status_update->guild_id)));
+    json_object_set(su, "user", json_string(ld_snowflake2str(status_update->guild_id)));
 
     json_t *roles = json_array();
 
@@ -185,7 +185,7 @@ json_t *ld_json_unpack_status_update(struct ld_json_status_update *status_update
     if(status_update->roles != NULL) {
         ld_debug("role: %d", *status_update->roles);
         for (i = 0; i < strlen((char *) status_update->roles); i++) {
-            json_array_append_new(roles, json_string(ld_snowflake_num2str(status_update->roles[i])));
+            json_array_append_new(roles, json_string(ld_snowflake2str(status_update->roles[i])));
         }
         json_object_set(su, "roles", roles);
     }
@@ -389,17 +389,18 @@ int *ld_json_pack_message(struct ld_json_message *new_message, json_t *message) 
 }
 
 //snowflake conversion function
-int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE snowflake) {
+int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, uint64_t snowflake) {
     if(new_flake == NULL) {
-        return 0;
+        return LDS_OK;
     }
 
-    unsigned long long tmp;
+    uint64_t tmp;
 
-    tmp = (snowflake >> 22)
-            + 1420070400000 //convert to unix time in ms
-            ;
-    new_flake->timestamp = tmp;
+    tmp = (snowflake >> 22);
+    new_flake->timestamp = tmp; //discord epoch in ms
+
+    tmp = ((snowflake >> 22) + 1420070400000); //convert to unix time in milliseconds
+    new_flake->unix_timestamp = tmp;
 
     tmp = (snowflake & 0x3E0000) >> 17;
     new_flake->worker_id = tmp;
@@ -410,5 +411,20 @@ int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, LD_SNOWFLAKE sno
     tmp = snowflake & 0xFFF;
     new_flake->increment = tmp;
 
-    return 0;
+    return LDS_OK;
+}
+
+int ld_json_read_timestamp(struct ld_timestamp *new_timestamp, char *timestamp) {
+    if(new_timestamp == NULL) {
+        return LDS_OK;
+    }
+
+    struct tm *time;
+    time = getdate(timestamp);
+
+    new_timestamp->iso_str = strdup(timestamp);
+    new_timestamp->unix_epoch = (uint64_t) mktime(time);
+    new_timestamp->discord_epoch = new_timestamp->unix_epoch * 1000 - 1420070400000;
+
+    return LDS_OK;
 }
