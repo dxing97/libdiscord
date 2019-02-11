@@ -114,9 +114,8 @@ int main(int argc, char *argv[]) {
     info->user_callback = callback;
     info->gateway_ringbuffer_size = 8;
 
-    struct ld_context *context;
-    context = ld_init_context(info, context);
-    if(context == NULL) {
+    struct ld_context *context = malloc(sizeof(struct ld_context));
+    if(ld_init_context(info, context) != LDS_OK) {
         ld_error("error creating libdiscord context");
         return 1;
     }
