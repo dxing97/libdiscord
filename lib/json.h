@@ -1,4 +1,4 @@
-#include <cxxabi.h>/** @file */
+/** @file */
 
 #ifndef LIBDISCORD_JSON_H
 #define LIBDISCORD_JSON_H
