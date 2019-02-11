@@ -17,7 +17,7 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
         struct ld_json_message message;
         ld_json_message_init(&message);
 
-        ld_json_load_message(&message, (json_t *) data);
+        ld_json_pack_message(&message, (json_t *) data);
 
         char *next;
         if (message.content == NULL) {

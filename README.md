@@ -17,5 +17,5 @@ Currently only tested against Ubuntu 18.04 and macOS Mojave.
 ## Example Bots
 See [example_bots](example_bots) for a couple of sample bots. 
 
-## [Install scripts](scrips)
+## [Install scripts](scripts)
 Intended for development use only.

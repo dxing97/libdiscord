@@ -1,23 +1,19 @@
 ## Goals
-* Get a stable working minimal example bot with minimal spaghetti (mostly working, still too much spaghet)
+* Get a stable working minimal example bot ~~with minimal spaghetti~~ (mostly working, not stable)
 * Get 100% coverage of all API functions (websocket gateway, REST, voice websocket, voice UDP, v1.0 release)
-* ~~Discord developer ToS compliant~~ compliance will be up to bot developers, although the library will try to include 
-some convenience functions to make this easier if nessecary
+* ~~Discord developer ToS compliant~~ (compliance will be up to bot developers, although the library will try to include 
+some convenience functions to make this easier if necessary)
 * ~~A bot that can turn your lights on~~ too vague
 
 ## Todo
 Ordered roughly in terms of priority.
 
 ### Library
-* see if we want to use libuv for libdiscord - libwebsockets and libcurl
-  * figure out how libuv 
-* Basic metadata manipulation functions: sublibrary/module for JSON data payloads/structs for lower level abstraction
-* Better documentation (comments in the source code is NOT good documentation)
+* Improve doxygen documentation
 * helper function to verify if a bot token is valid without connecting to discord
 
 ### Websocket
-* look into potentially migrating to LWS 3.0
-* More callbacks
+* More detailed and documented callbacks
 * Sharding
 * merge ld_connect and ld_service
 
@@ -28,11 +24,12 @@ Ordered roughly in terms of priority.
 * Add way of logging bot actions through a Discord channels (use Discord channel for logging)
 
 ### JSON
+* **FIX REFERENCES SO WE DON'T LEAK AS MUCH MEMORY**
 * Nullable vs optional fields - how to handle?
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
 * string to snowflake function
 * Timestamp manipulation functions
-    * Make/find functions that will encode/decode ISO8601-formatted strings. Will GNU save us?
+    * Make/find functions that will encode/decode ISO8601-formatted strings. Use GNU function?
     
 ### Example Bots
 #### minimal - Minimal example websocket bot
@@ -42,32 +39,29 @@ Ordered roughly in terms of priority.
 * add halt message channel option
 
 #### ayylmao - A Basic Call and Response Bot
-* rewrite using new message commands used in counter
-    * Ignore calls from other bots
-* Bug: space in response CLI option causes spam of the response
 * Add support for multiple calls/responses per bot
   * wew-lad?
   * rename bot to call-response when this is implemented
 
 
 #### Stalkerbot - Track user presence
-* a bot to tell you when your bot crashes (wait...)
+* a bot to tell you when your bot crashes (waitaminute...)
 
 #### ping - A Comprehensive Latency Tool
-* Measure latency between libcurl and ulfius
+* Measure communication and server operation latencies to Discord
 
-#### A Discord CLI Tool
-* Shell scripting integration?
+#### simplepost
+* Extend to some sort of CLI scriptable tool for posting messages?
 
 #### A Configurable Bot for the Masses
 * Look into YAML formatting
 * YAML -> JSON converter? Support multiple config types
 
 ## Planned
-* Git submodules to statically link some dependencies (cygwin)
+* Git submodules to statically link some dependencies (cygwin?)
 * zlib compression support in gateway payloads (check other compression methods in gateway connections)
-* See if jansson increment/decrement needs to be used
-* More elaborate CMake setup for OS detection, dependency checks
+
+* More elaborate CMake setup for ~~OS detection~~, dependency checks
 
 ## Far Future
 * Rich presence integration?
