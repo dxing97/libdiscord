@@ -2,6 +2,7 @@
 
 #ifndef LIBDISCORD_JSON_H
 #define LIBDISCORD_JSON_H
+#define _GNU_SOURCE 1
 
 #include <libdiscord.h>
 #include <jansson.h>
