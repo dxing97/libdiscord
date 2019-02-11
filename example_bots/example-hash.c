@@ -329,10 +329,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ld_send_basic_message(context, 345264084679131146, "example-bot-hash: received SIGINT or HCF, cleaning up");
+    ld_send_basic_message(context, 463486213462949898, "example-bot-hash: received SIGINT or HCF, cleaning up");
 
     ABORT:
     ld_cleanup_context(context);
+    free(context);
+    context = NULL;
     free(bot_token);
     return 0;
 }

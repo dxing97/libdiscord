@@ -606,6 +606,7 @@ ld_status ld_gateway_connect(struct ld_context *context) {
         return 1;
     }
     free(ads_port);
+    free(i);
     return 0;
 }
 
