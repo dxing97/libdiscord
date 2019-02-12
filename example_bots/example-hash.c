@@ -284,6 +284,8 @@ int main(int argc, char *argv[]) {
 
     ABORT:
     ld_cleanup_context(context);
+    free(context);
+    context = NULL;
     free(bot_token);
 
     return 0;
