@@ -264,7 +264,7 @@ struct ld_json_activity {
 /**
  * @brief Activity secrets json object
  *
- * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-secrets" Discord API Documentation </a>
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#activity-object-activity-secrets"> Discord API Documentation </a>
  *
  */
 struct ld_json_secrets {
@@ -276,7 +276,7 @@ struct ld_json_secrets {
 /**
  * @brief Gateway status update json object
  *
- * <a href="https://discordapp.com/developers/docs/topics/gateway#update-status-gateway-status-update-structure" Discord API Documentation </a>
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#update-status-gateway-status-update-structure"> Discord API Documentation </a>
  */
 
 struct ld_json_gateway_update_status {
@@ -286,6 +286,9 @@ struct ld_json_gateway_update_status {
     int afk;
 };
 
+/**
+ *
+ */
 struct ld_json_user {
     uint64_t id;
     char *username;

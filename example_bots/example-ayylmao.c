@@ -134,9 +134,6 @@ int main(int argc, char *argv[]) {
             case 'l':
                 log_level = strtoul(optarg, NULL, 10);
                 break;
-//            case 'u':
-//                use_ulfius = 1;
-//                break;
             case 'g':
                 game = strdup(optarg);
                 break;
@@ -211,7 +208,6 @@ int main(int argc, char *argv[]) {
                 bot_exit = 1;
         }
     }
-    //disconnect from discord gracefully
     ld_info("disconnecting from discord");
     //destroy the context
     ld_cleanup_context(&context);

@@ -8,14 +8,16 @@ some convenience functions to make this easier if necessary)
 ## Todo
 Ordered roughly in terms of priority.
 
-### Library
-* Improve doxygen documentation
-* helper function to verify if a bot token is valid without connecting to discord
-
 ### Websocket
+* Reconnections
 * More detailed and documented callbacks
 * Sharding
 * merge ld_connect and ld_service
+
+### Library
+* Improve doxygen documentation
+* Improve logging faclilities (switch to LWS' logging functions entirely?)
+* helper function to verify if a bot token is valid without connecting to discord
 
 ### REST
 * Nonblocking HTTP requests

@@ -58,14 +58,12 @@ ld_status ld_init_context_info(struct ld_context_info *info) {
  * returns NULL if the info struct was malformed or missing things
  * allocates memory for the struct and internal components
  */
-ld_status ld_init_context(struct ld_context_info *info, struct ld_context *context) {
+ld_status ld_init_context(const struct ld_context_info *info, struct ld_context *context) {
     if(context == NULL) {
 //        struct ld_context *context = malloc(sizeof(struct ld_context));
         ld_error("%s: was passed null pointer for context", __FUNCTION__);
         return LDS_MEMORY_ERR;
     }
-
-//    context->gateway_state = LD_GATEWAY_UNCONNECTED;
 
     context->user_callback = info->user_callback;
 
@@ -78,14 +76,44 @@ ld_status ld_init_context(struct ld_context_info *info, struct ld_context *conte
         return LDS_CURL_ERR;
     }
 
+
+    // bot token copying
     if(info->bot_token == NULL) {
         ld_error("%s: bot token is null, can't continue", __FUNCTION__);
         return LDS_TOKEN_MISSING_ERR;
     }
     context->bot_token = strdup(info->bot_token);
 
+
+    // logging
     lws_set_log_level(31, NULL);
 
+
+    // LWS context init
+    context->lws_context = NULL;
+    struct lws_context_creation_info ccinfo;
+    memset(&ccinfo, 0, sizeof(struct lws_context_creation_info));
+
+    ccinfo.port = CONTEXT_PORT_NO_LISTEN;
+    ccinfo.iface = NULL;
+    ccinfo.protocols = protocols;
+    ccinfo.extensions = exts;
+    ccinfo.options = LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+    ccinfo.ssl_cert_filepath = NULL;
+    ccinfo.ssl_private_key_filepath = NULL;
+    ccinfo.gid = -1;
+    ccinfo.uid = -1;
+    ccinfo.server_string = NULL;
+    ccinfo.user = context;
+
+    context->lws_context = lws_create_context(&ccinfo);
+    if(context->lws_context == NULL) {
+        ld_error("%s: couldn't create lws_context\n", __FUNCTION__);
+        return LDS_WEBSOCKET_INIT_ERR;
+    }
+
+
+    // LWS gateway payload ringbuffer init
     context->gateway_ring = lws_ring_create(
             sizeof(struct ld_gateway_payload),
             info->gateway_ringbuffer_size,
@@ -95,6 +123,8 @@ ld_status ld_init_context(struct ld_context_info *info, struct ld_context *conte
         return LDS_WEBSOCKET_RINGBUFFER_ERR;
     }
 
+
+    // Initial bot presence
     context->init_presence = malloc(sizeof(struct ld_json_status_update));
     if(context->init_presence == NULL) {
         ld_error("%s: error mallocing initial presence");
@@ -104,15 +134,23 @@ ld_status ld_init_context(struct ld_context_info *info, struct ld_context *conte
         context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
     else
         context->init_presence = NULL;
+
+
+    // GET /gateway/bot naive ratelimiting
     context->gateway_bot_limit = 1;
     context->gateway_bot_remaining = 1;
     context->gateway_bot_reset = lws_now_secs();
 
+
     context->gi_count = 0;
 
+
+    // heartbeat tracking
     context->heartbeat_interval = 0;
     context->hb_count = 0;
     context->last_hb = lws_now_secs();
+
+
 
     context->gateway_rx_buffer_len = 0;
     context->gateway_rx_buffer = NULL;
@@ -120,7 +158,10 @@ ld_status ld_init_context(struct ld_context_info *info, struct ld_context *conte
 
     context->gateway_session_id = NULL;
 
+
+    // current user info
     context->current_user = NULL;
+
 
     //hello payload properties
     if(info->device != NULL) { //override default
@@ -132,7 +173,7 @@ ld_status ld_init_context(struct ld_context_info *info, struct ld_context *conte
     if(info->browser != NULL) {
         context->browser = strdup(info->browser);
     } else {
-        info->browser = LD_LIBNAME;
+        context->browser = LD_LIBNAME;
     }
 
     if(info->os != NULL) {
@@ -389,7 +430,7 @@ struct ld_gi *_ld_init_gi(struct ld_context *context) {
 }
 
 /*
- * connect to discord
+ * connect to discord gateway
  * HTTP authorization initialization
  *  check the bot token's validity here
  * websocket/gateway connection and initialization
@@ -431,7 +472,7 @@ ld_status ld_connect(struct ld_context *context) {
         context->current_user = malloc(sizeof(struct ld_json_user));
         if(context->current_user == NULL) {
             ld_error("ld_connect: couldn't allocate user struct");
-            return LDS_ERROR;
+            return LDS_MEMORY_ERR;
         }
         ret = ld_get_current_user(context, context->current_user);
         if(ret != LDS_OK) {
@@ -535,49 +576,35 @@ ld_status ld_service(struct ld_context *context, int timeout) {
  */
 ld_status ld_gateway_connect(struct ld_context *context) {
 
-
-//    switch(context->gateway_state) {
-//        case LD_GATEWAY_UNCONNECTED:
-//            context->gateway_state = LD_GATEWAY_CONNECTING;
-//            break;
-//        case LD_GATEWAY_CONNECTING:
-//            ld_debug("ld_gateway_connect: still trying to connect");
-//            break;
-////            return 0;
-//        case LD_GATEWAY_CONNECTED:
-//            ld_debug("ld_gateway_connect: already connected");
-//            return 0;
-//    }
-
     //lws context creation info
-    struct lws_context_creation_info info;
-    struct lws_context *lws_context;
-    struct lws_client_connect_info *i;
-
-    memset(&info, 0, sizeof(info));
+//    struct lws_context_creation_info info;
+//    struct lws_context *lws_context;
+    struct lws_client_connect_info *i; ///< @todo allocate on stack instead of the heap
+//
+//    memset(&info, 0, sizeof(info));
     i = malloc(sizeof(struct lws_client_connect_info));
-    memset(i, 0, sizeof(struct lws_client_connect_info));
+//    memset(i, 0, sizeof(struct lws_client_connect_info));
+//
+//    info.port = CONTEXT_PORT_NO_LISTEN;
+//    info.iface = NULL;
+//    info.protocols = protocols;
+//    info.extensions = exts;
+//    info.options = LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
+//    info.ssl_cert_filepath = NULL;
+//    info.ssl_private_key_filepath = NULL;
+//    info.gid = -1;
+//    info.uid = -1;
+//    info.server_string = NULL;
+//    info.user = context;
+//
+//    lws_context = lws_create_context(&info);
+//    if(lws_context == NULL) {
+//        ld_error("lws context init failed while trying to connect to the gateway");
+//        return -1;
+//    }
+//    context->lws_context = lws_context;
 
-    info.port = CONTEXT_PORT_NO_LISTEN;
-    info.iface = NULL;
-    info.protocols = protocols;
-    info.extensions = exts;
-    info.options = LWS_SERVER_OPTION_VALIDATE_UTF8 | LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
-    info.ssl_cert_filepath = NULL;
-    info.ssl_private_key_filepath = NULL;
-    info.gid = -1;
-    info.uid = -1;
-    info.server_string = NULL;
-    info.user = context;
-
-    lws_context = lws_create_context(&info);
-    if(lws_context == NULL) {
-        ld_error("lws context init failed while trying to connect to the gateway");
-        return -1;
-    }
-    context->lws_context = lws_context;
-
-    i->context = lws_context;
+    i->context = context->lws_context;
 
     char *gateway_url;
     gateway_url = malloc(1000);
@@ -606,6 +633,7 @@ ld_status ld_gateway_connect(struct ld_context *context) {
         return 1;
     }
     free(ads_port);
+    free(i);
     return 0;
 }
 
@@ -1115,7 +1143,7 @@ ld_status ld_gateway_queue_heartbeat(struct ld_context *context) {
     hb = ld_json_create_payload(json_integer(LD_GATEWAY_OPCODE_HEARTBEAT),
                                 json_integer(context->last_seq), NULL, NULL); //create heartbeat payload
 
-    if(lws_ring_get_count_free_elements(context->gateway_ring) == LDS_OK) {
+    if(lws_ring_get_count_free_elements(context->gateway_ring) == 0) {
         ld_warning("%s: can't fit any new payloads into gateway ringbuffer", __FUNCTION__);
         return LDS_WEBSOCKET_CANTFIT_PAYLOAD_ERR;
     }
@@ -1125,7 +1153,7 @@ ld_status ld_gateway_queue_heartbeat(struct ld_context *context) {
     tmp->payload = strdup(json_dumps(hb, 0));
 
     ret = lws_ring_insert(context->gateway_ring, tmp, 1);
-    if(ret != LDS_OK) {
+    if(ret != 1) {
         ld_warning("couldn't fit heartbeat payload into gateway ringbuffer");
         return LDS_WEBSOCKET_CANTFIT_HEARTBEAT_ERR;
     }

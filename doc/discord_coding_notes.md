@@ -13,6 +13,28 @@ if sucessfully resumed
 else
     gateway sends op9 invalid session
     
+    
+connect to gateway:
+if(previous session info does not exist)
+    send identify
+    etc (normal control flow)
+else
+    send resume
+    set resuming to 1
+endif
+
+if(websocket rx resumed)
+    set resuming to 0
+
+disconnect from gateway:
+set resuming to 0
+if(session invalidated)
+    delete session info 
+else(session might be valid)
+    keep current session info
+    
+
+
 
 ```
 

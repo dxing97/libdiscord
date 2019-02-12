@@ -29,6 +29,7 @@
 
 /**
  * @brief Return values from decoding
+ * depreciated, use status.h LDS enums
  */
 enum ldecode {
     LDE_OK = 0, ///< everything is OK
@@ -288,13 +289,16 @@ ld_status ld_init_context_info(struct ld_context_info *info);
 
 /**
  * @brief Initializes an ld_context struct using a given ld_context_info
+ * @details Takes a context info struct and creates a context with relevant info nessecary for the lifetime of a discord
+ * bot.
+ * @todo Move websocket lws_context initilization here, from ld_gateway_connect
  * 
  * @param info A pointer to an already-initialized ld_context_info
- * @param context A pointer to the context to initialize
+ * @param context A pointer to the context to initialize, with zeroed memory already allocated to it.
  * 
  * @return int Status code
  */
-ld_status ld_init_context(struct ld_context_info *info, struct ld_context *context);
+ld_status ld_init_context(const struct ld_context_info *info, struct ld_context *context);
 
 /**
  * @brief Frees the members of a given ld_context struct, then destroys the struct
@@ -388,15 +392,13 @@ ld_status ld_service(struct ld_context *context, int timeout);
 
 /**
  * @brief Starts a fresh gateway connection
- * @n This will:
- * @n - start a fresh websocket connection
- * @n - parse HELLO payload
- * @n - create & send IDENTIFY payload
- * @n - start timekeeping for heartbeats
+ * @details Called inside ld_connect, initializes and creates a libwebsocket client connection
+ *
+ * @todo allocate lws_client_connect_info on stack instead of heap
  * 
  * @param context Pointer to an ld_context struct
  * 
- * @return int Status code. 0 on success.
+ * @return int Status code. 0 (LDS_OK) on success.
  */
 ld_status ld_gateway_connect(struct ld_context *context);
 

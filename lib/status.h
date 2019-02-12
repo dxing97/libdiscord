@@ -24,6 +24,7 @@
      LDS_WEBSOCKET_CANTFIT_PAYLOAD_ERR = 210, ///< websocket: can't fit new payload into ringbuffer error
      LDS_WEBSOCKET_CANTFIT_HEARTBEAT_ERR = 211, ///< websocket: can't fit heartbeat into ringbuffer error
      LDS_WEBSOCKET_HEARTBEAT_ACKNOWLEDEGEMENT_MISSED = 220, ///< websocket: heartbeat ack missed
+     LDS_WEBSOCKET_INIT_ERR = 230, ///< websocket: error initializing lws context
      LDS_JSON_ERR = 300, ///< generic JSON error
      LDS_JSON_DECODING_ERR = 301, ///< JSON decoding error
      LDS_JSON_ENCODING_ERR = 302, ///< JSON encoding error
