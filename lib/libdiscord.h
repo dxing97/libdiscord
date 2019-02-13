@@ -165,6 +165,10 @@ struct ld_gateway_payload {
 
 struct ld_gi;
 
+struct ld_gateway_session {
+
+};
+
 /**
  * 
  * @brief Context for each bot
@@ -198,7 +202,7 @@ struct ld_context {
     char *gateway_rx_buffer; ///< pointer to rx buffer used for large websocket payloads
     size_t gateway_rx_buffer_len; ///< rx buffer size
     // struct _ld_json_presence *presence;
-    char *gateway_session_id; ///< gateway session ID
+    char *gateway_session_id; ///< gateway session ID, received in READY payload
     int gateway_bot_limit; ///< ratelimit reset amount \todo integrate into library ratelimit interface
     int gateway_bot_remaining; ///< last ratelimit remaining value \todo
     unsigned long gateway_bot_reset; ///< unix time for reset \todo

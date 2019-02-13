@@ -17,7 +17,7 @@
 
 int bot_exit = 0;
 
-char trigger[] = "!hash";
+char *trigger = NULL;
 char halt_trigger[] = "hcf";
 
 uint64_t target_channel = 0;
@@ -65,7 +65,7 @@ char *to_hash2(const char *input, const char *hashfun) {
     EVP_DigestInit_ex(mdctx, md, NULL);
     EVP_DigestUpdate(mdctx, mess1, strlen(mess1));
     EVP_DigestUpdate(mdctx, mess2, strlen(mess2));
-    EVP_DigestFinal_ex(mdctx, md_value, &md_len);
+    EVP_DigestFinal_ex(mdctx, md_value,  (unsigned int *) &md_len);
 #if OPENSSL_VERSION_NUMBER > 0x1010000fL //1.1.0release
     EVP_MD_CTX_free(mdctx);
 #else
@@ -110,6 +110,8 @@ char *to_hash(struct ld_json_message *message, struct ld_context *context) {
         ld_send_basic_message(context, message->channel_id, tmp);
     }
 
+    target_channel = message->channel_id;
+
     return ret;
 
 }
@@ -150,8 +152,13 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
             return LDS_OK;
         }
 
-        ld_send_basic_message(context, message.channel_id, hash);
+        int ret = ld_send_basic_message(context, message.channel_id, hash);
         free(hash);
+
+        if(ret != LDS_OK) {
+            ld_error("%s: error sending hash\n", __FUNCTION__);
+            return LDS_CURL_ERR;
+        }
 
         return LDS_OK;
     }
@@ -192,9 +199,10 @@ int main(int argc, char *argv[]) {
                 {"help",      no_argument,       0, 'h'},
                 {"bot-token", required_argument, 0, 't'},
                 {"log-level", required_argument, 0, 'l'},
-                {0, 0,                           0, 0}
+                {"prefix"   , required_argument, 0, 'p'},
+                {0,                           0, 0,   0}
         };
-        c = getopt_long(argc, argv, "ht:l:", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:p:", long_options, &option_index);
         if(c == -1) {
             break;
         }
@@ -213,6 +221,9 @@ int main(int argc, char *argv[]) {
             case 'l':
                 log_level = strtoul(optarg, NULL, 10);
                 break;
+            case 'p':
+                trigger = strdup(optarg);
+                break;
             default:
                 return 1; //this should never happen
         }
@@ -225,6 +236,9 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    if(trigger == NULL) {
+        trigger = strdup("!hash");
+    }
     signal(SIGINT, sig_handler);
 
     printf("Initializing libdiscord at log level %lu\n", log_level);
@@ -280,9 +294,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ld_send_basic_message(context, target_channel, "example-bot-hash: received SIGINT or HALT_TRIGGER, cleaning up");
+    if(target_channel != 0)
+        ld_send_basic_message(context, target_channel, "example-bot-hash: received SIGINT or HALT_TRIGGER, cleaning up");
 
-    ABORT:
+ABORT:
     ld_cleanup_context(context);
     free(context);
     context = NULL;

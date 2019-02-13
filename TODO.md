@@ -37,6 +37,9 @@ Ordered roughly in terms of priority.
 #### minimal - Minimal example websocket bot
 * remake it again
 
+#### hash - digest generator
+* accept file uploads to hash
+
 #### counter - responds to i with i+1
 * add halt message channel option
 

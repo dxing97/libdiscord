@@ -163,7 +163,7 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     context->current_user = NULL;
 
 
-    //hello payload properties
+    // hello payload properties
     if(info->device != NULL) { //override default
         context->device = strdup(info->device);
     } else {
@@ -181,6 +181,9 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     } else {
         context->os = ld_get_os_name();
     }
+
+    // clear session info
+    context->gateway_session_id = NULL;
 
     return LDS_OK;
 }
@@ -956,6 +959,10 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
             ld_debug("heartbeat interval is %d", hbi);
             context->heartbeat_interval = hbi;
 
+            if(context->gateway_session_id != NULL) {
+                // resuming here
+                break;
+            }
             //prepare identify struct
             struct ld_json_identify ident;
 
@@ -1118,7 +1125,8 @@ ld_status ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, j
             ld_debug("dispatch type is %s, callback reason is %d", dispatch_dict[i].name,
                      dispatch_dict[i].cbk_reason);
             if(dispatch_dict[i].dispatch_callback != NULL) {
-                ld_debug("calling dispatch libdiscord callback for ld_callback (%s)", typestr);
+//                ld_debug("calling dispatch libdiscord callback for ld_callback (%s)", typestr);
+                //library callback
                 ret = dispatch_dict[i].dispatch_callback(context, data);
                 if(ret != LDS_OK) {
                     ld_error("dispatch parser: internal dispatch callback errored out");
