@@ -27,7 +27,7 @@ Ordered roughly in terms of priority.
 
 ### JSON
 * **FIX REFERENCES SO WE DON'T LEAK AS MUCH MEMORY**
-* Nullable vs optional fields - how to handle?
+* Differentiate between null and missing json fields in json structs
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
 * string to snowflake function
 * Timestamp manipulation functions

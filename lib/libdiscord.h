@@ -10,7 +10,7 @@
 #include "libdiscord_config.h"
 
 #include "log.h"
-#include "json.h"
+//#include "json.h"
 
 /*
  *
@@ -111,7 +111,7 @@ enum ld_gateway_state {
  * @brief enum for opcodes that can we received from the gateway. 
  */
 enum ld_gateway_opcode {
-    LD_GATEWAY_OPCODE_UNKNOWN = -1, ///< placeholder
+    LD_GATEWAY_OPCODE_UNKNOWN = 999, ///< placeholder
     LD_GATEWAY_OPCODE_DISPATCH = 0, ///< dispatches an event
     LD_GATEWAY_OPCODE_HEARTBEAT = 1, ///< used for ping checking
     LD_GATEWAY_OPCODE_IDENTIFY = 2, ///< used for client handshake
@@ -137,6 +137,15 @@ enum ld_gateway_payloadtype {
     LD_GATEWAY_T = 2,
     LD_GATEWAY_S = 3,
     LD_GATEWAY_UNKNOWN = 100
+};
+
+/**
+ * @brief enum used to identify dispatch events
+ * @todo identify events and put them here
+ */
+enum ld_dispatch_event {
+    LD_DISPATCH_UNKNOWN = 999,
+    LD_PRESENCES_REPLACE ///< undocumented event
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -262,13 +271,15 @@ struct ld_context_info {
 };
 
 /**
- * @brief ld_dispatch struct
+ * @brief ld_dispatch struct, used in dict
  */
 struct ld_dispatch {
     const char *name; ///< name
     enum ld_callback_reason cbk_reason; ///< callback reason
     int (*dispatch_callback)(struct ld_context *context, json_t *data); ///< callback
 };
+
+
 
 //forward declarations
 struct ld_json_identify;

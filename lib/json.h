@@ -15,12 +15,13 @@
 
 /*
  *
- * native type:
+ * native type: char * (string), uint64_t, etc
  * READ:
  * string -> struct
  *
  * SAVE:
  * struct -> string
+ * (native type) -> string
  *
  * LOAD:
  * string -> json_t
@@ -28,20 +29,27 @@
  *
  * PACK:
  * json_t -> struct
- * (native type) -> struct
  *
  * UNPACK:
  * struct -> json_t
  *
  * DUMP:
  * json_t -> string
+ * 
+ * VALID:
+ * checks if a struct's values conform to expected values
+ * 
+ * 
  *
  * snowflake: uint64_t
+ * 
  * timestamps: strings
  * example: 2019-02-09T21:31:47.083000+00:00
  */
 
-
+    //forward declarations
+enum ld_gateway_opcode;
+enum ld_dispatch_event;
 
 enum ld_presence_activity_type;
 enum ld_json_status_type;
@@ -90,6 +98,9 @@ struct ld_json_integration;
 struct ld_json_getgateway;
 struct ld_json_getgateway_bot;
 struct ld_json_getgateway_bot_sessionstartlimit;
+
+struct ld_json_websocket_payload;
+struct ld_json_resume;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -568,6 +579,36 @@ struct ld_json_getgateway_bot_sessionstartlimit {
     int reset_after;
 };
 
+/**
+ * @brief Gateway payload
+ *
+ * @todo how to identify struct type?
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#payloads"> Discord API Documentation </a>
+ */
+struct ld_json_websocket_payload {
+    enum ld_gateway_opcode op;///< opcode
+    void *d; ///< data, pointer to struct. must be present for this to be valid
+    int s; ///< seq number, only on opcode 0
+//    char *t; ///< event name,  only on opcode 0
+    enum ld_dispatch_event t; ///< event name, only used for opcode 0
+
+};
+
+/**
+ * @brief Gateway resume data field
+ *
+ * <a href="https://discordapp.com/developers/docs/topics/gateway#resume"> Discord API Documentation </a>
+ */
+struct ld_json_resume {
+    char *token; ///< user/bot token
+    char *session_id;
+    int seq; ///< sequence number
+};
+
+
+//// functions
+
 /*
  * takes four json_t objects and creates a payload
  */
@@ -578,7 +619,7 @@ json_t *ld_json_create_payload(json_t *op, json_t *d, json_t *t, json_t *s);
  */
 json_t *ld_json_create_message();
 
-//todo: snowflake conversion functions
+
 uint64_t ld_str2snowflake();
 char * ld_snowflake2str(uint64_t flake);
 json_t *ld_json_dump_activity(struct ld_json_activity *activity);
@@ -593,5 +634,28 @@ int ld_json_message_cleanup(struct ld_json_message *message);
 int *ld_json_pack_message(struct ld_json_message *new_message, json_t *message);
 int ld_json_pack_snowflake(struct ld_json_snowflake *new_flake, uint64_t snowflake);
 int ld_json_read_timestamp(struct ld_timestamp *new_timestamp, char *timestamp);
+
+
+/**
+ * @brief Internal json dump function used for most ld_json_dump_* functions
+ * @param out Pointer to save string to, must be freed by caller
+ * @param in json_t containing json data
+ * @return LDS enum, LDS_OK on success, LDS_JSON_* on error
+ */
+ld_status _ld_json_dump_all(char **out, json_t *in, const char *caller);
+
+ld_status ld_json_unpack_resume(json_t *out, struct ld_json_resume *resume);
+ld_status ld_json_dump_resume(char **out, json_t *resume);
+ld_status ld_json_save_resume(char **out, struct ld_json_resume *resume);
+
+/**
+ * @brief Checks payload struct against Discord's field rules
+ * @param payload pointer to filled payload. Cannot be null.
+ * @return LDS_OK if valid, LD_JSON_* error otherwise
+ */
+ld_status ld_json_payload_valid(struct ld_json_websocket_payload *payload);
+ld_status ld_json_unpack_payload(json_t *out, struct ld_json_websocket_payload *payload);
+ld_status ld_json_dump_payload(char **out, json_t *payload);
+ld_status ld_json_save_payload(char **out, const struct ld_json_websocket_payload *payload);
 
 #endif //LIBDISCORD_JSON_H

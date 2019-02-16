@@ -428,3 +428,109 @@ int ld_json_read_timestamp(struct ld_timestamp *new_timestamp, char *timestamp) 
 
     return LDS_OK;
 }
+
+
+ld_status _ld_json_dump_all(char **out, json_t *in, const char *caller) {
+    char *tmp;
+    if(out == NULL) {
+        if(caller != NULL)
+            ld_warning("%s: recieved null out from %s", __FUNCTION__, caller);
+        return LDS_INCOMPLETE_ARGS_ERR;
+    }
+
+    tmp = json_dumps(in, 0);
+    if(tmp == NULL) {
+        *out = NULL;
+        ld_warning("%s: jansson: couldn't dump json_t from %s", __FUNCTION__, caller);
+        return LDS_JSON_DUMP_ERR;
+    }
+    *out = tmp;
+    return LDS_OK;
+}
+
+ld_status ld_json_unpack_resume(json_t *out, struct ld_json_resume *resume) {
+
+    return LDS_OK;
+}
+
+ld_status ld_json_dump_resume(char **out, json_t *resume) {
+    return _ld_json_dump_all(out, resume, __FUNCTION__);
+}
+
+ld_status ld_json_save_resume(char **out, struct ld_json_resume *resume) {
+    if(resume == NULL) { //nothing to do
+        return LDS_OK;
+    }
+    if(out == NULL) {
+        ld_warning("%s: got null out ptr", __FUNCTION__);
+        return LDS_INCOMPLETE_ARGS_ERR;
+    }
+    if(resume->token == NULL || resume->session_id == NULL) {
+        ld_warning("%s: missing token or session id", __FUNCTION__);
+        return LDS_JSON_MISSING_REQUIRED_ERR;
+    }
+
+    enum ld_status_enum ret;
+    json_t json_res;
+    ret = ld_json_unpack_resume(&json_res, resume);
+    if(ret != LDS_OK) {
+        ld_warning("%s: error unpacking");
+        return ret;
+    }
+
+    ret = ld_json_dump_resume(out, &json_res);
+    if(ret != LDS_OK) {
+        ld_warning("%s: error dumping", __FUNCTION__);
+        return ret;
+    }
+
+
+    return LDS_OK;
+}
+
+ld_status ld_json_payload_valid(struct ld_json_websocket_payload *payload) {
+    if(payload->op == LD_GATEWAY_OPCODE_UNKNOWN) {
+        //bad or unknown opcode
+        ld_error("%s: unknown opcode", __FUNCTION__);
+        return LDS_JSON_MISSING_REQUIRED_ERR;
+    }
+    if(payload->d == NULL) {
+        //no data payload
+        ld_error("%s: no data payload found", __FUNCTION__);
+        return LDS_JSON_MISSING_REQUIRED_ERR;
+    }
+
+    if(payload->op == LD_GATEWAY_OPCODE_DISPATCH) {
+        if(payload->t == LD_DISPATCH_UNKNOWN) {
+            ld_error("%s: unknown dispatch type", __FUNCTION__);
+            return LDS_JSON_MISSING_REQUIRED_ERR;
+        }
+        if(payload->s < 0) {
+            ld_warning("%s: seq number (%d) is likely invalid (< 0)", __FUNCTION__, payload->s);
+        }
+    }
+    return LDS_OK;
+}
+
+ld_status ld_json_unpack_payload(json_t *out, struct ld_json_websocket_payload *payload) {
+    if(payload == NULL) { //nothing to do
+        return LDS_OK;
+    }
+    if(ld_json_payload_valid(payload) != LDS_OK) {
+        ld_warning("%s: payload struct not valid", __FUNCTION__);
+        return LDS_JSON_INVALID_ERR;
+    }
+
+
+
+    return LDS_OK;
+}
+ld_status ld_json_dump_payload(char **out, json_t *payload) {
+    return _ld_json_dump_all(out, payload, __FUNCTION__);
+}
+ld_status ld_json_save_payload(char **out, const struct ld_json_websocket_payload *payload) {
+    if(out == NULL) {
+
+    }
+    return LDS_OK;
+}

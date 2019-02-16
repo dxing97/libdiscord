@@ -65,7 +65,8 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         return LDS_MEMORY_ERR;
     }
 
-    context->user_callback = info->user_callback;
+    ////// info not required
+
 
     /* curl init */
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -77,17 +78,8 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     }
 
 
-    // bot token copying
-    if(info->bot_token == NULL) {
-        ld_error("%s: bot token is null, can't continue", __FUNCTION__);
-        return LDS_TOKEN_MISSING_ERR;
-    }
-    context->bot_token = strdup(info->bot_token);
-
-
     // logging
     lws_set_log_level(31, NULL);
-
 
     // LWS context init
     context->lws_context = NULL;
@@ -111,30 +103,6 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         ld_error("%s: couldn't create lws_context\n", __FUNCTION__);
         return LDS_WEBSOCKET_INIT_ERR;
     }
-
-
-    // LWS gateway payload ringbuffer init
-    context->gateway_ring = lws_ring_create(
-            sizeof(struct ld_gateway_payload),
-            info->gateway_ringbuffer_size,
-            NULL);
-    if(context->gateway_ring == NULL) {
-        ld_error("couldn't init gateway ringbuffer");
-        return LDS_WEBSOCKET_RINGBUFFER_ERR;
-    }
-
-
-    // Initial bot presence
-    context->init_presence = malloc(sizeof(struct ld_json_status_update));
-    if(context->init_presence == NULL) {
-        ld_error("%s: error mallocing initial presence");
-        return LDS_MEMORY_ERR;
-    }
-    if(info->init_presence != NULL)
-        context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
-    else
-        context->init_presence = NULL;
-
 
     // GET /gateway/bot naive ratelimiting
     context->gateway_bot_limit = 1;
@@ -162,28 +130,77 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     // current user info
     context->current_user = NULL;
 
+    // clear session info
+    context->gateway_session_id = NULL;
+
+    context->init_presence = NULL;
+
+    /////// info optional
+
+    // LWS gateway payload ringbuffer init with info
+
+    context->gateway_ring = lws_ring_create(
+            sizeof(struct ld_gateway_payload),
+            (info == NULL) ? LD_RINGBUFFER_DEFAULT_SIZE : info->gateway_ringbuffer_size,
+            NULL);
+    if(context->gateway_ring == NULL) {
+        ld_error("couldn't init gateway ringbuffer");
+        return LDS_WEBSOCKET_RINGBUFFER_ERR;
+    }
 
     // hello payload properties
-    if(info->device != NULL) { //override default
+    if(info != NULL && info->device != NULL) { //override default
         context->device = strdup(info->device);
     } else {
         context->device = LD_LIBNAME;
     }
 
-    if(info->browser != NULL) {
+    if(info != NULL && info->browser != NULL) {
         context->browser = strdup(info->browser);
     } else {
         context->browser = LD_LIBNAME;
     }
 
-    if(info->os != NULL) {
+    if(info != NULL && info->os != NULL) {
         context->os = strdup(info->browser);
     } else {
         context->os = ld_get_os_name();
     }
 
-    // clear session info
-    context->gateway_session_id = NULL;
+
+    ////// info required
+    if(info == NULL) {
+        ld_notice("%s: initializing without context info. Many libdiscord functions will be unusable", __FUNCTION__);
+        return LDS_OK;
+    }
+
+    context->user_callback = info->user_callback;
+
+    // bot token copying
+    if(info->bot_token == NULL) {
+        ld_error("%s: bot token is null, can't continue", __FUNCTION__);
+        return LDS_TOKEN_MISSING_ERR;
+    }
+    context->bot_token = strdup(info->bot_token);
+
+
+    // Initial bot presence
+    context->init_presence = malloc(sizeof(struct ld_json_status_update));
+    if(context->init_presence == NULL) {
+        ld_error("%s: error mallocing initial presence");
+        return LDS_MEMORY_ERR;
+    }
+    if(info->init_presence != NULL)
+        context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
+    else
+        context->init_presence = NULL;
+
+
+
+
+
+
+
 
     return LDS_OK;
 }
@@ -484,7 +501,6 @@ ld_status ld_connect(struct ld_context *context) {
         }
     }
 
-    //todo: add init for context.gi here
     //init the gateway interface
 //
 //    switch(context->gateway_state) {
@@ -543,6 +559,7 @@ ld_status ld_service(struct ld_context *context, int timeout) {
             ld_warning("%s: didn't recieve a HB_ACK", __FUNCTION__);
             // todo: make sure we're actually disconnected from gateway
 //            context->gateway_state = LD_GATEWAY_UNCONNECTED;
+            lws_close_reason(context->lws_wsi, 4009, NULL, 0); ///timeout @todo: make sure this works
             return LDS_WEBSOCKET_HEARTBEAT_ACKNOWLEDEGEMENT_MISSED;
         }
         ret = ld_gateway_queue_heartbeat(context);
@@ -678,12 +695,13 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 //            context->lws_wsi = NULL;
             break;
         case LWS_CALLBACK_CLIENT_RECEIVE:
+            /// @todo clean this up
             //check to see if we've received a new fragment
-            ld_debug("gateway rx buf len: %d", context->gateway_rx_buffer_len);
-            ld_debug("first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
+//            ld_debug("gateway rx buf len: %d", context->gateway_rx_buffer_len);
+//            ld_debug("first?=%d, last=%d", lws_is_first_fragment(wsi), lws_is_final_fragment(wsi));
             if(context->gateway_rx_buffer == NULL && lws_is_final_fragment(wsi)) {
                 //first fragment is also the last fragment
-                ld_debug("first gateway fragment is also last fragment");
+//                ld_debug("first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
                 ld_notice("single RX: %s", (char *) in);
@@ -720,8 +738,7 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                 }
 
                 i = ld_gateway_payload_parser(context, context->gateway_rx_buffer, context->gateway_rx_buffer_len);
-
-                ld_debug("payload parser code: %d", i);
+//                ld_debug("payload parser code: %d", i);
                 free(context->gateway_rx_buffer);
                 context->gateway_rx_buffer = NULL;
                 context->gateway_rx_buffer_len = 0;
@@ -738,7 +755,7 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 
             return 0;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
-            ld_debug("ld_lws_callback: recieved pong from gateway");
+            ld_debug("ld_lws_callback: recieved websocket pong from gateway");
             break;
         case LWS_CALLBACK_CLIENT_WRITEABLE:
             ld_debug("lws: client writable callback");
@@ -895,7 +912,7 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
                 break;
             case LD_GATEWAY_D:
                 d = value;
-                ld_debug("got data field in payload");
+//                ld_debug("got data field in payload");
                 break;
             case LD_GATEWAY_T:
                 t = value;
@@ -904,7 +921,7 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
                 context->last_seq = (int) json_integer_value(value);
                 break;
             case LD_GATEWAY_UNKNOWN:
-                ld_warning("got unknown key in payload");
+                ld_warning("%s: got unknown key in payload", __FUNCTION__);
                 return 1;
         }
     }
@@ -934,8 +951,10 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
         case LD_GATEWAY_OPCODE_REQUEST_MEMBERS:
             break;
         case LD_GATEWAY_OPCODE_INVALIDATE_SESSION:
-            ld_info("gateway session invalidated");
-            context->gi[0]->session_valid = 0; //todo: WHICH WSI DOES THIS GI CORRESPOND TO??
+//            ld_info("gateway session invalidated");
+            free(context->gateway_session_id);
+            context->gateway_session_id = NULL;
+            context->last_seq = 0;
             break;
         case LD_GATEWAY_OPCODE_HELLO:
             //save heartbeat interval
@@ -959,37 +978,20 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
             ld_debug("heartbeat interval is %d", hbi);
             context->heartbeat_interval = hbi;
 
+            struct ld_json_identify ident;
+            char *out;
             if(context->gateway_session_id != NULL) {
                 // resuming here
-                break;
+                struct ld_json_resume resume;
+
+                resume.session_id = context->gateway_session_id;
+                resume.token = context->bot_token;
+                resume.seq = context->last_seq;
+
+                ld_json_save_resume(&out, &resume);
+            } else {
+                ld_set_identify(context, &ident);
             }
-            //prepare identify struct
-            struct ld_json_identify ident;
-
-            ld_set_identify(context, &ident);
-
-//            memset(&properties, 0, sizeof(struct ld_json_identify_connection_properties));
-//            properties.browser = LD_LIBNAME;
-//            properties.device = LD_LIBNAME;
-//            properties.os = ld_get_os_name();
-//
-//            memset(&game, 0, sizeof(struct ld_json_activity));
-//
-////            game.name = context->presence->game;
-//            memset(&status, 0, sizeof(struct ld_json_gateway_update_status));
-////            if(context->presence != NULL)
-////                status.status = strdup(ld_json_status2str(context->presence->status_type)); //todo: remove old presence system
-//            status.game = &game;
-//            status.roles = NULL;
-//
-//            memset(&ident, 0, sizeof(struct ld_json_identify));
-//            ident.token = context->bot_token;
-//            ident.compress = 0; // todo: implement zlib compression
-//            ident.large_threshold = 250; //valid between 50 and 250, libdiscord will emit warning of outside range
-//            ident.shard[0] = 0; //sharding not yet implemented
-//            ident.shard[1] = context->shards;
-//            ident.properties = &properties;
-//            ident.status_update = &status;
 
             //prepare IDENTIFY payload
             op = json_integer(LD_GATEWAY_OPCODE_IDENTIFY);
@@ -1063,7 +1065,7 @@ ld_status ld_dispatch_ready(struct ld_context *context, json_t *data) {
  */
 ld_status ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data) {
     //check type
-    ld_debug("parsing dispatch type");
+//    ld_debug("parsing dispatch type");
     int i, ret;
     const char *typestr;
     typestr = json_string_value(type);
