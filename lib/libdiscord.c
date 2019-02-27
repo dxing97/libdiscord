@@ -599,11 +599,11 @@ ld_status ld_gateway_connect(struct ld_context *context) {
     //lws context creation info
 //    struct lws_context_creation_info info;
 //    struct lws_context *lws_context;
-    struct lws_client_connect_info *i; ///< @todo allocate on stack instead of the heap
+    struct lws_client_connect_info *i; ///< @todo try allocate on stack instead of the heap. will this still work?
 //
 //    memset(&info, 0, sizeof(info));
     i = malloc(sizeof(struct lws_client_connect_info));
-//    memset(i, 0, sizeof(struct lws_client_connect_info));
+    memset(i, 0, sizeof(struct lws_client_connect_info));
 //
 //    info.port = CONTEXT_PORT_NO_LISTEN;
 //    info.iface = NULL;

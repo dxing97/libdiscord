@@ -1,4 +1,4 @@
-# Building libdiscord
+# Building/Compiling libdiscord
 
 libdiscord uses the CMake build system, so building and installing should be fairly straightforward and relatively 
 portable.
