@@ -13,7 +13,7 @@
 static struct lws_protocols protocols[] = {
         {
                 "DiscordBot",
-                (int (*)(struct lws *, enum lws_callback_reasons, void *, void *, unsigned long))ld_lws_callback,
+                (int (*)(struct lws *, enum lws_callback_reasons, void *, void *, size_t))ld_lws_callback,
                             8192,
                 8192 //rx buffer size
         },

@@ -35,14 +35,14 @@
  *
  * DUMP:
  * json_t -> string
- * 
+ *
  * VALID:
  * checks if a struct's values conform to expected values
- * 
- * 
+ *
+ *
  *
  * snowflake: uint64_t
- * 
+ *
  * timestamps: strings
  * example: 2019-02-09T21:31:47.083000+00:00
  */
@@ -588,7 +588,7 @@ struct ld_json_getgateway_bot_sessionstartlimit {
  */
 struct ld_json_websocket_payload {
     enum ld_gateway_opcode op;///< opcode
-    void *d; ///< data, pointer to struct. must be present for this to be valid
+    void *d; ///< data, pointer to some struct. must be present for this to be valid
     int s; ///< seq number, only on opcode 0
 //    char *t; ///< event name,  only on opcode 0
     enum ld_dispatch_event t; ///< event name, only used for opcode 0
@@ -606,6 +606,13 @@ struct ld_json_resume {
     int seq; ///< sequence number
 };
 
+/**
+ * @brief struct equivalent of "[]"
+ * is this a good solution?
+ */
+struct ld_json_empty_array {
+
+};
 
 //// functions
 

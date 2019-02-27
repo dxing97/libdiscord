@@ -491,7 +491,7 @@ ld_status ld_json_save_resume(char **out, struct ld_json_resume *resume) {
 ld_status ld_json_payload_valid(struct ld_json_websocket_payload *payload) {
     if(payload->op == LD_GATEWAY_OPCODE_UNKNOWN) {
         //bad or unknown opcode
-        ld_error("%s: unknown opcode", __FUNCTION__);
+        ld_error("%s: unknown opcode (%d)", __FUNCTION__, payload->op);
         return LDS_JSON_MISSING_REQUIRED_ERR;
     }
     if(payload->d == NULL) {
