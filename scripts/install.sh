@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-LWS_VERSION=3.0.1
+LWS_VERSION=3.1.0
 #ULFIUS_VERSION=2.3.6
 ## Uber basic installation script
 # WIP, always examine the source before arbitrarily running someone else's scripts
@@ -26,10 +26,10 @@ if [ $(id -u) = 0 ]; then
 fi
 
 sudo apt update && sudo apt upgrade
-sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-openssl1.0-dev\
+sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-openssl-dev\
                  git \
-                 make cmake gcc libssl-dev libconfig-dev\
-                 zlib1g-dev libssl-dev libcurl4-gnutls-dev libuv1-dev
+                 make cmake gcc libconfig-dev\
+                 zlib1g-dev libssl-dev libuv1-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
 #

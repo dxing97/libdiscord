@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#libwebsockets v3.0.1
+#libwebsockets v3.1.0
 
 LWS_VERSION="3.1.0"
 
