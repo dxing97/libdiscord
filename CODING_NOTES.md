@@ -6,7 +6,7 @@ the `scheme://` part to be omitted. User code shouldn't have to worry about this
 ## Connection states
 ~~Connections to Discord can't be characterized simply as "connected" and "disconnected".~~ Connections include:
 * the idempotent REST API
-* the websocket API
+* the websocket API (gateway in the API docs)
 * the UDP voice connection
 
 A bot that's not connected to the gateway can still send API requests over the REST API, with the only
