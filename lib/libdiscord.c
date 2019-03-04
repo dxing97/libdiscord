@@ -559,7 +559,7 @@ ld_status ld_service(struct ld_context *context, int timeout) {
             ld_warning("%s: didn't recieve a HB_ACK", __FUNCTION__);
             // todo: make sure we're actually disconnected from gateway
 //            context->gateway_state = LD_GATEWAY_UNCONNECTED;
-            lws_close_reason(context->lws_wsi, 4009, NULL, 0); ///timeout @todo: make sure this works
+//            lws_close_reason(context->lws_wsi, 4009, NULL, 0); ///timeout @todo: make sure this works (this doesn't work, causes segfault, use in lws callback)
             return LDS_WEBSOCKET_HEARTBEAT_ACKNOWLEDEGEMENT_MISSED;
         }
         ret = ld_gateway_queue_heartbeat(context);
