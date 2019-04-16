@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 project(libdiscord VERSION 0.3.0 LANGUAGES C)
 
+message(STATUS "We are on a ${CMAKE_SYSTEM_NAME} system")
+message(STATUS "The host processor is ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+
 ## Library info
 set(PACKAGE libdiscord)
 set(CPACK_PACKAGE_NAME libdiscord)
@@ -38,15 +41,30 @@ include_directories(example_bots lib cmake)
 
 #homebrew on macOS
 include_directories(/usr/local/opt/curl/include)
-include_directories(/usr/local/opt/openssl/include)
 
+include_directories(/usr/local/opt/openssl/include)
+link_directories(/usr/local/opt/openssl/lib)
+
+include_directories(/usr/local/opt/libwebsockets/include)
+link_directories(/usr/local/opt/libwebsockets/lib)
+
+link_directories(/usr/local/opt/jansson/lib)
+
+#include_directories(/usr/local/include/glib-2.0)
+#include_directories(/usr/local/include/glib-2.0/glib)
 
 
 include_directories("${PROJECT_BINARY_DIR}")
 # If libwebsockets was compiled and installed in Cygwin:
 include_directories(/usr/local/lib/include)
 
-set(LD_LIBS websockets jansson curl crypto)
+#find_library(LCRYPTO openssl)
+#find_package(BZip2)
+find_package(PkgConfig REQUIRED)
+pkg_search_module(GLIB REQUIRED glib-2.0)
+
+set(LD_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS})
+set(LD_LIBS websockets jansson curl crypto ${GLIB_LDFLAGS})
 
 ## Sources and headers
 configure_file(
@@ -54,14 +72,18 @@ configure_file(
         "${PROJECT_BINARY_DIR}/libdiscord_config.h"
 )
 
-set(LD_SOURCE lib/libdiscord.h lib/libdiscord.c lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h lib/utils.c lib/utils.h lib/status.h)
-add_library(discord SHARED ${LD_SOURCE})
+
 
 
 ## Targets
 ## Library
+set(LD_SOURCE lib/libdiscord.h lib/libdiscord.c lib/REST.h lib/REST.c lib/log.c lib/log.h lib/json.c lib/json.h lib/utils.c lib/utils.h lib/status.h)
+add_library(discord SHARED ${LD_SOURCE})
+
+target_include_directories(discord PRIVATE ${LD_INCLUDE_DIRS})
 target_link_libraries(discord ${LD_LIBS})
 set_target_properties(discord PROPERTIES VERSION ${PROJECT_VERSION})
+
 target_compile_options(discord PRIVATE "-Wall")
 target_compile_options(discord PRIVATE "-Werror")
 target_compile_options(discord PRIVATE "-Wno-unknown-pragmas")

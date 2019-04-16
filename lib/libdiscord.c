@@ -982,6 +982,7 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
             char *out;
             if(context->gateway_session_id != NULL) {
                 // resuming here
+                ld_debug("%s: have previous gsid, will try resuming", __FUNCTION__);
                 struct ld_json_resume resume;
 
                 resume.session_id = context->gateway_session_id;
@@ -990,6 +991,7 @@ ld_status ld_gateway_payload_parser(struct ld_context *context, char *in, size_t
 
                 ld_json_save_resume(&out, &resume);
             } else {
+                ld_debug("%s: no previous gsid, will try new connection identify", __FUNCTION__);
                 ld_set_identify(context, &ident);
             }
 

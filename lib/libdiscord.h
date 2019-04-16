@@ -6,6 +6,7 @@
 #include <curl/curl.h>
 #include <libwebsockets.h>
 #include <jansson.h>
+//#include <glib.h>
 
 #include "libdiscord_config.h"
 
