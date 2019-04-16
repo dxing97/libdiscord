@@ -60,11 +60,11 @@ include_directories(/usr/local/lib/include)
 
 #find_library(LCRYPTO openssl)
 #find_package(BZip2)
-find_package(PkgConfig REQUIRED)
-pkg_search_module(GLIB REQUIRED glib-2.0)
-
-set(LD_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS})
-set(LD_LIBS websockets jansson curl crypto ${GLIB_LDFLAGS})
+#find_package(PkgConfig REQUIRED)
+#pkg_search_module(GLIB REQUIRED glib-2.0)
+#
+#set(LD_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS})
+#set(LD_LIBS websockets jansson curl crypto ${GLIB_LDFLAGS})
 
 ## Sources and headers
 configure_file(
