@@ -1,32 +1,39 @@
 ## Goals
 * Get a stable working minimal example bot ~~with minimal spaghetti~~ (mostly working, not stable)
 * Get 100% coverage of all API functions (websocket gateway, REST, voice websocket, voice UDP, v1.0 release)
-* ~~Discord developer ToS compliant~~ (compliance will be up to bot developers, although the library will try to include 
-some convenience functions to make this easier if necessary)
-* ~~A bot that can turn your lights on~~ too vague
 
 ## Todo
 Ordered roughly in terms of priority.
 
 ### Websocket
-* Reconnections
+* **Reconnection logic**
 * More detailed and documented callbacks
 * Sharding
 * merge ld_connect and ld_service
+* zlib compression
+
+### CMake
+* OS detection
+* Dependency checks/finding
 
 ### Library
 * Improve doxygen documentation
 * Improve logging faclilities (switch to LWS' logging functions entirely?)
-* helper function to verify if a bot token is valid without connecting to discord
+* ~~helper function to verify if a bot token is valid without connecting to discord~~
+* Consider changing library name to something less generic
+
+### Installation and deployment 
+* Dockerfile image for quick testing
+* Debian package available by v0.3 release
+* Add a way to build dependencies from source and linking statically
 
 ### REST
 * Nonblocking HTTP requests
 * Ratelimiting
-* Try using OpenSSL to see if our "unexpected TLS packet" error goes away
-* Add way of logging bot actions through a Discord channels (use Discord channel for logging)
+* Add convenience functions for logging bot actions (including internal library stuff) through a Discord channels (use Discord channel for logging)
 
 ### JSON
-* **FIX REFERENCES SO WE DON'T LEAK AS MUCH MEMORY**
+* **FIX JANSSON REFERENCES SO WE DON'T LEAK AS MUCH MEMORY**
 * Differentiate between null and missing json fields in json structs
 * JSON manipulation/creation functions for each type of JSON object that the API will send to us
 * string to snowflake function
@@ -34,51 +41,44 @@ Ordered roughly in terms of priority.
     * Make/find functions that will encode/decode ISO8601-formatted strings. Use GNU function?
     
 ### Example Bots
-#### minimal - Minimal example websocket bot
-* remake it again
-
-#### hash - digest generator
-* accept file uploads to hash
-
-#### counter - responds to i with i+1
-* add halt message channel option
+Bots that demonstrate libdiscord functionality
 
 #### ayylmao - A Basic Call and Response Bot
 * Add support for multiple calls/responses per bot
-  * wew-lad?
-  * rename bot to call-response when this is implemented
+  * wew-lad, hmm-🤔 as default 
+  
+#### minimalws - Minimal example websocket bot
+* Brings bot presence online
+* Waits for stop message
 
+#### hash - digest generator
+* accept file uploads to hash
+* spin off into its own repo seperate from the library repo, use to test libdiscord shared library config
+
+#### counter - responds to i with i+1
+* add halt message channel option
+* possibly spin off into its own repo
 
 #### Stalkerbot - Track user presence
-* a bot to tell you when your bot crashes (waitaminute...)
+* a bot to tell you when your bot ~~crashes~~ goes offline  (waitaminute...)
 
 #### ping - A Comprehensive Latency Tool
-* Measure communication and server operation latencies to Discord
+* Measure communication latencies to Discord and internal bot delays and metrics
+* Integrate into library as diagnostic functions
 
-#### simplepost
-* Extend to some sort of CLI scriptable tool for posting messages?
+#### simplepost - REST-only simple message posting
+* script-friendly app for posting simple messages
 
-#### A Configurable Bot for the Masses
-* Look into YAML formatting
-* YAML -> JSON converter? Support multiple config types
-
-## Planned
-* Git submodules to statically link some dependencies (cygwin?)
-* zlib compression support in gateway payloads (check other compression methods in gateway connections)
-
-* More elaborate CMake setup for ~~OS detection~~, dependency checks
 
 ## Far Future
-* Rich presence integration?
+* Rich presence integration? (Spotify?)
 * OAuth2 support (write/find a OAuth2 client library for C)
 * Support for voice channels (UDP connections, use libuv?)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
-* Example bot with image generation integration (Allegro 5 bitmaps? MagickWand? SDL?)
-* Support for userbots
-* A Discord CLI client (not necessarily as an example app - may be a separate app)
-* Test on a ESP32
-* Support for MinGW, Cygwin, or WSL
-* Spotify rich presence integration
+* A Discord CLI client (probably as a separate app)
+* Test on a ESP32, android
+* Support for MinGW and Cygwin
+* Support for Windows
 * Make/autogenerate wrapper for other languages, including Python, C++, Rust, and Go.
 
 ## Far Far Future
