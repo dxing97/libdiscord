@@ -24,7 +24,7 @@ Ordered roughly in terms of priority.
 
 ### Installation and deployment 
 * Dockerfile image for quick testing
-* Debian package available by v0.3 release
+* Debian package available by v0.3 release for arm, x86, sparc 
 * Add a way to build dependencies from source and linking statically
 
 ### REST
