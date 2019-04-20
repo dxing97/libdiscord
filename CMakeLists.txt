@@ -64,7 +64,8 @@ include_directories(/usr/local/lib/include)
 #pkg_search_module(GLIB REQUIRED glib-2.0)
 #
 #set(LD_INCLUDE_DIRS ${GLIB_INCLUDE_DIRS})
-#set(LD_LIBS websockets jansson curl crypto ${GLIB_LDFLAGS})
+
+set(LD_LIBS websockets jansson curl crypto ${GLIB_LDFLAGS})
 
 ## Sources and headers
 configure_file(
