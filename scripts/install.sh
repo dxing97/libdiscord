@@ -28,7 +28,7 @@ fi
 sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-openssl-dev\
                  git \
-                 make cmake gcc libconfig-dev\
+                 build-essential make cmake gcc libconfig-dev\
                  zlib1g-dev libssl-dev libuv1-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
@@ -69,7 +69,7 @@ cd libwebsockets
     cd build
         cmake .. -DCMAKE_BUILD_TYPE=Debug -DLWS_WITH_LIBUV=ON -DLWS_WITH_LATENCY=ON -DLWS_WITH_IPV6=ON -DLWS_WITH_PLUGINS=ON
         make
-        sudo checkinstall --pkgname libwebsockets-dev --pkgversion="$(LWS_VERSION)"
+        sudo checkinstall --pkgname libwebsockets-dev --pkgversion "$(LWS_VERSION)"
         sudo ldconfig
     cd ..
 cd ..
