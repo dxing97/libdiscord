@@ -10,7 +10,7 @@ LWS_VERSION=3.1.0
 # if a package is already installed, prompt user for options (keep old, install new, something else)
 # Have forks of libwebsockets, ulfius, libcurl as submodules in libdiscord and link them
 # statically as an option?
-#assuming Ubuntu 17.10, debian 9
+#assuming Ubuntu 18.04
 #assuming the current directory is where everything is going to be downloaded
 #assuming sudo access
 
@@ -28,7 +28,7 @@ fi
 sudo apt update && sudo apt upgrade
 sudo apt install checkinstall libmicrohttpd-dev libjansson-dev libcurl4-openssl-dev\
                  git \
-                 build-essential make cmake gcc libconfig-dev\
+                 build-essential make cmake gcc\
                  zlib1g-dev libssl-dev libuv1-dev
 #sudo apt install libulfius-dev
 #sudo apt install libwebsockets-dev
