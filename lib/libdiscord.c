@@ -65,6 +65,8 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         return LDS_MEMORY_ERR;
     }
 
+    memset(context, 0, sizeof(struct ld_context));
+
     ////// info not required
 
 
@@ -398,14 +400,18 @@ ld_status _ld_get_gateway_bot(struct ld_context *context) {
         return LDS_JSON_CANTFINDKEY_ERR;
     }
 
-    if(json_string_value(tmp) == NULL) {
+    const char *tmpurl;
+    tmpurl = json_string_value(tmp);
+    if(tmpurl == NULL) {
         ld_error("_ld_get_gateway_bot: didn't receive string object in \"url\" from "
                  "JSON payload received from /gateway/bot");
         return LDS_JSON_CANTFINDVALUE_ERR;
     }
 
-    context->gateway_bot_url = malloc(strlen(json_string_value(tmp)) + 1);
-    context->gateway_bot_url = strcpy(context->gateway_bot_url, json_string_value(tmp));
+    context->gateway_bot_url = malloc(strlen(tmpurl) + 1);
+    context->gateway_bot_url = strcpy(context->gateway_bot_url, tmpurl);
+
+    ld_debug("%s: gateway_bot_url: %s", __FUNCTION__, context->gateway_bot_url);
 
     tmp = json_object_get(object, "shards");
     if(tmp == NULL) {
@@ -487,6 +493,8 @@ ld_status ld_connect(struct ld_context *context) {
             return ret;
         }
     }
+
+    ld_debug("%s: gateway_bot_url: %s", __FUNCTION__, context->gateway_bot_url);
 
     if(context->current_user == NULL) {
         context->current_user = malloc(sizeof(struct ld_json_user));
