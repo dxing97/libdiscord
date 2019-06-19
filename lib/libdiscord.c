@@ -53,23 +53,7 @@ ld_status ld_init_context_info(struct ld_context_info *info) {
     return 0;
 }
 
-/*
- * creates a context from user info
- * returns NULL if the info struct was malformed or missing things
- * allocates memory for the struct and internal components
- */
-ld_status ld_init_context(const struct ld_context_info *info, struct ld_context *context) {
-    if(context == NULL) {
-//        struct ld_context *context = malloc(sizeof(struct ld_context));
-        ld_error("%s: was passed null pointer for context", __FUNCTION__);
-        return LDS_MEMORY_ERR;
-    }
-
-    memset(context, 0, sizeof(struct ld_context));
-
-    ////// info not required
-
-
+ld_status ld_init_curl(const struct ld_context_info *info, struct ld_context *context) {
     /* curl init */
     curl_global_init(CURL_GLOBAL_DEFAULT);
     context->curl_multi_handle = curl_multi_init();
@@ -78,11 +62,10 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         ld_error("%s: curl_easy_init() returned NULL", __FUNCTION__);
         return LDS_CURL_ERR;
     }
+    return LDS_OK;
+}
 
-
-    // logging
-    lws_set_log_level(31, NULL);
-
+ld_status ld_init_lws(const struct ld_context_info *info, struct ld_context *context) {
     // LWS context init
     context->lws_context = NULL;
     struct lws_context_creation_info ccinfo;
@@ -105,6 +88,50 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         ld_error("%s: couldn't create lws_context\n", __FUNCTION__);
         return LDS_WEBSOCKET_INIT_ERR;
     }
+
+    context->gateway_ring = lws_ring_create(
+            sizeof(struct ld_gateway_payload),
+            (info == NULL) ? LD_RINGBUFFER_DEFAULT_SIZE : info->gateway_ringbuffer_size,
+            NULL);
+    if(context->gateway_ring == NULL) {
+        ld_error("couldn't init gateway ringbuffer");
+        return LDS_WEBSOCKET_RINGBUFFER_ERR;
+    }
+
+    return LDS_OK;
+}
+
+/*
+ * creates a context from user info
+ * returns NULL if the info struct was malformed or missing things
+ * allocates memory for the struct and internal components
+ */
+ld_status ld_init_context(const struct ld_context_info *info, struct ld_context *context) {
+    if(context == NULL) {
+//        struct ld_context *context = malloc(sizeof(struct ld_context));
+        ld_error("%s: was passed null pointer for context", __FUNCTION__);
+        return LDS_MEMORY_ERR;
+    }
+
+    memset(context, 0, sizeof(struct ld_context));
+
+    ld_status ret;
+
+    ret = ld_init_curl(info, context);
+    if(ret != LDS_OK) {
+        ld_error("%s: curl init error (%d)", __FUNCTION__, ret);
+        return ret;
+    }
+
+    // logging
+    lws_set_log_level(31, NULL);
+
+    ret = ld_init_lws(info, context);
+    if(ret != LDS_OK) {
+        ld_error("%s: lws init error (%d)", __FUNCTION__, ret);
+        return ret;
+    }
+
 
     // GET /gateway/bot naive ratelimiting
     context->gateway_bot_limit = 1;
@@ -141,14 +168,7 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
 
     // LWS gateway payload ringbuffer init with info
 
-    context->gateway_ring = lws_ring_create(
-            sizeof(struct ld_gateway_payload),
-            (info == NULL) ? LD_RINGBUFFER_DEFAULT_SIZE : info->gateway_ringbuffer_size,
-            NULL);
-    if(context->gateway_ring == NULL) {
-        ld_error("couldn't init gateway ringbuffer");
-        return LDS_WEBSOCKET_RINGBUFFER_ERR;
-    }
+
 
     // hello payload properties
     if(info != NULL && info->device != NULL) { //override default
@@ -166,7 +186,7 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     if(info != NULL && info->os != NULL) {
         context->os = strdup(info->browser);
     } else {
-        context->os = ld_get_os_name();
+        context->os = LD_SYSTEMOS;
     }
 
 
@@ -196,13 +216,6 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
         context->init_presence = memcpy(context->init_presence, info->init_presence, sizeof(struct ld_json_status_update));
     else
         context->init_presence = NULL;
-
-
-
-
-
-
-
 
     return LDS_OK;
 }
@@ -545,12 +558,6 @@ ld_status ld_connect(struct ld_context *context) {
 ld_status ld_service(struct ld_context *context, int timeout) {
      ld_status ret = 0;
 
-//    if(context->gateway_state == LD_GATEWAY_UNCONNECTED) {
-//        //we are unconnected, let's check if there was a close code
-//        //we are trying to service a closed connection, so we should try opening that connection
-//        return ld_connect(context);
-//    }
-
     if(context->lws_wsi == NULL) {
         //reconnect
         ld_connect(context);
@@ -559,7 +566,7 @@ ld_status ld_service(struct ld_context *context, int timeout) {
 
     //check heartbeat timer
     if(((lws_now_secs() - context->last_hb) > (context->heartbeat_interval / 1000)) &&
-       context->heartbeat_interval != 0) {
+        context->heartbeat_interval != 0) {
         //put heartbeat payload in gateway_queue
         context->hb_count++;
         if(context->hb_count > 1) { //todo: settable limit for hb_ack misses
@@ -712,7 +719,7 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
 //                ld_debug("first gateway fragment is also last fragment");
                 i = ld_gateway_payload_parser(context, in, len); //take the buffer and interpret it
 
-                ld_notice("single RX: %s", (char *) in);
+                ld_debug("single RX: %s", (char *) in);
                 context->gateway_rx_buffer = NULL;
                 context->gateway_rx_buffer_len = 0;
 
@@ -740,9 +747,9 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                 context->gateway_rx_buffer[context->gateway_rx_buffer_len] = '\0';
 
                 if(context->gateway_rx_buffer_len > 2000) {
-                    ld_notice("multi RX: %.*s...", 2000, context->gateway_rx_buffer);
+                    ld_debug("multi RX: %.*s...", 2000, context->gateway_rx_buffer);
                 } else {
-                    ld_notice("multi RX: %s", context->gateway_rx_buffer);
+                    ld_debug("multi RX: %s", context->gateway_rx_buffer);
                 }
 
                 i = ld_gateway_payload_parser(context, context->gateway_rx_buffer, context->gateway_rx_buffer_len);
@@ -758,8 +765,6 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                                                  context->gateway_rx_buffer_len + len + 1);
             strncpy(context->gateway_rx_buffer + context->gateway_rx_buffer_len, in, len);
             context->gateway_rx_buffer_len += len;
-
-//            _ld_note(context, "multi RX: %.*s", context->gateway_rx_buffer, context->gateway_rx_buffer_len);
 
             return 0;
         case LWS_CALLBACK_CLIENT_RECEIVE_PONG:
@@ -785,7 +790,7 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
                 ld_error("couldn't write payload to buffer");
                 return -1;
             }
-            lwsl_notice("TX: %s\n", payload + LWS_PRE);
+            lwsl_debug("TX: %s\n", payload + LWS_PRE);
             i = lws_write(wsi, (unsigned char *) (payload + LWS_PRE), strlen(gateway_payload->payload), LWS_WRITE_TEXT);
             if(i < 0) {
                 lwsl_err("ERROR %d writing to socket, hanging up\n", i);
@@ -825,6 +830,12 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
         case LWS_CALLBACK_CHANGE_MODE_POLL_FD:
         case LWS_CALLBACK_LOCK_POLL:
         case LWS_CALLBACK_UNLOCK_POLL:
+            break;
+        case LWS_CALLBACK_WS_CLIENT_DROP_PROTOCOL:
+            ld_debug("%s: lws client dropped protocol", __FUNCTION__);
+            break;
+        case LWS_CALLBACK_CLIENT_CLOSED:
+            ld_debug("%s: lws client closed", __FUNCTION__);
             break;
         default:
             ld_debug("lws: received lws callback reason %d", reason);

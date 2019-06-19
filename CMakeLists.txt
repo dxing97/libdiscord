@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(libdiscord VERSION 0.3.0 LANGUAGES C)
 
-message(STATUS "We are on a ${CMAKE_SYSTEM_NAME} system")
+message(STATUS "We are on a ${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_VERSION} system")
 message(STATUS "The host processor is ${CMAKE_HOST_SYSTEM_PROCESSOR}")
 
 ## Library info
@@ -16,7 +16,7 @@ set(LD_VERSION "${LD_VERSION_MAJOR}${LD_VERSION_MINOR}${LD_VERSION_PATCH}")
 ## libdiscord options
 set(LD_RINGBUFFER_DEFAULT_SIZE 16)
 
-## Discord-specific options
+## Discord-specific default options
 set(LD_API_URL "\"https://discordapp.com/api\"")
 set(LD_REST_API_VERSION "\"/v6\"")
 set(LD_WS_API_VERSION 6)

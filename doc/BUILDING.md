@@ -83,7 +83,7 @@ make
 
 Test the ayylmao bot:
 ```bash
-./example-ayylmao-bot -t YOUR_BOT_TOKEN
+./example-bot-ayylmao -t YOUR_BOT_TOKEN
 ```
 
 ## Testing history

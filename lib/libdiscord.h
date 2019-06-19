@@ -479,7 +479,7 @@ ld_status ld_dispatch_ready(struct ld_context *context, json_t *data);
  * @param data Pointer to JSON object containing dispatch data
  * 
  * @return int Status code
- * @n 0: success
+ * @n LDS_OK: success
  * @n 1: jansson (JSON parsing) error
  */
 ld_status ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, json_t *data);
@@ -493,7 +493,7 @@ ld_status ld_gateway_dispatch_parser(struct ld_context *context, json_t *type, j
 ld_status ld_gateway_queue_heartbeat(struct ld_context *context);
 
 /**
- * @brief Gets the operating system name
+ * @brief Gets the operating system name. Depreciated, use CMake's CMAKE_SYSTEM_NAME in libdiscord_config.h.in
  * 
  * @return char* A string containing the operating system name
  */
