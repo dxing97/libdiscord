@@ -15,6 +15,7 @@ set(LD_VERSION "${LD_VERSION_MAJOR}${LD_VERSION_MINOR}${LD_VERSION_PATCH}")
 
 ## libdiscord options
 set(LD_RINGBUFFER_DEFAULT_SIZE 16)
+set(LD_CONNECT_DELAY_INTERVAL 5)  # in ld_service, if ld_connect returns error, ld_service will block for this amount of time. not so good for event loops with other things happening in the background
 
 ## Discord-specific default options
 set(LD_API_URL "\"https://discordapp.com/api\"")

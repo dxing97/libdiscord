@@ -13,7 +13,7 @@
 
 static int bot_exit = 0; //0: no exit, 1: exit
 static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
-static int fail_mode = 0; //0: default, try recovering, 1: exit on error
+static int fail_mode = 1; //0: default, try recovering, 1: exit on error
 CURL *handle;
 char *trigger = "ayy", *response = "lmao";
 
@@ -25,12 +25,12 @@ void int_handler(int i) {
  * main way of user interaction with libdiscord
  * the user callback returns 0 if everything is OK
  *
- * ld_context contains info about the bot. The user shouldn't have to mess with it.
+ * ld_context contains info about the bot. User code shouldn't have to mess with it.
  * ld_callback_reason is the reason for the library calling the callback. See the enum declaration in libdiscord.h
  * data and len contain data that may be needed for the callback, their use depends on the reason for the callback.
  */
 int callback(struct ld_context *context, enum ld_callback_reason reason, void *data, int len) {
-    //if content == "ayy", POST "lmao" to that channel
+    // if content == "ayy", POST "lmao" to that channel
 
     if(reason != LD_CALLBACK_MESSAGE_CREATE) {
         return 0;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
      * if an "ayy" is detected, POST a message to the same channel with content "lmao"
      * continue ad infinitum (or until the bot is killed)
      */
-    int c; //bot_exit: 0 for don't exit, 1 for exit
+    int c; // bot_exit: 0 for don't exit, 1 for exit
     char *bot_token = NULL;
     char *game = NULL;
     unsigned long log_level = 31;
@@ -188,23 +188,24 @@ int main(int argc, char *argv[]) {
     int ret, i = 0;
     //while the bot is still alive
     while(!bot_exit) {
-        if(bot_state == 0) {
-            //bot isn't connected, so we should try connecting
-            ret = ld_connect(&context);
-            if(ret != 0) {
-                ld_warning("error connecting to discord: error code %d", ret);
-                break;
-            }
-            bot_state = 1;
-        }
-
+//        if(bot_state == 0) {
+//            //bot isn't connected, so we should try connecting
+//            ret = ld_connect(&context);
+//            if(ret != 0) {
+//                ld_warning("error connecting to discord (%d)", ret);
+//                break;
+//            }
+//            bot_state = 1;
+//        }
         ret = ld_service(&context, 20); //service the connection
-        if(ret != 0) {
-            ld_error("ld_service returned non-0 (%d)", ret);
-            if(fail_mode == 1)
-                bot_exit = 0;
-            else
+        if(ret != LDS_OK) {
+            if(fail_mode == 1) {
+                ld_error("ld_service returned (%d), retrying", ret);
+            } else {
                 bot_exit = 1;
+                ld_error("ld_service returned (%d), exiting", ret);
+            }
+
         }
     }
     ld_info("disconnecting from discord");

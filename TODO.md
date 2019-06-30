@@ -7,6 +7,7 @@ Ordered roughly in terms of priority.
 
 ### Websocket
 * **Reconnection logic**
+  * logging functions stop working on a curl error why?
 * More detailed and documented callbacks
 * Sharding
 * merge ld_connect and ld_service

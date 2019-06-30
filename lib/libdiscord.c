@@ -560,7 +560,12 @@ ld_status ld_service(struct ld_context *context, int timeout) {
 
     if(context->lws_wsi == NULL) {
         //reconnect
-        ld_connect(context);
+        ret = ld_connect(context);
+        if(ret != LDS_OK) {
+            ld_notice("%s: ld_connect returned error, will retry in %d secs", __FUNCTION__, LD_CONNECT_DELAY_INTERVAL);
+            sleep(LD_CONNECT_DELAY_INTERVAL);
+            return LDS_CONNECTION_ERR;
+        }
         return LDS_OK;
     }
 
@@ -570,11 +575,11 @@ ld_status ld_service(struct ld_context *context, int timeout) {
         //put heartbeat payload in gateway_queue
         context->hb_count++;
         if(context->hb_count > 1) { //todo: settable limit for hb_ack misses
+
             //didn't receive HB_ACK
             ld_warning("%s: didn't recieve a HB_ACK", __FUNCTION__);
+
             // todo: make sure we're actually disconnected from gateway
-//            context->gateway_state = LD_GATEWAY_UNCONNECTED;
-//            lws_close_reason(context->lws_wsi, 4009, NULL, 0); ///timeout @todo: make sure this works (this doesn't work, causes segfault, use in lws callback)
             return LDS_WEBSOCKET_HEARTBEAT_ACKNOWLEDEGEMENT_MISSED;
         }
         ret = ld_gateway_queue_heartbeat(context);
@@ -836,7 +841,11 @@ ld_status ld_lws_callback(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         case LWS_CALLBACK_CLIENT_CLOSED:
             ld_debug("%s: lws client closed", __FUNCTION__);
+            // tell libdiscord we are disconnected and should reconnect later
             break;
+        case LWS_CALLBACK_WSI_DESTROY:
+            ld_debug("%s: lws_wsi destroyed, clearing out", __FUNCTION__);
+            context->lws_wsi = NULL;
         default:
             ld_debug("lws: received lws callback reason %d", reason);
             break;
@@ -1192,7 +1201,7 @@ ld_status ld_gateway_queue_heartbeat(struct ld_context *context) {
     return LDS_OK;
 }
 
-/*
+/* DEPRECIATED: Use CMake for this instead
  * gets the name of the operating system (checks uname -o)
  * future: check #ifdef _WIN32 or something
  */

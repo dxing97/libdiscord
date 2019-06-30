@@ -279,6 +279,7 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
     ret = curl_easy_perform(context->curl_handle);
     if(ret != CURLE_OK){
         ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
+        return LDS_CURL_ERR;
     }
     curl_easy_getinfo(context->curl_handle, CURLINFO_RESPONSE_CODE, &(response->http_status));
     return LDE_OK;
