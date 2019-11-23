@@ -261,8 +261,12 @@ int ld_rest_send_request(struct ld_context *context, struct ld_rest_response *re
             ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
         }
     }
-    ret = curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 1);
 
+
+    if(ld_get_logging_level()>LD_LOG_INFO)
+        ret = curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 1);
+    else
+        ret = curl_easy_setopt(context->curl_handle, CURLOPT_VERBOSE, 0);
     if(ret != CURLE_OK){
         ld_warning("%s (%s:%s): curl_easy_perform returned error: %s", __FUNCTION__, __FILE__, __LINE__, curl_easy_strerror(ret));
     }
