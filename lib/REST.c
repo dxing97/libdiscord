@@ -147,11 +147,11 @@ struct ld_rest_response *ld_rest_init_response(struct ld_rest_response *response
 
 int ld_rest_free_request(struct ld_rest_request *request){
     free(request->body);
+    request->body_size = 0;
     ld_headers_clean(request->headers);
     free(request->headers);
     free(request->base_url);
     free(request->endpoint);
-    free(request);
     return LDE_OK;
 }
 
@@ -297,6 +297,8 @@ char *ld_rest_verb_enum2str(enum ld_rest_http_verb verb) {
             return "PATCH";
         case LD_REST_VERB_DELETE:
             return "DELETE";
+        default:
+            return NULL;
     }
     return NULL;
 }
@@ -354,11 +356,12 @@ int ld_create_basic_message(struct ld_context *context, struct ld_rest_request *
     req->verb = LD_REST_VERB_POST;
     sprintf(tmp, "Bot %s", context->bot_token);
     ld_headers_put(req->headers, "Authorization", tmp);
+    ld_headers_put(req->headers, "Content-Type", "application/json");
 
     //generate POST message
     json_t *body;
 
-    body = json_pack("{ss}", "content", message_content);
+    body = json_pack("{s:s}", "content", message_content);
     if(body == NULL) {
         ld_error("couldn't create JSON object for lmao data");
         return LDE_JSON;
@@ -392,6 +395,7 @@ int ld_send_basic_message(struct ld_context *context, LD_SNOWFLAKE channelid, co
         ld_notice("ld_send_basic_message: request returned %d", resp.http_status);
         return 1;
     }
+    ld_rest_free_request(&req);
     return 0;
 }
 
