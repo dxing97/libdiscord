@@ -144,3 +144,9 @@ char *ld_log_generate_string(unsigned long ll, const char *log_message, va_list 
     free(time_string);
     return message;
 }
+
+
+/*
+ * return log level
+ */
+unsigned long ld_get_logging_level() {return _ld_ll;};

@@ -3,7 +3,7 @@
 //#include "libwebsockets/lib/libwebsockets.h"
 
 #include "libdiscord.h"
-
+#include "log.h"
 
 /*
  * libwebsockets protocols struct, parameters set here are used to set the behavior of 
@@ -124,7 +124,7 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     }
 
     // logging
-    lws_set_log_level(31, NULL);
+    lws_set_log_level(ld_get_logging_level(), NULL);
 
     ret = ld_init_lws(info, context);
     if(ret != LDS_OK) {

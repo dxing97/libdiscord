@@ -69,6 +69,11 @@ void _ld_log(unsigned long ll, unsigned long enabled_levels, const char *log_mes
 const char *ld_log_level_string(unsigned long ll);
 
 /*
+ * returns current log level
+ */
+unsigned long ld_get_logging_level();
+
+/*
  * allocates and returns a string containing a log message that can be sent to stderr or a discord channel
  */
 char *ld_log_generate_string(unsigned long ll, const char *log_message, va_list arg);
