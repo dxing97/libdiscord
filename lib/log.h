@@ -37,7 +37,7 @@ enum ld_log_level {
  * eliminates the need for keeping the log level in ld_context
  * can call whenever, sets a static global variable in library
  */
-unsigned long ld_set_logging_level(unsigned long ll);
+unsigned long ld_set_logging_level(unsigned long log_level);
 
 /*
  * logging functions

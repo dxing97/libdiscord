@@ -18,11 +18,11 @@
 /*
  * private global variable used to store the current logging level.
  */
-static unsigned long _ld_ll;
+static unsigned long _ld_ll = LD_LOG_ERROR | LD_LOG_WARNING | LD_LOG_NOTICE | LD_LOG_INFO;
 
 //sets static global variable for the library
-unsigned long ld_set_logging_level(unsigned long ll) {
-    _ld_ll = ll;
+unsigned long ld_set_logging_level(unsigned long log_level) {
+    _ld_ll = log_level;
     return _ld_ll;
 }
 
