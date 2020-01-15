@@ -11,11 +11,13 @@ The goal of this library currently is:
 ## Building
 See [building](doc/BUILDING.md)
 
-Currently only tested against Ubuntu 18.04, Raspbian, and macOS Mojave. 
-Windows support is currently nonexistent but will be tested and added in the future. 
+Libdiscord is currently actively tested against Ubuntu 18.04, Raspbian, and macOS Catalina. 
+It has been previously tested to work on ArchLinux, FreeBSD, OpenBSD, and Debian.
+The library should build and run on systems that libcurl and libwebsockets supports.
+Windows has not been tested, but there's nothing preventing libdiscord from being able to run on Windows. 
 
 ## Example Bots
-See [example_bots](example_bots) for some sample bots. 
+See [example_bots](example_bots) for some sample bots.
 
 ## [Install scripts](scripts)
 Intended for development use only.
@@ -24,4 +26,4 @@ Intended for development use only.
 See [the todo list](TODO.md) for a list of things that will be implemented at some point. 
 Major features and fixes in development for the first point release (v0.3) are:
  * Reconnection logic
- * Jansson memory leaks
+ * Jansson memory leaks and other show-stopping bugs

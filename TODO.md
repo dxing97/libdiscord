@@ -1,6 +1,11 @@
-## Goals
-* Get a stable working minimal example bot ~~with minimal spaghetti~~ (mostly working, not stable)
-* Get 100% coverage of all API functions (websocket gateway, REST, voice websocket, voice UDP, v1.0 release)
+## Milestones
+* v0.3
+    * fix all bugs that prevent a bot from running indefinitely
+        * add resuming logic 
+* v1.0
+    * 100% coverage of all API functions (websocket gateway, REST, voice websocket, voice UDP, v1.0 release)
+
+
 
 ## Todo
 Ordered roughly in terms of priority.
@@ -42,7 +47,7 @@ Ordered roughly in terms of priority.
     * Make/find functions that will encode/decode ISO8601-formatted strings. Use GNU function?
     
 ### Example Bots
-Bots that demonstrate libdiscord functionality
+* fold hash and counter into ayylmao (or remove entirely)
 
 #### ayylmao - A Basic Call and Response Bot
 * Add support for multiple calls/responses per bot
@@ -60,7 +65,7 @@ Bots that demonstrate libdiscord functionality
 * add halt message channel option
 * possibly spin off into its own repo
 
-#### Stalkerbot - Track user presence
+#### tracker - Track user presence
 * a bot to tell you when your bot ~~crashes~~ goes offline  (waitaminute...)
 
 #### ping - A Comprehensive Latency Tool
@@ -72,13 +77,12 @@ Bots that demonstrate libdiscord functionality
 
 
 ## Far Future
-* Rich presence integration? (Spotify?)
-* OAuth2 support (write/find a OAuth2 client library for C)
+* Rich presence integration?
+* OAuth2 support (need to write/find a OAuth2 client library for C)
 * Support for voice channels (UDP connections, use libuv?)
 * Support for file-based bot configuration allowing in-flight changing of bot behavior
 * A Discord CLI client (probably as a separate app)
-* Test on a ESP32, android
-* Support for MinGW and Cygwin
+* Support for ESP32
 * Support for Windows
 * Make/autogenerate wrapper for other languages, including Python, C++, Rust, and Go.
 
