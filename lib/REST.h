@@ -8,6 +8,7 @@
 #define LIBDISCORD_REST_H
 
 #include <curl/curl.h>
+#include <sys/queue.h>
 
 //#include <libdiscord.h>
 #include "status.h"
@@ -40,14 +41,18 @@ enum ld_rest_http_verb {
     LD_REST_VERB_DELETE
 };
 
-/*
- * rather opaque structure used to process headers into libcurl
+/**
+ * Linked list to store HTTP headers before passing them into curl.
  */
 struct ld_headers {
 //    struct _u_map *umap;
-    int length;
-    char **key;
-    char **value;
+//    int length;
+//    char **key;
+//    char **value;
+    char *key;
+    char *value;
+
+    SLIST_ENTRY(ld_headers);
 };
 
 /*
