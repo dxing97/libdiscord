@@ -1,24 +1,25 @@
 //
 // Created by dxing97 on 11/11/17.
 //
-#include "libdiscord.h"
 
 /*
  * This bot will respond to every "ayy" with "lmao", or any other trigger-response pair you want
  */
 
+#include <libdiscord.h>
+
 #include <getopt.h>
 #include <signal.h>
-#include <REST.h>
 
-static int bot_exit = 0; //0: no exit, 1: exit
-static int bot_state = 0; //0: not connected/disconnected, 1: connect initiated
-static int fail_mode = 1; //0: default, try recovering, 1: exit on error
+static int signaled = 0;
+static int try_recovery = 1;
+unsigned long log_level = 31;
+
 CURL *handle;
 char *trigger = "ayy", *response = "lmao";
 
 void int_handler(int i) {
-    bot_exit = 1;
+    signaled = 1;
 }
 
 /*
@@ -64,19 +65,17 @@ int callback(struct ld_context *context, enum ld_callback_reason reason, void *d
 int main(int argc, char *argv[]) {
 
     /*
-     * pass in arguments for parameters that we want to connect to discord with.
-     *  this includes the bot token, debug verbosity, and so on
-     *  use getopt
-     * initialize a connection to the gateway
-     *
-     * listen for messages sent with "ayy" (with permutations)
-     * if an "ayy" is detected, POST a message to the same channel with content "lmao"
-     * continue ad infinitum (or until the bot is killed)
+     * get input arguments
+     * initialize context from arguments
+     * enter event loop
+     * in loop:
+     *  update events, process callbacks until signal is raised
+     * clean up
      */
-    int c; // bot_exit: 0 for don't exit, 1 for exit
+    int c;
     char *bot_token = NULL;
     char *game = NULL;
-    unsigned long log_level = 31;
+
     if(argc == 1) {
         goto HELP;
     }
@@ -88,7 +87,6 @@ int main(int argc, char *argv[]) {
                 {"bot-token",      required_argument, 0, 't'},
                 {"help",           no_argument,       0, 'h'},
                 {"log-level",      required_argument, 0, 'l'},
-//                {"use-ulfius", no_argument, 0, 'u'},
                 {"game",           required_argument, 0, 'g'},
                 {"trigger",        required_argument, 0, 'r'},
                 {"response",       required_argument, 0, 'R'},
@@ -97,9 +95,7 @@ int main(int argc, char *argv[]) {
         };
 
         int option_index = 0;
-        c = getopt_long(argc, argv, "ht:l:"
-                                    //                                    "u"
-                                    "g:r:R:a", long_options, &option_index);
+        c = getopt_long(argc, argv, "ht:l:g:r:R:a", long_options, &option_index);
 
         if(c == -1) {
             break;
@@ -143,7 +139,7 @@ int main(int argc, char *argv[]) {
                 response = strdup(optarg);
                 break;
             case 'a':
-                fail_mode = 1;
+                try_recovery = 1;
             default:
                 abort();
         }
@@ -161,7 +157,9 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, int_handler);
     ld_debug("set response to %s", response);
-    //define context info, including bot token
+
+
+    //initialize arguments to be passed into context initalization
     struct ld_context_info *info;
     info = malloc(sizeof(struct ld_context_info));
     ld_init_context_info(info);
@@ -175,42 +173,35 @@ int main(int argc, char *argv[]) {
 
     //initialize context with context info
     struct ld_context context;
-    int retp;
-    retp = ld_init_context(info, &context); //garbage in, garbage out
-    if(retp != 0) {
-        ld_error("error creating libdiscord context");
-        return 1;
-    }
+    int ret = ld_init_context(info, &context);
     free(info);
 
-    handle = curl_easy_init();
+    if(ret != LDE_OK){
+        ld_error("error initializing libdiscord context, got %d", ret);
+        return 1;
+    }
 
-    int ret, i = 0;
-    //while the bot is still alive
-    while(!bot_exit) {
-//        if(bot_state == 0) {
-//            //bot isn't connected, so we should try connecting
-//            ret = ld_connect(&context);
-//            if(ret != 0) {
-//                ld_warning("error connecting to discord (%d)", ret);
-//                break;
-//            }
-//            bot_state = 1;
-//        }
+//    handle = curl_easy_init();
+    int count = 0;
+    while(!signaled) {
         ret = ld_service(&context, 20); //service the connection
         if(ret != LDS_OK) {
-            if(fail_mode == 1) {
+            if(try_recovery == 1 && count < 4) {
+                count++;
                 ld_error("ld_service returned (%d), retrying", ret);
             } else {
-                bot_exit = 1;
+                signaled = 1;
                 ld_error("ld_service returned (%d), exiting", ret);
             }
 
         }
     }
+
     ld_info("disconnecting from discord");
     //destroy the context
     ld_cleanup_context(&context);
-    curl_easy_cleanup(handle);
+//    curl_easy_cleanup(handle);
+
+
     return 0;
 }

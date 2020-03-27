@@ -25,6 +25,7 @@
 
 # CMake
 cmake-build-debug/
+/cmake/libdiscord_config.h
 
 # Mongo Explorer plugin:
 .idea/**/mongoSettings.xml

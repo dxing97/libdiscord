@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <jansson.h>
-//#include "libwebsockets/lib/libwebsockets.h"
 
 #include "libdiscord.h"
 #include "log.h"
@@ -108,7 +107,6 @@ ld_status ld_init_lws(const struct ld_context_info *info, struct ld_context *con
  */
 ld_status ld_init_context(const struct ld_context_info *info, struct ld_context *context) {
     if(context == NULL) {
-//        struct ld_context *context = malloc(sizeof(struct ld_context));
         ld_error("%s: was passed null pointer for context", __FUNCTION__);
         return LDS_MEMORY_ERR;
     }
@@ -141,20 +139,15 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
 
     context->gi_count = 0;
 
-
     // heartbeat tracking
     context->heartbeat_interval = 0;
     context->hb_count = 0;
     context->last_hb = lws_now_secs();
 
-
-
     context->gateway_rx_buffer_len = 0;
     context->gateway_rx_buffer = NULL;
 
-
     context->gateway_session_id = NULL;
-
 
     // current user info
     context->current_user = NULL;
@@ -167,8 +160,6 @@ ld_status ld_init_context(const struct ld_context_info *info, struct ld_context 
     /////// info optional
 
     // LWS gateway payload ringbuffer init with info
-
-
 
     // hello payload properties
     if(info != NULL && info->device != NULL) { //override default
@@ -246,8 +237,6 @@ void ld_cleanup_context(struct ld_context *context) {
     curl_global_cleanup();
     lws_context_destroy(context->lws_context);
     lws_ring_destroy(context->gateway_ring);
-
-//    free(context);
 }
 
 struct _ld_buffer {
