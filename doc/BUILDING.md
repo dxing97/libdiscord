@@ -13,13 +13,14 @@ Recommended packages: ``checkinstall``: for installing libwebsockets from source
 Direct dependencies: 
 * libwebsockets 
     * minimum required version is v2.4.1, anything below that will not work
+    * libwebsockets v4 has not been tested, and is not known to work yet
     * Ubuntu/debian package - ``libwebsockets-dev`` (likely severely out of date, Ubuntu 18.04 uses v2.0.3)
 * Jansson 
     * version 2.9 or later should work, v2.7 has been confirmed to NOT work (json_pack changed behavior)
     * Ubuntu/debian package - ``libjansson-dev``
 * libcurl 
     * any recent version with SSL support
-    * Ubuntu/debian package - ``libcurl4-openssl-dev``
+    * Ubuntu/debian package - ``libcurl4-openssl-dev`` or ``libcurl4-gnutls-dev``
 * OpenSSL
     * Only needed for ``example-bot-hash``, will be removed as a direct dependency in future update
     * Ubuntu/debian package - ``libssl-dev``
@@ -32,10 +33,10 @@ Get a copy of libwebsockets source from github.
 ```bash
 git clone https://github.com/warmcat/libwebsockets 
 ```
-Checkout the latest version (3.1.0 as of writing)
+Checkout the latest version (3.2.2 as of writing)
 ```bash
 cd libwebsockets
-git checkout v3.1.0
+git checkout v3.2.2
 ```
 Create a seperate build directory
 ```bash
@@ -50,7 +51,7 @@ make -j4
 ```
 (option 1, preferred) Install the library . Make sure you read the prompts that come up regarding expluding certain files.
 ```bash
-sudo checkinstall --pkgname libwebsockets-dev --pkgversion="3.1.0"
+sudo checkinstall --pkgname libwebsockets-dev --pkgversion="3.2.2"
 ```
 Note that you can uninstall libwebsockets afterward using apt or dpkg 
 if you install libwebsockets with checkinstall, in case something breaks. Depending on your version of checkinstall, 
@@ -87,12 +88,14 @@ Test the ayylmao bot:
 ```
 
 ## Testing history
-Tested to build and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
+* Tested to NOT work with libwebsockets v4.x.x, use v3.x.x
+* Tested to work with Ubuntu 19.10, LWS v3.2.2
+* Tested to build and work on Raspberry Pi 3 and Raspberry Pi W running Raspbian (stretch), 
 but note that if you want to install libwebsockets with checkinstall on Raspbian, 
-then you will have to compile and install ``checkinstall`` from source yourself. Otherwise, install with ``sudo make install``
+then you will have to compile and install ``checkinstall`` from source yourself (or until the checkinstall package is updated). Otherwise, install with ``sudo make install``
 
-Tested to work on Ubuntu 18.04.2 LTS
+* Tested to work on Ubuntu 18.04.4 LTS
 
-Works on sparc64 Debian 4.13.4-1 with no issues.
+* Works on sparc64 Debian 4.13.4-1 with no issues.
 
-Works on macOS 10.14 "Mojave" after dependencies are properly installed using Homebrew.
+* Works on macOS 10.14 "Mojave" after dependencies are properly installed using Homebrew.
