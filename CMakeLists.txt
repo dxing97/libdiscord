@@ -38,7 +38,7 @@ configure_file(
 
 ## Targets
 ## Library
-add_library(discord SHARED libdiscord/libdiscord.c libdiscord/libdiscord.h libdiscord/codes.h libdiscord/log.h libdiscord/context.c libdiscord/context.h)
+add_library(discord SHARED libdiscord/libdiscord.c libdiscord/libdiscord.h libdiscord/codes.h libdiscord/log.h libdiscord/context.c libdiscord/context.h libdiscord/REST.c libdiscord/REST.h)
 
 target_include_directories(discord PRIVATE ${LD_INCLUDE_DIRS})
 target_link_libraries(discord ${LD_LIBS})
@@ -51,6 +51,12 @@ set_target_properties(discord PROPERTIES VERSION ${PROJECT_VERSION})
 
 
 ## Example Bots
+set(BOT_NULL_SOURCE
+        example_bots/example-null.c
+        ${PROJECT_BINARY_DIR}/libdiscord_config.h)
+add_executable(example-bot-null ${BOT_NULL_SOURCE})
+target_link_libraries(example-bot-null discord)
+
 set(BOT_AYY_SOURCE
         example_bots/example-ayylmao.c
         ${PROJECT_BINARY_DIR}/libdiscord_config.h)

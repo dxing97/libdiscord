@@ -20,6 +20,12 @@
  */
 lde_code ld_init(int loglevel);
 
+/**
+ *
+ * @param context Pointer to initialized ld_context
+ * @param timeout Timeout in milliseconds
+ * @return
+ */
 lde_code ld_service(struct ld_context *context, int timeout);
 
 #endif //LIBDISCORD_LIBDISCORD_H
