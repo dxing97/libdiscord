@@ -3,7 +3,8 @@ libdiscord was developed against the v6 API, which has been depreciated by Disco
 Functionality of libdiscord in the future is therefore not guaranteed.
 
 Developers interested in using C to interact with Discord are encouraged
-to look at alternative libraries such as [orca](https://github.com/cee-studio/orca). 
+to look at alternative libraries such as [concord](https://github.com/Cogmasters/concord) 
+or [orca](https://github.com/cee-studio/orca). 
 
 # libdiscord
 
